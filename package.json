@@ -10,16 +10,8 @@
   "engines": {
     "node": ">=8.9.3"
   },
-  "dependencies": {
-    "glob": "^7.1.2",
-    "mocha": "^6.0.2",
-    "semver": "^5.4.1",
-    "source-map-support": "^0.5.0",
-    "url-parse": "^1.4.3"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/glob": "^5.0.33",
-    "@types/mocha": "^5.2.6",
     "@types/node": "^10.12.21"
   },
   "license": "MIT",
