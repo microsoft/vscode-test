@@ -95,10 +95,6 @@ export type VSCodeVersion =
  * 'insiders' for downloading latest Insiders.
  */
 async function downloadVSCode(version: VSCodeVersion): Promise<string> {
-	if (fs.existsSync(path.resolve(vscodeTestDir, version))) {
-		return Promise.resolve(path.resolve(vscodeTestDir, version));
-	}
-
 	console.log(`Downloading VS Code ${version}`);
 
 	if (!fs.existsSync(vscodeTestDir)) {
@@ -117,7 +113,10 @@ async function downloadVSCode(version: VSCodeVersion): Promise<string> {
 			}
 
 			if (archiveUrl.endsWith('.zip')) {
-				const archivePath = path.resolve(vscodeTestDir, `vscode-${version}.zip`);
+				const archivePath = path.resolve(
+					vscodeTestDir,
+					`vscode-${version}.zip`
+				);
 				const outStream = fs.createWriteStream(archivePath);
 				outStream.on('close', () => {
 					resolve(archivePath);
@@ -167,21 +166,40 @@ function unzipVSCode(vscodeArchivePath: string) {
  * @param version The version of VS Code to download such as '1.32.0'. You can also use
  * 'insiders' for downloading latest Insiders.
  */
-export async function downloadAndUnzipVSCode(version?: VSCodeVersion): Promise<string> {
+export async function downloadAndUnzipVSCode(
+	version?: VSCodeVersion
+): Promise<string> {
 	if (!version) {
 		version = await fetchLatestStableRelease();
 	}
 
-	const vscodeArchivePath = await downloadVSCode(version);
-	unzipVSCode(vscodeArchivePath);
-	// Remove archive
-	fs.unlinkSync(vscodeArchivePath);
+	if (fs.existsSync(path.resolve(vscodeTestDir, `vscode-${version}`))) {
+		console.log(`Found .vscode-test/vscode-${version}. Skipping download`);
+		return Promise.resolve(
+			downloadDirToExecutablePath(
+				path.resolve(vscodeTestDir, `vscode-${version}`)
+			)
+		);
+	}
 
+	const vscodeArchivePath = await downloadVSCode(version);
+	if (fs.existsSync(vscodeArchivePath)) {
+		unzipVSCode(vscodeArchivePath);
+		// Remove archive
+		fs.unlinkSync(vscodeArchivePath);
+	}
+
+	return downloadDirToExecutablePath(
+		path.resolve(vscodeTestDir, `vscode-${version}`)
+	);
+}
+
+function downloadDirToExecutablePath(dir: string) {
 	if (process.platform === 'win32') {
-		return path.resolve(vscodeTestDir, `vscode-${version}`, 'Code.exe');
+		return path.resolve(dir, 'Code.exe');
 	} else if (process.platform === 'darwin') {
-		return path.resolve(vscodeTestDir, `vscode-${version}`, 'Visual Studio Code.app/Contents/MacOS/Electron');
+		return path.resolve(dir, 'Visual Studio Code.app/Contents/MacOS/Electron');
 	} else {
-		return path.resolve(vscodeTestDir, `vscode-${version}`, 'VSCode-linux-x64/code');
+		return path.resolve(dir, 'VSCode-linux-x64/code');
 	}
 }
