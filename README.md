@@ -4,6 +4,8 @@ This module helps you testing VS Code extensions.
 
 ## Usage
 
+See https://github.com/octref/vscode-test-sample for more usage.
+
 ```ts
 import * as path from 'path'
 
@@ -15,11 +17,15 @@ async function go() {
   const testRunnerPath = path.resolve(__dirname, './suite')
   const testWorkspace = path.resolve(__dirname, '../../test-fixtures/fixture1')
 
+  /**
+   * Basic usage
+   */
   await runTests({
     extensionPath,
     testRunnerPath,
     testWorkspace
   })
+
 }
 
 go()
