@@ -15,64 +15,19 @@ const vscodeTestDir = path.resolve(extensionRoot, '.vscode-test');
 
 const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releases/stable`;
 
-async function fetchLatestStableRelease(): Promise<VSCodeVersion> {
+async function fetchLatestStableVersion(): Promise<string> {
 	const versions = await request.getJSON(vscodeStableReleasesAPI);
 	if (!versions || !Array.isArray(versions) || !versions[0]) {
 		throw Error('Failed to get latest VS Code version');
 	}
 
-	return versions[0] as VSCodeVersion;
+	return versions[0];
 }
 
-export type VSCodeVersion =
-	| 'insiders'
-	| '1.32.2'
-	| '1.32.1'
-	| '1.32.0'
-	| '1.31.1'
-	| '1.31.0'
-	| '1.30.2'
-	| '1.30.1'
-	| '1.30.0'
-	| '1.29.1'
-	| '1.29.0'
-	| '1.28.2'
-	| '1.28.1'
-	| '1.28.0'
-	| '1.27.2'
-	| '1.27.1'
-	| '1.27.0'
-	| '1.26.1'
-	| '1.26.0'
-	| '1.25.1'
-	| '1.25.0'
-	| '1.24.1'
-	| '1.24.0'
-	| '1.23.1'
-	| '1.23.0'
-	| '1.22.2'
-	| '1.22.1'
-	| '1.22.0'
-	| '1.21.1'
-	| '1.21.0'
-	| '1.20.1'
-	| '1.20.0'
-	| '1.19.3'
-	| '1.19.2'
-	| '1.19.1'
-	| '1.19.0'
-	| '1.18.1'
-	| '1.18.0'
-	| '1.17.2'
-	| '1.17.1'
-	| '1.17.0'
-	| '1.16.1'
-	| '1.16.0'
-	| '1.15.1'
-	| '1.15.0'
-	| '1.14.2'
-	| '1.14.1'
-	| '1.14.0';
+async function isValidVersion(version: string) {
+	const validVersions: string[] = await request.getJSON(vscodeStableReleasesAPI);
+	return version === 'insiders' || validVersions.includes(version);
+}
 
 /**
  * Download a copy of VS Code archive to `.vscode-test`.
@@ -80,7 +35,7 @@ export type VSCodeVersion =
  * @param version The version of VS Code to download such as '1.32.0'. You can also use
  * 'insiders' for downloading latest Insiders.
  */
-async function downloadVSCodeArchive(version: VSCodeVersion): Promise<string> {
+async function downloadVSCodeArchive(version: string): Promise<string> {
 	if (!fs.existsSync(vscodeTestDir)) {
 		fs.mkdirSync(vscodeTestDir, { recursive: true });
 	}
@@ -98,7 +53,7 @@ async function downloadVSCodeArchive(version: VSCodeVersion): Promise<string> {
 				return;
 			}
 
-			const archiveRequestOptions = urlToOptions(archiveUrl)
+			const archiveRequestOptions = urlToOptions(archiveUrl);
 			if (archiveUrl.endsWith('.zip')) {
 				const archivePath = path.resolve(vscodeTestDir, `vscode-${version}.zip`);
 				const outStream = fs.createWriteStream(archivePath);
@@ -152,9 +107,13 @@ function unzipVSCode(vscodeArchivePath: string) {
  * @param version The version of VS Code to download such as '1.32.0'. You can also use
  * 'insiders' for downloading latest Insiders.
  */
-export async function downloadAndUnzipVSCode(version?: VSCodeVersion): Promise<string> {
-	if (!version) {
-		version = await fetchLatestStableRelease();
+export async function downloadAndUnzipVSCode(version?: string): Promise<string> {
+	if (version) {
+		if (!(await isValidVersion(version))) {
+			throw Error(`Invalid version ${version}`);
+		}
+	} else {
+		version = await fetchLatestStableVersion();
 	}
 
 	if (fs.existsSync(path.resolve(vscodeTestDir, `vscode-${version}`))) {

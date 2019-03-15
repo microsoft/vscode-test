@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as cp from 'child_process';
-import { downloadAndUnzipVSCode, VSCodeVersion } from './download';
+import { downloadAndUnzipVSCode } from './download';
 
 export interface TestOptions {
 	/**
@@ -17,9 +17,13 @@ export interface TestOptions {
 	vscodeExecutablePath?: string;
 
 	/**
-	 * The VS Code version to download. Default to latest stable version.
+	 * The VS Code version to download. Valid versions are:
+	 * - `'insiders'`
+	 * - `'1.32.0'`, `'1.31.1'`, etc
+	 *
+	 * Default to latest stable version.
 	 */
-	version?: VSCodeVersion;
+	version?: string;
 
 	/**
 	 * Absolute path to the extension root. Must include a `package.json`

@@ -6,7 +6,7 @@
 import * as https from 'https';
 import { urlToOptions } from './util';
 
-export async function getJSON(api: string) {
+export async function getJSON(api: string): Promise<any> {
 	return new Promise((resolve, reject) => {
 		https.get(urlToOptions(api), res => {
 			if (res.statusCode !== 200) {
