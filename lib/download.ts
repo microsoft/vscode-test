@@ -25,7 +25,7 @@ async function fetchLatestStableRelease(): Promise<VSCodeVersion> {
 }
 
 export type VSCodeVersion =
-	| 'Insiders'
+	| 'insiders'
 	| '1.32.2'
 	| '1.32.1'
 	| '1.32.0'
@@ -75,12 +75,12 @@ export type VSCodeVersion =
 	| '1.14.0';
 
 /**
- * Download a copy of VS Code.
+ * Download a copy of VS Code archive to `.vscode-test`.
  *
  * @param version The version of VS Code to download such as '1.32.0'. You can also use
  * 'insiders' for downloading latest Insiders.
  */
-async function downloadVSCode(version: VSCodeVersion): Promise<string> {
+async function downloadVSCodeArchive(version: VSCodeVersion): Promise<string> {
 	if (!fs.existsSync(vscodeTestDir)) {
 		fs.mkdirSync(vscodeTestDir, { recursive: true });
 	}
@@ -145,7 +145,9 @@ function unzipVSCode(vscodeArchivePath: string) {
 }
 
 /**
- * Download and unzip a copy of VS Code in `./.vscode-test`
+ * Download and unzip a copy of VS Code in `.vscode-test`. The paths are:
+ * - `.vscode-test/vscode-<VERSION>`. For example, `./vscode-test/vscode-1.32.0`
+ * - `./vscode-test/vscode-insiders`.
  *
  * @param version The version of VS Code to download such as '1.32.0'. You can also use
  * 'insiders' for downloading latest Insiders.
@@ -161,7 +163,7 @@ export async function downloadAndUnzipVSCode(version?: VSCodeVersion): Promise<s
 	}
 
 	console.log(`Downloading VS Code ${version}`);
-	const vscodeArchivePath = await downloadVSCode(version);
+	const vscodeArchivePath = await downloadVSCodeArchive(version);
 	if (fs.existsSync(vscodeArchivePath)) {
 		unzipVSCode(vscodeArchivePath);
 		console.log(`Downloaded VS Code ${version}`);

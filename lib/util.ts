@@ -6,6 +6,7 @@
 import * as path from 'path';
 import { parse as parseUrl } from 'url';
 import * as https from 'https';
+import { VSCodeVersion } from './download';
 
 let downloadPlatform;
 
@@ -20,7 +21,10 @@ switch (process.platform) {
 		downloadPlatform = 'linux-x64';
 }
 
-export function getVSCodeDownloadUrl(version) {
+export function getVSCodeDownloadUrl(version: VSCodeVersion) {
+	if (version === 'insiders') {
+		return `https://update.code.visualstudio.com/latest/${downloadPlatform}/insiders`;
+	}
 	return `https://update.code.visualstudio.com/${version}/${downloadPlatform}/stable`;
 }
 
