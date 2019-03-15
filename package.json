@@ -10,7 +10,10 @@
   "engines": {
     "node": ">=8.9.3"
   },
-  "dependencies": {},
+  "dependencies": {
+    "http-proxy-agent": "^2.1.0",
+    "https-proxy-agent": "^2.2.1"
+  },
   "devDependencies": {
     "@types/node": "^10.12.21"
   },

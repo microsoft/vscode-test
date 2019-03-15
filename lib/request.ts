@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as https from 'https';
+import { urlToOptions } from './util';
 
 export async function getJSON(api: string) {
 	return new Promise((resolve, reject) => {
-		https.get(api, res => {
+		https.get(urlToOptions(api), res => {
 			if (res.statusCode !== 200) {
 				reject('Failed to get JSON');
 			}
