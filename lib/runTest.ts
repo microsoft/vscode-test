@@ -56,11 +56,17 @@ export interface TestOptions {
 	 *   options.testWorkspace,
 	 *   '--extensionDevelopmentPath=' + options.extPath,
 	 *   '--extensionTestsPath=' + options.testPath,
-	 *   '--locale=en'
+	 *   '--locale=' + (options.locale || 'en')
 	 * ];
 	 * ```
 	 */
 	vscodeLaunchArgs?: string[];
+
+	/**
+	 * The locale to use (e.g. `en-US` or `zh-TW`).
+	 * If not specified, it defaults to `en`.
+	 */
+	locale?: string;
 }
 
 export async function runTests(options: TestOptions): Promise<number> {
@@ -73,7 +79,7 @@ export async function runTests(options: TestOptions): Promise<number> {
 			options.testWorkspace,
 			'--extensionDevelopmentPath=' + options.extensionPath,
 			'--extensionTestsPath=' + options.testRunnerPath,
-			'--locale=en'
+			'--locale=' + (options.locale || 'en')
 		];
 
 		const cmd = cp.spawn(options.vscodeExecutablePath, args);
