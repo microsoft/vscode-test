@@ -1,15 +1,15 @@
 # vscode-test
 
-This module helps you testing VS Code extensions.
+This module helps you test VS Code extensions.
 
 ## Usage
 
-See https://github.com/octref/vscode-test-sample for more usage.
+See https://github.com/octref/vscode-test-sample for a runnable sample.
 
 ```ts
 import * as path from 'path'
 
-import { runTests } from 'vscode-test'
+import { runTests, downloadAndUnzipVSCode } from 'vscode-test'
 
 async function go() {
 
@@ -26,6 +26,43 @@ async function go() {
     testWorkspace
   })
 
+  const testRunnerPath2 = path.resolve(__dirname, './suite2')
+  const testWorkspace2 = path.resolve(__dirname, '../../test-fixtures/fixture2')
+
+  /**
+   * Running a second test suite
+   */
+  await runTests({
+    extensionPath,
+    testRunnerPath: testRunnerPath2,
+    testWorkspace: testWorkspace2
+  })
+
+  /**
+   * Use 1.31.0 release for testing
+   */
+  await runTests({
+    version: '1.31.0',
+    extensionPath,
+    testRunnerPath,
+    testWorkspace
+  })
+
+  /**
+   * Noop, since 1.31.0 already downloaded to .vscode-test/vscode-1.31.0
+   */
+  await downloadAndUnzipVSCode('1.31.0')
+
+  /**
+   * Manually download VS Code 1.30.0 release for testing.
+   */
+  const vscodeExecutablePath = await downloadAndUnzipVSCode('1.30.0')
+  await runTests({
+    vscodeExecutablePath,
+    extensionPath,
+    testRunnerPath,
+    testWorkspace
+  })
 }
 
 go()
