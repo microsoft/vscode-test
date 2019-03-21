@@ -2,9 +2,16 @@
 
 This module helps you test VS Code extensions.
 
+Supported:
+
+- Node > 8.x
+- Windows > Windows Server 2012+ / Win10+ (anything with Powershell > 5.0)
+- macOS
+- Linux
+
 ## Usage
 
-See https://github.com/octref/vscode-test-sample for a runnable sample.
+See https://github.com/octref/vscode-test-sample for a runnable sample, with [Azure Devops](https://github.com/octref/vscode-test-sample/blob/master/azure-pipelines.yml) and [Travis](https://github.com/octref/vscode-test-sample/blob/master/.travis.yml) configurations.
 
 ```ts
 import * as path from 'path'

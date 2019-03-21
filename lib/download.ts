@@ -90,8 +90,11 @@ function unzipVSCode(vscodeArchivePath: string) {
 	if (vscodeArchivePath.endsWith('.zip')) {
 		if (process.platform === 'win32') {
 			cp.spawnSync('powershell.exe', [
+				'-NoProfile',
+				'-NonInteractive',
+				'-NoLogo',
 				'-Command',
-				`Expand-Archive -Path ${vscodeArchivePath} -DestinationPath ${extractDir}`
+				`Microsoft.PowerShell.Archive\\Expand-Archive -Path "${vscodeArchivePath}" -DestinationPath "${extractDir}"`
 			]);
 		} else {
 			cp.spawnSync('unzip', [vscodeArchivePath, '-d', `${extractDir}`]);
