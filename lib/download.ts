@@ -26,7 +26,7 @@ async function fetchLatestStableVersion(): Promise<string> {
 
 async function isValidVersion(version: string) {
 	const validVersions: string[] = await request.getJSON(vscodeStableReleasesAPI);
-	return version === 'insiders' || validVersions.includes(version);
+	return version === 'insiders' || validVersions.indexOf(version) !== -1;
 }
 
 /**
@@ -37,7 +37,7 @@ async function isValidVersion(version: string) {
  */
 async function downloadVSCodeArchive(version: string): Promise<string> {
 	if (!fs.existsSync(vscodeTestDir)) {
-		fs.mkdirSync(vscodeTestDir, { recursive: true });
+		fs.mkdirSync(vscodeTestDir);
 	}
 
 	return new Promise((resolve, reject) => {
