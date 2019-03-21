@@ -110,8 +110,9 @@ function unzipVSCode(vscodeArchivePath: string) {
  * - `.vscode-test/vscode-<VERSION>`. For example, `./vscode-test/vscode-1.32.0`
  * - `./vscode-test/vscode-insiders`.
  *
- * @param version The version of VS Code to download such as '1.32.0'. You can also use
- * 'insiders' for downloading latest Insiders.
+ * @param version The version of VS Code to download such as `1.32.0`. You can also use
+ * `"insiders"` for downloading latest VS Code Insiders build.
+ * When unspecified, download latest stable version.
  */
 export async function downloadAndUnzipVSCode(version?: string): Promise<string> {
 	if (version) {
@@ -128,12 +129,16 @@ export async function downloadAndUnzipVSCode(version?: string): Promise<string> 
 	}
 
 	console.log(`Downloading VS Code ${version}`);
-	const vscodeArchivePath = await downloadVSCodeArchive(version);
-	if (fs.existsSync(vscodeArchivePath)) {
-		unzipVSCode(vscodeArchivePath);
-		console.log(`Downloaded VS Code ${version}`);
-		// Remove archive
-		fs.unlinkSync(vscodeArchivePath);
+	try {
+		const vscodeArchivePath = await downloadVSCodeArchive(version);
+		if (fs.existsSync(vscodeArchivePath)) {
+			unzipVSCode(vscodeArchivePath);
+			console.log(`Downloaded VS Code ${version}`);
+			// Remove archive
+			fs.unlinkSync(vscodeArchivePath);
+		}
+	} catch (err) {
+		throw Error(`Failed to download and unzip VS Code ${version}`)
 	}
 
 	return downloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`));
