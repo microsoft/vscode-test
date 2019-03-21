@@ -131,7 +131,7 @@ export async function downloadAndUnzipVSCode(version?: string): Promise<string> 
 		return Promise.resolve(downloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`)));
 	}
 
-	console.log(`Downloading VS Code ${version}`);
+	console.log(`Downloading VS Code ${version} into .vscode-test/vscode-${version}.`);
 	try {
 		const vscodeArchivePath = await downloadVSCodeArchive(version);
 		if (fs.existsSync(vscodeArchivePath)) {

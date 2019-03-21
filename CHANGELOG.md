@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.5 | 2019-03-21
+
+- Log folder to download VS Code into.
+
 ### 0.1.4 | 2019-03-21
 
 - Add `-NoProfile`, `-NonInteractive` and `-NoLogo` for using PowerShell to extract VS Code. [#2](https://github.com/Microsoft/vscode-test/issues/2).
