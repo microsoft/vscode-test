@@ -41,7 +41,9 @@ async function downloadVSCodeArchive(version: string): Promise<string> {
 	}
 
 	return new Promise((resolve, reject) => {
-		const requestOptions = urlToOptions(getVSCodeDownloadUrl(version));
+		const downloadUrl = getVSCodeDownloadUrl(version);
+		console.log(`Downloading VS Code from: ${downloadUrl}`)
+		const requestOptions = urlToOptions(downloadUrl);
 
 		https.get(requestOptions, res => {
 			if (res.statusCode !== 302) {
@@ -95,6 +97,10 @@ function unzipVSCode(vscodeArchivePath: string) {
 			cp.spawnSync('unzip', [vscodeArchivePath, '-d', `${extractDir}`]);
 		}
 	} else {
+		// tar does not create extractDir by default
+		if (!fs.existsSync(extractDir)) {
+			fs.mkdirSync(extractDir);
+		}
 		cp.spawnSync('tar', ['-xzf', vscodeArchivePath, '-C', extractDir]);
 	}
 }
