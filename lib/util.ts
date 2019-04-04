@@ -41,11 +41,11 @@ if (process.env.npm_config_https_proxy) {
 
 export function urlToOptions(url: string): https.RequestOptions {
     const options: https.RequestOptions = parseUrl(url)
-    if (PROXY_AGENT && url.startsWith('http://')) {
+    if (PROXY_AGENT && options.protocol.startsWith('http:')) {
         options.agent = PROXY_AGENT;
     }
 
-    if (HTTPS_PROXY_AGENT && url.startsWith('https://')) {
+    if (HTTPS_PROXY_AGENT && options.protocol.startsWith('https:')) {
         options.agent = HTTPS_PROXY_AGENT;
     }
     return options;
