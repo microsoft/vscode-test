@@ -34,6 +34,7 @@ var PROXY_AGENT = undefined;
 var HTTPS_PROXY_AGENT = undefined;
 if (process.env.npm_config_proxy) {
     PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
+    HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
 }
 if (process.env.npm_config_https_proxy) {
     HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
