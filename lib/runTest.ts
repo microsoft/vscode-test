@@ -6,14 +6,7 @@
 import * as cp from 'child_process';
 import { downloadAndUnzipVSCode } from './download';
 
-const enum OptionType {
-	Default,
-	Explicit
-}
-
 export interface TestOptions {
-	type: OptionType.Default;
-
 	/**
 	 * The VS Code executable being used for testing.
 	 *
@@ -78,8 +71,6 @@ export interface TestOptions {
 }
 
 export interface ExplicitTestOptions {
-	type: OptionType.Explicit;
-
 	/**
 	 * The VS Code executable being used for testing.
 	 *
@@ -110,36 +101,31 @@ export interface ExplicitTestOptions {
 	 launchArgs: string[];
 }
 
-type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
-
-export async function runTests(options: Omit<TestOptions, 'type'> | Omit<ExplicitTestOptions, 'type'>): Promise<number> {
-	const innerOptions: TestOptions | ExplicitTestOptions = ((<ExplicitTestOptions>options).launchArgs)
-		? <TestOptions>{ type: OptionType.Default, ...options }
-		: <ExplicitTestOptions>{ type: OptionType.Explicit, ...options};
-
-	if (!innerOptions.vscodeExecutablePath) {
-		innerOptions.vscodeExecutablePath = await downloadAndUnzipVSCode(innerOptions.version);
+export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
+	if (!options.vscodeExecutablePath) {
+		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
 	}
 
+	if ('launchArgs' in options) {
+		return innerRunTests(options.vscodeExecutablePath, options.launchArgs);
+	}
+
+	let args = [
+		options.testWorkspace,
+		'--extensionDevelopmentPath=' + options.extensionPath,
+		'--extensionTestsPath=' + options.testRunnerPath,
+		'--locale=' + (options.locale || 'en')
+	];
+
+	if (options.additionalLaunchArgs) {
+		args = args.concat(options.additionalLaunchArgs);
+	}
+	return innerRunTests(options.vscodeExecutablePath, args);
+}
+
+async function innerRunTests(executable: string, args: string[]): Promise<number> {
 	return new Promise((resolve, reject) => {
-		let args = [];
-
-		if (innerOptions.type === OptionType.Default) {
-			args = [
-				innerOptions.testWorkspace,
-				'--extensionDevelopmentPath=' + innerOptions.extensionPath,
-				'--extensionTestsPath=' + innerOptions.testRunnerPath,
-				'--locale=' + (innerOptions.locale || 'en')
-			];
-
-			if (innerOptions.additionalLaunchArgs) {
-				args = args.concat(innerOptions.additionalLaunchArgs);
-			}
-		} else {
-			args = innerOptions.launchArgs;
-		}
-
-		const cmd = cp.spawn(innerOptions.vscodeExecutablePath, args);
+		const cmd = cp.spawn(executable, args);
 
 		cmd.stdout.on('data', function(data) {
 			const s = data.toString();
