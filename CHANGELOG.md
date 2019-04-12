@@ -3,6 +3,7 @@
 ### 0.1.6
 
 - 🙌 Set `ExecutionPolicy` for Windows unzip command. [#6](https://github.com/Microsoft/vscode-test/pull/6).
+- 🙌 Fix NPM http/https proxy handling. [#7](https://github.com/Microsoft/vscode-test/pull/7).
 
 ### 0.1.5 | 2019-03-21
 
