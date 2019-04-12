@@ -91,6 +91,7 @@ function unzipVSCode(vscodeArchivePath: string) {
 		if (process.platform === 'win32') {
 			cp.spawnSync('powershell.exe', [
 				'-NoProfile',
+				'-ExecutionPolicy', 'Bypass',
 				'-NonInteractive',
 				'-NoLogo',
 				'-Command',
