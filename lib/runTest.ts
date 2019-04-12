@@ -51,6 +51,8 @@ export interface TestOptions {
 	 * A list of arguments passed to `code` executable.
 	 * See `code --help` for possible arguments.
 	 *
+	 * By default, these arguments are used.
+	 *
 	 * ```ts
 	 * [
 	 *   options.testWorkspace,
@@ -59,6 +61,9 @@ export interface TestOptions {
 	 *   '--locale=' + (options.locale || 'en')
 	 * ];
 	 * ```
+	 *
+	 * When you provide `vscodeLaunchArgs`, its options are appended to the
+	 * default option list.
 	 */
 	vscodeLaunchArgs?: string[];
 
@@ -75,12 +80,16 @@ export async function runTests(options: TestOptions): Promise<number> {
 	}
 
 	return new Promise((resolve, reject) => {
-		const args = [
+		let args = [
 			options.testWorkspace,
 			'--extensionDevelopmentPath=' + options.extensionPath,
 			'--extensionTestsPath=' + options.testRunnerPath,
 			'--locale=' + (options.locale || 'en')
 		];
+
+		if (options.vscodeLaunchArgs) {
+			args = args.concat(options.vscodeLaunchArgs);
+		}
 
 		const cmd = cp.spawn(options.vscodeExecutablePath, args);
 
