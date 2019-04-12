@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.1.6
+### 0.2.0 | 2019-04-12
 
 - 🙌 Set `ExecutionPolicy` for Windows unzip command. [#6](https://github.com/Microsoft/vscode-test/pull/6).
 - 🙌 Fix NPM http/https proxy handling. [#5](https://github.com/Microsoft/vscode-test/pull/5).
