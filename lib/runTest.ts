@@ -110,30 +110,36 @@ export interface ExplicitTestOptions {
 	 launchArgs: string[];
 }
 
-export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
-	if (!options.vscodeExecutablePath) {
-		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+
+export async function runTests(options: Omit<TestOptions, 'type'> | Omit<ExplicitTestOptions, 'type'>): Promise<number> {
+	const innerOptions: TestOptions | ExplicitTestOptions = ((<ExplicitTestOptions>options).launchArgs)
+		? <TestOptions>{ type: OptionType.Default, ...options }
+		: <ExplicitTestOptions>{ type: OptionType.Explicit, ...options};
+
+	if (!innerOptions.vscodeExecutablePath) {
+		innerOptions.vscodeExecutablePath = await downloadAndUnzipVSCode(innerOptions.version);
 	}
 
 	return new Promise((resolve, reject) => {
 		let args = [];
 
-		if (options.type === OptionType.Default) {
+		if (innerOptions.type === OptionType.Default) {
 			args = [
-				options.testWorkspace,
-				'--extensionDevelopmentPath=' + options.extensionPath,
-				'--extensionTestsPath=' + options.testRunnerPath,
-				'--locale=' + (options.locale || 'en')
+				innerOptions.testWorkspace,
+				'--extensionDevelopmentPath=' + innerOptions.extensionPath,
+				'--extensionTestsPath=' + innerOptions.testRunnerPath,
+				'--locale=' + (innerOptions.locale || 'en')
 			];
 
-			if (options.additionalLaunchArgs) {
-				args = args.concat(options.additionalLaunchArgs);
+			if (innerOptions.additionalLaunchArgs) {
+				args = args.concat(innerOptions.additionalLaunchArgs);
 			}
 		} else {
-			args = options.launchArgs;
+			args = innerOptions.launchArgs;
 		}
 
-		const cmd = cp.spawn(options.vscodeExecutablePath, args);
+		const cmd = cp.spawn(innerOptions.vscodeExecutablePath, args);
 
 		cmd.stdout.on('data', function(data) {
 			const s = data.toString();
