@@ -31,23 +31,25 @@ const HttpsProxyAgent = require('https-proxy-agent');
 const HttpProxyAgent = require('http-proxy-agent');
 
 let PROXY_AGENT = undefined;
+let HTTPS_PROXY_AGENT = undefined;
 
 if (process.env.npm_config_proxy) {
-	console.log(`Using proxy ${process.env.npm_config_proxy}`)
-
-	if (process.env.npm_config_proxy.startsWith('http://')) {
-		PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy)
-	} else if (process.env.npm_config_proxy.startsWith('https://')) {
-		PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy)
-	}
+	PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
+}
+if (process.env.npm_config_https_proxy) {
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
 }
 
 export function urlToOptions(url: string): https.RequestOptions {
-	const options: https.RequestOptions = parseUrl(url)
-	if (PROXY_AGENT) {
+	const options: https.RequestOptions = parseUrl(url);
+	if (PROXY_AGENT && options.protocol.startsWith('http:')) {
 		options.agent = PROXY_AGENT;
 	}
 
+	if (HTTPS_PROXY_AGENT && options.protocol.startsWith('https:')) {
+		options.agent = HTTPS_PROXY_AGENT;
+	}
 	return options;
 }
 
