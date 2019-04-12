@@ -30,26 +30,27 @@ export function getVSCodeDownloadUrl(version: string) {
 const HttpsProxyAgent = require('https-proxy-agent');
 const HttpProxyAgent = require('http-proxy-agent');
 
-var PROXY_AGENT = undefined;
-var HTTPS_PROXY_AGENT = undefined;
+let PROXY_AGENT = undefined;
+let HTTPS_PROXY_AGENT = undefined;
+
 if (process.env.npm_config_proxy) {
-    PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
-    HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
+	PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
 }
 if (process.env.npm_config_https_proxy) {
-    HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
 }
 
 export function urlToOptions(url: string): https.RequestOptions {
-    const options: https.RequestOptions = parseUrl(url)
-    if (PROXY_AGENT && options.protocol.startsWith('http:')) {
-        options.agent = PROXY_AGENT;
-    }
+	const options: https.RequestOptions = parseUrl(url);
+	if (PROXY_AGENT && options.protocol.startsWith('http:')) {
+		options.agent = PROXY_AGENT;
+	}
 
-    if (HTTPS_PROXY_AGENT && options.protocol.startsWith('https:')) {
-        options.agent = HTTPS_PROXY_AGENT;
-    }
-    return options;
+	if (HTTPS_PROXY_AGENT && options.protocol.startsWith('https:')) {
+		options.agent = HTTPS_PROXY_AGENT;
+	}
+	return options;
 }
 
 export function downloadDirToExecutablePath(dir: string) {
