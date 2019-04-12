@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.6
+
+- 🙌 Set `ExecutionPolicy` for Windows unzip command. [#6](https://github.com/Microsoft/vscode-test/pull/6).
+
 ### 0.1.5 | 2019-03-21
 
 - Log folder to download VS Code into.
