@@ -56,11 +56,6 @@ async function go() {
   })
 
   /**
-   * Noop, since 1.31.0 already downloaded to .vscode-test/vscode-1.31.0
-   */
-  await downloadAndUnzipVSCode('1.31.0')
-
-  /**
    * Manually download VS Code 1.30.0 release for testing.
    */
   const vscodeExecutablePath = await downloadAndUnzipVSCode('1.30.0')
@@ -69,6 +64,30 @@ async function go() {
     extensionPath,
     testRunnerPath,
     testWorkspace
+  })
+
+  /**
+   * Add additional launch flags for VS Code
+   */
+  await runTests({
+    vscodeExecutablePath,
+    extensionPath,
+    testRunnerPath,
+    testWorkspace,
+    // This disables all extensions except the one being testing
+    additionalLaunchArgs: ['--disable-extensions']
+  })
+
+  /**
+   * Manually specify all launch flags for VS Code
+   */
+  await runTests({
+    vscodeExecutablePath,
+    launchArgs: [
+      testWorkspace,
+      `--extensionDevelopmentPath=${extensionPath}`,
+      `--extensionTestsPath=${testRunnerPath}`
+    ]
   })
 }
 
