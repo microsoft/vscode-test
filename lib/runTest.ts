@@ -48,10 +48,7 @@ export interface TestOptions {
 	testWorkspace: string;
 
 	/**
-	 * A list of arguments passed to `code` executable.
-	 * See `code --help` for possible arguments.
-	 *
-	 * By default, these arguments are used.
+	 * A list of arguments appended to the default VS Code launch arguments below:
 	 *
 	 * ```ts
 	 * [
@@ -62,10 +59,9 @@ export interface TestOptions {
 	 * ];
 	 * ```
 	 *
-	 * When you provide `vscodeLaunchArgs`, its options are appended to the
-	 * default option list.
+	 * See `code --help` for possible arguments.
 	 */
-	vscodeLaunchArgs?: string[];
+	additionalLaunchArgs?: string[];
 
 	/**
 	 * The locale to use (e.g. `en-US` or `zh-TW`).
@@ -74,24 +70,62 @@ export interface TestOptions {
 	locale?: string;
 }
 
-export async function runTests(options: TestOptions): Promise<number> {
+export interface ExplicitTestOptions {
+	/**
+	 * The VS Code executable being used for testing.
+	 *
+	 * If not passed, will use options.version for downloading a copy of
+	 * VS Code for testing. If `version` is not specified either, will
+	 * download and use latest stable release.
+	 */
+	vscodeExecutablePath?: string;
+
+	/**
+	 * The VS Code version to download. Valid versions are:
+	 * - `'insiders'`
+	 * - `'1.32.0'`, `'1.31.1'`, etc
+	 *
+	 * Default to latest stable version.
+	 */
+	version?: string;
+
+	/**
+	 * A list of arguments used for launching VS Code executable.
+	 *
+	 * You need to provide `--extensionDevelopmentPath` and `--extensionTestsPath` manually when
+	 * using this option. If you want to open a specific workspace for testing, you need to pass
+	 * the absolute path of the workspace as first item in this list.
+	 *
+	 * See `code --help` for possible arguments.
+	 */
+	 launchArgs: string[];
+}
+
+export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
 	if (!options.vscodeExecutablePath) {
 		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
 	}
 
+	if ('launchArgs' in options) {
+		return innerRunTests(options.vscodeExecutablePath, options.launchArgs);
+	}
+
+	let args = [
+		options.testWorkspace,
+		'--extensionDevelopmentPath=' + options.extensionPath,
+		'--extensionTestsPath=' + options.testRunnerPath,
+		'--locale=' + (options.locale || 'en')
+	];
+
+	if (options.additionalLaunchArgs) {
+		args = args.concat(options.additionalLaunchArgs);
+	}
+	return innerRunTests(options.vscodeExecutablePath, args);
+}
+
+async function innerRunTests(executable: string, args: string[]): Promise<number> {
 	return new Promise((resolve, reject) => {
-		let args = [
-			options.testWorkspace,
-			'--extensionDevelopmentPath=' + options.extensionPath,
-			'--extensionTestsPath=' + options.testRunnerPath,
-			'--locale=' + (options.locale || 'en')
-		];
-
-		if (options.vscodeLaunchArgs) {
-			args = args.concat(options.vscodeLaunchArgs);
-		}
-
-		const cmd = cp.spawn(options.vscodeExecutablePath, args);
+		const cmd = cp.spawn(executable, args);
 
 		cmd.stdout.on('data', function(data) {
 			const s = data.toString();
