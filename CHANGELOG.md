@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.3.0 | 2019-04-13
+
+- 🙌 Add TypeScript as dev dependency. [#9](https://github.com/Microsoft/vscode-test/pull/9)
+- 🙌 Adding a simpler way of running tests with only `vscodeExecutablePath` and `launchArgs`. [#8](https://github.com/Microsoft/vscode-test/pull/8).
+
 ### 0.2.0 | 2019-04-12
 
 - 🙌 Set `ExecutionPolicy` for Windows unzip command. [#6](https://github.com/Microsoft/vscode-test/pull/6).
