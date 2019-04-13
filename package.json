@@ -15,7 +15,8 @@
     "https-proxy-agent": "^2.2.1"
   },
   "devDependencies": {
-    "@types/node": "8"
+    "@types/node": "8",
+    "typescript": "^3.4.3"
   },
   "license": "MIT",
   "author": "Visual Studio Code Team",
