@@ -98,7 +98,7 @@ export interface ExplicitTestOptions {
 	 *
 	 * See `code --help` for possible arguments.
 	 */
-	 launchArgs: string[];
+	launchArgs: string[];
 }
 
 export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
@@ -131,6 +131,13 @@ async function innerRunTests(executable: string, args: string[]): Promise<number
 			const s = data.toString();
 			if (!s.includes('update#setState idle')) {
 				console.log(s);
+			}
+		});
+
+		cmd.stderr.on('data', function(data) {
+			const s = data.toString();
+			if (!s.includes('stty: stdin')) {
+				console.log(`Spawn Error: ${data.toString()}`);
 			}
 		});
 
