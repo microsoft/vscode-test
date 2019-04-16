@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.3.1 | 2019-04-16
+
+- Log errors from stderr of the command to launch VS Code.
+
 ### 0.3.0 | 2019-04-13
 
 - 🙌 Add TypeScript as dev dependency. [#9](https://github.com/Microsoft/vscode-test/pull/9)
