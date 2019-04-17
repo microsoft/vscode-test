@@ -149,5 +149,9 @@ export async function downloadAndUnzipVSCode(version?: string): Promise<string> 
 		throw Error(`Failed to download and unzip VS Code ${version}`)
 	}
 
-	return downloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`));
+	if (version === 'insiders') {
+		return Promise.resolve(insidersDownloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`)));
+	} else {
+		return downloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`));
+	}
 }
