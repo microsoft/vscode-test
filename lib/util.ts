@@ -22,7 +22,7 @@ switch (process.platform) {
 
 export function getVSCodeDownloadUrl(version: string) {
 	if (version === 'insiders') {
-		return `https://update.code.visualstudio.com/latest/${downloadPlatform}/insiders`;
+		return `https://update.code.visualstudio.com/latest/${downloadPlatform}/insider`;
 	}
 	return `https://update.code.visualstudio.com/${version}/${downloadPlatform}/stable`;
 }
