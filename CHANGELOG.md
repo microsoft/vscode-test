@@ -1,12 +1,16 @@
 # Changelog
 
+### 0.3.2 | 2019-04-17
+
+- Correctly resolve Insider exectuable. [#12](https://github.com/Microsoft/vscode-test/issues/12).
+
 ### 0.3.1 | 2019-04-16
 
 - Log errors from stderr of the command to launch VS Code.
 
 ### 0.3.0 | 2019-04-13
 
-- 🙌 Add TypeScript as dev dependency. [#9](https://github.com/Microsoft/vscode-test/pull/9)
+- 🙌 Add TypeScript as dev dependency. [#9](https://github.com/Microsoft/vscode-test/pull/9).
 - 🙌 Adding a simpler way of running tests with only `vscodeExecutablePath` and `launchArgs`. [#8](https://github.com/Microsoft/vscode-test/pull/8).
 
 ### 0.2.0 | 2019-04-12
