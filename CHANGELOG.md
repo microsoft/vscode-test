@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.3.5 | 2019-04-17
+
+- Fix macOS Insiders incorrect url resolve.
+
 ### 0.3.4 | 2019-04-17
 
 - One more fix for Insiders url resolver.
