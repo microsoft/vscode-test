@@ -56,6 +56,16 @@ async function go() {
   })
 
   /**
+   * Use Insiders release for testing
+   */
+  await runTests({
+    version: 'insiders',
+    extensionPath,
+    testRunnerPath,
+    testWorkspace
+  })
+
+  /**
    * Manually download VS Code 1.30.0 release for testing.
    */
   const vscodeExecutablePath = await downloadAndUnzipVSCode('1.30.0')
