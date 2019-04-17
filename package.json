@@ -1,6 +1,6 @@
 {
   "name": "vscode-test",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
