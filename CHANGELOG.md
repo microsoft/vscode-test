@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.3.4 | 2019-04-17
+
+- One more fix for Insiders url resolver.
+
 ### 0.3.3 | 2019-04-17
 
 - Correct Insiders download link.
