@@ -62,3 +62,13 @@ export function downloadDirToExecutablePath(dir: string) {
 		return path.resolve(dir, 'VSCode-linux-x64/code');
 	}
 }
+
+export function insidersDownloadDirToExecutablePath(dir: string) {
+	if (process.platform === 'win32') {
+		return path.resolve(dir, 'Code - Insiders.exe');
+	} else if (process.platform === 'darwin') {
+		return path.resolve(dir, 'Visual Studio Code - Insiders/Contents/MacOS/Electron');
+	} else {
+		return path.resolve(dir, 'VSCode-linux-x64/code-insiders');
+	}
+}

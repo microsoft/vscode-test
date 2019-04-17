@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as request from './request';
-import { getVSCodeDownloadUrl, urlToOptions, downloadDirToExecutablePath } from './util';
+import { getVSCodeDownloadUrl, urlToOptions, downloadDirToExecutablePath, insidersDownloadDirToExecutablePath } from './util';
 
 const extensionRoot = process.cwd();
 const vscodeTestDir = path.resolve(extensionRoot, '.vscode-test');
@@ -129,7 +129,11 @@ export async function downloadAndUnzipVSCode(version?: string): Promise<string> 
 
 	if (fs.existsSync(path.resolve(vscodeTestDir, `vscode-${version}`))) {
 		console.log(`Found .vscode-test/vscode-${version}. Skipping download.`);
-		return Promise.resolve(downloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`)));
+		if (version === 'insiders') {
+			return Promise.resolve(insidersDownloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`)));
+		} else {
+			return Promise.resolve(downloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`)));
+		}
 	}
 
 	console.log(`Downloading VS Code ${version} into .vscode-test/vscode-${version}.`);
