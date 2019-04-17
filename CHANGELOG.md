@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.3.3 | 2019-04-17
+
+- Correct Insiders download link.
+
 ### 0.3.2 | 2019-04-17
 
 - Correctly resolve Insider exectuable. [#12](https://github.com/Microsoft/vscode-test/issues/12).
