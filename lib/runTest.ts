@@ -43,6 +43,13 @@ export interface TestOptions {
 	testRunnerPath: string;
 
 	/**
+	 * Environment variables being passed to the test runner.
+	 */
+	testRunnerEnv?: {
+		[key: string]: string | undefined;
+	};
+
+	/**
 	 * Absolute path of the fixture workspace to launch for testing
 	 */
 	testWorkspace: string;
@@ -99,15 +106,30 @@ export interface ExplicitTestOptions {
 	 * See `code --help` for possible arguments.
 	 */
 	launchArgs: string[];
+
+	/**
+	 * Environment variables being passed to the test runner.
+	 */
+	testRunnerEnv?: {
+		[key: string]: string | undefined;
+	};
 }
 
-export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
+export async function runTests(
+	options: TestOptions | ExplicitTestOptions
+): Promise<number> {
 	if (!options.vscodeExecutablePath) {
-		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
+		options.vscodeExecutablePath = await downloadAndUnzipVSCode(
+			options.version
+		);
 	}
 
 	if ('launchArgs' in options) {
-		return innerRunTests(options.vscodeExecutablePath, options.launchArgs);
+		return innerRunTests(
+			options.vscodeExecutablePath,
+			options.launchArgs,
+			options.testRunnerEnv
+		);
 	}
 
 	let args = [
@@ -120,12 +142,22 @@ export async function runTests(options: TestOptions | ExplicitTestOptions): Prom
 	if (options.additionalLaunchArgs) {
 		args = args.concat(options.additionalLaunchArgs);
 	}
-	return innerRunTests(options.vscodeExecutablePath, args);
+	return innerRunTests(
+		options.vscodeExecutablePath,
+		args,
+		options.testRunnerEnv
+	);
 }
 
-async function innerRunTests(executable: string, args: string[]): Promise<number> {
+async function innerRunTests(
+	executable: string,
+	args: string[],
+	testRunnerEnv?: {
+		[key: string]: string | undefined
+	}
+): Promise<number> {
 	return new Promise((resolve, reject) => {
-		const cmd = cp.spawn(executable, args);
+		const cmd = cp.spawn(executable, args, { env: testRunnerEnv });
 
 		cmd.stdout.on('data', function(data) {
 			const s = data.toString();
