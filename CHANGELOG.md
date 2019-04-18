@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.4.0 | 2019-04-18
+
+- Add `testRunnerEnv` option. [#13](https://github.com/Microsoft/vscode-test/issues/13).
+
 ### 0.3.5 | 2019-04-17
 
 - Fix macOS Insiders incorrect url resolve.
