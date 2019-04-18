@@ -77,7 +77,8 @@ async function go() {
   })
 
   /**
-   * Add additional launch flags for VS Code
+   * - Add additional launch flags for VS Code
+   * - Pass custom environment variables to test runner
    */
   await runTests({
     vscodeExecutablePath,
@@ -85,7 +86,9 @@ async function go() {
     testRunnerPath,
     testWorkspace,
     // This disables all extensions except the one being testing
-    additionalLaunchArgs: ['--disable-extensions']
+    additionalLaunchArgs: ['--disable-extensions'],
+    // Custom environment variables for test runner
+    testRunnerEnv: { foo: 'bar' }
   })
 
   /**
