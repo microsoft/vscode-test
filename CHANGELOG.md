@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.4.1 | 2019-05-02
+
+- Fix Linux crash because `testRunnerEnv` is not merged with `process.env` for spawning the
+testing process. [#14](https://github.com/Microsoft/vscode-test/issues/14c).
+
 ### 0.4.0 | 2019-04-18
 
 - Add `testRunnerEnv` option. [#13](https://github.com/Microsoft/vscode-test/issues/13).
