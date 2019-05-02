@@ -157,7 +157,8 @@ async function innerRunTests(
 	}
 ): Promise<number> {
 	return new Promise((resolve, reject) => {
-		const cmd = cp.spawn(executable, args, { env: testRunnerEnv });
+		const fullEnv = Object.assign({}, process.env, testRunnerEnv)
+		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
 		cmd.stdout.on('data', function(data) {
 			const s = data.toString();
