@@ -85,7 +85,7 @@ async function go() {
     extensionPath,
     testRunnerPath,
     testWorkspace,
-    // This disables all extensions except the one being testing
+    // This disables all extensions except the one being tested
     additionalLaunchArgs: ['--disable-extensions'],
     // Custom environment variables for test runner
     testRunnerEnv: { foo: 'bar' }
