@@ -13,7 +13,7 @@ This module helps you test VS Code extensions.
 Supported:
 
 - Node >= 8.x
-- Windows > Windows Server 2012+ / Win10+ (anything with Powershell > 5.0)
+- Windows >= Windows Server 2012+ / Win10+ (anything with Powershell >= 5.0)
 - macOS
 - Linux
 
