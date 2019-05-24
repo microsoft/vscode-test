@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.4.2 | 2019-05-24
+
+- `testWorkspace` is now optional.
+
 ### 0.4.1 | 2019-05-02
 
 - Fix Linux crash because `testRunnerEnv` is not merged with `process.env` for spawning the
