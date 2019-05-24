@@ -52,7 +52,7 @@ export interface TestOptions {
 	/**
 	 * Absolute path of the fixture workspace to launch for testing
 	 */
-	testWorkspace: string;
+	testWorkspace?: string;
 
 	/**
 	 * A list of arguments appended to the default VS Code launch arguments below:
@@ -115,49 +115,39 @@ export interface ExplicitTestOptions {
 	};
 }
 
-export async function runTests(
-	options: TestOptions | ExplicitTestOptions
-): Promise<number> {
+export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
 	if (!options.vscodeExecutablePath) {
-		options.vscodeExecutablePath = await downloadAndUnzipVSCode(
-			options.version
-		);
+		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
 	}
 
 	if ('launchArgs' in options) {
-		return innerRunTests(
-			options.vscodeExecutablePath,
-			options.launchArgs,
-			options.testRunnerEnv
-		);
+		return innerRunTests(options.vscodeExecutablePath, options.launchArgs, options.testRunnerEnv);
 	}
 
 	let args = [
-		options.testWorkspace,
 		'--extensionDevelopmentPath=' + options.extensionPath,
 		'--extensionTestsPath=' + options.testRunnerPath,
 		'--locale=' + (options.locale || 'en')
 	];
+	if (options.testWorkspace) {
+		args.unshift(options.testWorkspace);
+	}
 
 	if (options.additionalLaunchArgs) {
 		args = args.concat(options.additionalLaunchArgs);
 	}
-	return innerRunTests(
-		options.vscodeExecutablePath,
-		args,
-		options.testRunnerEnv
-	);
+	return innerRunTests(options.vscodeExecutablePath, args, options.testRunnerEnv);
 }
 
 async function innerRunTests(
 	executable: string,
 	args: string[],
 	testRunnerEnv?: {
-		[key: string]: string | undefined
+		[key: string]: string | undefined;
 	}
 ): Promise<number> {
 	return new Promise((resolve, reject) => {
-		const fullEnv = Object.assign({}, process.env, testRunnerEnv)
+		const fullEnv = Object.assign({}, process.env, testRunnerEnv);
 		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
 		cmd.stdout.on('data', function(data) {
