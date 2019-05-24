@@ -27,14 +27,12 @@ steps:
       disown -ar
       echo "Started xvfb"
     fi
-  workingDirectory: sample
   displayName: Start xvfb
 
 - bash: |
     yarn install
     yarn compile
     yarn test
-  workingDirectory: sample
   displayName: Run Tests
   env:
     DISPLAY: :10
