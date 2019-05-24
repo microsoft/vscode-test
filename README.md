@@ -1,4 +1,12 @@
-# vscode-test
+<p>
+  <h1 align="center">vscode-test</h1>
+</p>
+
+<p align="center">
+  <a href="https://dev.azure.com/vscode/VSCode/_build?definitionId=14">
+    <img src="https://img.shields.io/azure-devops/build/vscode/a4cdce18-a05c-4bb8-9476-5d07e63bfd76/14.svg?label=Azure%20DevOps&logo=Azure%20Devops&style=flat-square">
+  </a>
+</p>
 
 This module helps you test VS Code extensions.
 
@@ -11,7 +19,7 @@ Supported:
 
 ## Usage
 
-See https://github.com/octref/vscode-test-sample for a runnable sample, with [Azure Devops](https://github.com/octref/vscode-test-sample/blob/master/azure-pipelines.yml) and [Travis](https://github.com/octref/vscode-test-sample/blob/master/.travis.yml) configurations.
+See [./sample](./sample) for a runnable sample, with [Azure Devops Pipelines](https://github.com/microsoft/vscode-test/blob/master/azure-pipelines.yml) configuration.
 
 ```ts
 import * as path from 'path'
