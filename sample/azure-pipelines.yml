@@ -21,20 +21,17 @@ steps:
   displayName: 'Install Node.js'
 
 - bash: |
-    if [ $AGENT_OS == "Linux" ]; then
-      set -e
-      /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
-      disown -ar
-      echo "Started xvfb"
-    fi
+    set -e
+    /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+    disown -ar
+    echo "Started xvfb"
   displayName: Start xvfb
+  condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
 
 - bash: |
     # vscode-test has its extension located at /sample
     cd sample
-    yarn install
-    yarn compile
-    yarn test
+    yarn && yarn compile && yarn test
   displayName: Run Tests
   env:
     DISPLAY: :10
