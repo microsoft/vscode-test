@@ -30,6 +30,8 @@ steps:
   displayName: Start xvfb
 
 - bash: |
+    # vscode-test has its extension located at /sample
+    cd sample
     yarn install
     yarn compile
     yarn test
