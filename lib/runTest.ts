@@ -26,19 +26,23 @@ export interface TestOptions {
 	version?: string;
 
 	/**
-	 * Absolute path to the extension root. Must include a `package.json`
-	 * Extension Manifest.
+	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
+	 * Must include a `package.json` Extension Manifest.
 	 */
 	extensionPath: string;
 
 	/**
-	 * Absolute path to the test suite folder. Must include an `index.js` that
-	 * exports a test runner, such as:
+	 * Absolute path to the test runner. Passed to `--extensionTestsPath`.
+	 * Can be either a file path or a directory path that contains an `index.js`.
+	 * Must export a `run` function of the following signature:
 	 *
 	 * ```ts
-	 * import * as testRunner from 'vscode/lib/testrunner';
-	 * module.exports = testRunner;
+	 * function run(testsRoot: string, cb: (error: any, failures?: number) => void): void;
 	 * ```
+	 *
+	 * When running integration test, the Extension Development Host will call this function
+	 * that runs the test suite. The `cb` function should be called when the test suite finishes.
+	 *
 	 */
 	testRunnerPath: string;
 
@@ -50,7 +54,12 @@ export interface TestOptions {
 	};
 
 	/**
-	 * Absolute path of the fixture workspace to launch for testing
+	 * Absolute path of the fixture workspace to launch for testing.
+	 * Passed as the first argument to `code` executable and can be:
+	 *
+	 * - File path: Open file on test start
+	 * - Folder path: Open folder on test start
+	 * - Workspace file path: Open workspace on test start
 	 */
 	testWorkspace?: string;
 
