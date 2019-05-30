@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <a href="https://dev.azure.com/vscode/VSCode/_build?definitionId=14">
-    <img src="https://img.shields.io/azure-devops/build/vscode/a4cdce18-a05c-4bb8-9476-5d07e63bfd76/14.svg?label=Azure%20DevOps&logo=Azure%20Devops&style=flat-square">
+  <a href="https://dev.azure.com/vscode/vscode-test/_build?definitionId=15">
+    <img src="https://img.shields.io/azure-devops/build/vscode/350ef5c4-15fc-411a-9a5e-0622da4da69c/15.svg?label=Azure%20DevOps&logo=Azure%20Devops&style=flat-square">
   </a>
 </p>
 
