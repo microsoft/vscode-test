@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.4.3 | 2019-05-30
+
+- Improved API documentation.
+
 ### 0.4.2 | 2019-05-24
 
 - `testWorkspace` is now optional.
