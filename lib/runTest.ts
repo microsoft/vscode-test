@@ -6,7 +6,7 @@
 import * as cp from 'child_process';
 import { downloadAndUnzipVSCode } from './download';
 
-interface BaseTestOptions {
+interface TestOptions {
 	/**
 	 * The VS Code executable being used for testing.
 	 *
@@ -26,20 +26,10 @@ interface BaseTestOptions {
 	version?: string;
 
 	/**
-	 * Environment variables being passed to the test runner.
-	 */
-	testRunnerEnv?: {
-		[key: string]: string | undefined;
-	};
-
-}
-
-export interface TestOptions extends BaseTestOptions {
-	/**
 	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
 	 * Must include a `package.json` Extension Manifest.
 	 */
-	extensionPath: string;
+	extensionDevelopmentPath: string;
 
 	/**
 	 * Absolute path to the test runner. Passed to `--extensionTestsPath`.
@@ -54,7 +44,14 @@ export interface TestOptions extends BaseTestOptions {
 	 * that runs the test suite. The `cb` function should be called when the test suite finishes.
 	 *
 	 */
-	testRunnerPath: string;
+	extensionTestsPath: string;
+
+	/**
+	 * Environment variables being passed to the extension test script.
+	 */
+	extensionTestsEnv?: {
+		[key: string]: string | undefined;
+	};
 
 	/**
 	 * A list of arguments prepended to the default VS Code launch arguments below:
@@ -77,15 +74,15 @@ export async function runTests(options: TestOptions): Promise<number> {
 	}
 
 	let args = [
-		'--extensionDevelopmentPath=' + options.extensionPath,
-		'--extensionTestsPath=' + options.testRunnerPath
+		'--extensionDevelopmentPath=' + options.extensionDevelopmentPath,
+		'--extensionTestsPath=' + options.extensionTestsPath
 	];
 
 	if (options.additionalLaunchArgs) {
 		args = options.additionalLaunchArgs.concat(args)
 	}
 
-	return innerRunTests(options.vscodeExecutablePath, args, options.testRunnerEnv);
+	return innerRunTests(options.vscodeExecutablePath, args, options.extensionTestsEnv);
 }
 
 async function innerRunTests(

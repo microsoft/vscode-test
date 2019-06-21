@@ -4,28 +4,28 @@ import { runTests, downloadAndUnzipVSCode } from '../../lib/index'
 
 async function go() {
   try {
-    const extensionPath = path.resolve(__dirname, '../../')
-    const testRunnerPath = path.resolve(__dirname, './suite')
+    const extensionDevelopmentPath = path.resolve(__dirname, '../../')
+    const extensionTestsPath = path.resolve(__dirname, './suite')
     const testWorkspace = path.resolve(__dirname, '../../test-fixtures/fixture1')
 
     /**
      * Basic usage
      */
     await runTests({
-      extensionPath,
-      testRunnerPath
+      extensionDevelopmentPath,
+      extensionTestsPath
     })
 
-    const testRunnerPath2 = path.resolve(__dirname, './suite2')
+    const extensionTestsPath2 = path.resolve(__dirname, './suite2')
     const testWorkspace2 = path.resolve(__dirname, '../../test-fixtures/fixture2')
 
     /**
      * Running a second test suite
      */
     await runTests({
-      extensionPath,
-			testRunnerPath: testRunnerPath2,
-			additionalLaunchArgs: [testWorkspace2]
+      extensionDevelopmentPath,
+      extensionTestsPath: extensionTestsPath2,
+      additionalLaunchArgs: [testWorkspace2]
     })
 
     /**
@@ -33,8 +33,8 @@ async function go() {
      */
     await runTests({
       version: '1.31.0',
-      extensionPath,
-      testRunnerPath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
       additionalLaunchArgs: [testWorkspace]
     })
 
@@ -43,8 +43,8 @@ async function go() {
      */
     await runTests({
       version: 'insiders',
-      extensionPath,
-      testRunnerPath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
       additionalLaunchArgs: [testWorkspace]
     })
 
@@ -59,8 +59,8 @@ async function go() {
     const vscodeExecutablePath = await downloadAndUnzipVSCode('1.30.0')
     await runTests({
       vscodeExecutablePath,
-      extensionPath,
-      testRunnerPath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
       additionalLaunchArgs: [testWorkspace]
     })
 
@@ -70,15 +70,15 @@ async function go() {
      */
     await runTests({
       vscodeExecutablePath,
-      extensionPath,
-      testRunnerPath,
-			additionalLaunchArgs: [
-				testWorkspace,
-	      // This disables all extensions except the one being testing
-				'--disable-extensions'
-			],
-      // Custom environment variables for test runner
-      testRunnerEnv: { foo: 'bar' }
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      additionalLaunchArgs: [
+        testWorkspace,
+        // This disables all extensions except the one being testing
+        '--disable-extensions'
+      ],
+      // Custom environment variables for extension test script
+      extensionTestsEnv: { foo: 'bar' }
     })
 
   } catch (err) {
