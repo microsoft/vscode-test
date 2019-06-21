@@ -1,5 +1,7 @@
 trigger:
-- master
+- '*'
+pr:
+- '*'
 
 strategy:
   matrix:
@@ -29,7 +31,7 @@ steps:
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
 
 - bash: |
-    # vscode-test has its extension located at /sample
+    yarn && yarn compile
     cd sample
     yarn && yarn compile && yarn test
   displayName: Run Tests
