@@ -6,7 +6,7 @@
 import * as cp from 'child_process';
 import { downloadAndUnzipVSCode } from './download';
 
-export interface TestOptions {
+interface BaseTestOptions {
 	/**
 	 * The VS Code executable being used for testing.
 	 *
@@ -25,6 +25,16 @@ export interface TestOptions {
 	 */
 	version?: string;
 
+	/**
+	 * Environment variables being passed to the test runner.
+	 */
+	testRunnerEnv?: {
+		[key: string]: string | undefined;
+	};
+
+}
+
+export interface TestOptions extends BaseTestOptions {
 	/**
 	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
 	 * Must include a `package.json` Extension Manifest.
@@ -47,64 +57,21 @@ export interface TestOptions {
 	testRunnerPath: string;
 
 	/**
-	 * Environment variables being passed to the test runner.
-	 */
-	testRunnerEnv?: {
-		[key: string]: string | undefined;
-	};
-
-	/**
-	 * Absolute path of the fixture workspace to launch for testing.
-	 * Passed as the first argument to `code` executable and can be:
-	 *
-	 * - File path: Open file on test start
-	 * - Folder path: Open folder on test start
-	 * - Workspace file path: Open workspace on test start
-	 */
-	testWorkspace?: string;
-
-	/**
 	 * A list of arguments appended to the default VS Code launch arguments below:
 	 *
 	 * ```ts
 	 * [
-	 *   options.testWorkspace,
 	 *   '--extensionDevelopmentPath=' + options.extPath,
-	 *   '--extensionTestsPath=' + options.testPath,
-	 *   '--locale=' + (options.locale || 'en')
+	 *   '--extensionTestsPath=' + options.testPath
 	 * ];
 	 * ```
 	 *
 	 * See `code --help` for possible arguments.
 	 */
 	additionalLaunchArgs?: string[];
-
-	/**
-	 * The locale to use (e.g. `en-US` or `zh-TW`).
-	 * If not specified, it defaults to `en`.
-	 */
-	locale?: string;
 }
 
-export interface ExplicitTestOptions {
-	/**
-	 * The VS Code executable being used for testing.
-	 *
-	 * If not passed, will use options.version for downloading a copy of
-	 * VS Code for testing. If `version` is not specified either, will
-	 * download and use latest stable release.
-	 */
-	vscodeExecutablePath?: string;
-
-	/**
-	 * The VS Code version to download. Valid versions are:
-	 * - `'insiders'`
-	 * - `'1.32.0'`, `'1.31.1'`, etc
-	 *
-	 * Default to latest stable version.
-	 */
-	version?: string;
-
+export interface ExplicitTestOptions extends BaseTestOptions {
 	/**
 	 * A list of arguments used for launching VS Code executable.
 	 *
@@ -115,13 +82,6 @@ export interface ExplicitTestOptions {
 	 * See `code --help` for possible arguments.
 	 */
 	launchArgs: string[];
-
-	/**
-	 * Environment variables being passed to the test runner.
-	 */
-	testRunnerEnv?: {
-		[key: string]: string | undefined;
-	};
 }
 
 export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
@@ -129,22 +89,21 @@ export async function runTests(options: TestOptions | ExplicitTestOptions): Prom
 		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
 	}
 
+	let args = [];
 	if ('launchArgs' in options) {
-		return innerRunTests(options.vscodeExecutablePath, options.launchArgs, options.testRunnerEnv);
+		args = options.launchArgs;
+	} else {
+		args = [
+			'--extensionDevelopmentPath=' + options.extensionPath,
+			'--extensionTestsPath=' + options.testRunnerPath
+		];
+
+		if (options.additionalLaunchArgs) {
+			args = options.additionalLaunchArgs.concat(args)
+		}
+
 	}
 
-	let args = [
-		'--extensionDevelopmentPath=' + options.extensionPath,
-		'--extensionTestsPath=' + options.testRunnerPath,
-		'--locale=' + (options.locale || 'en')
-	];
-	if (options.testWorkspace) {
-		args.unshift(options.testWorkspace);
-	}
-
-	if (options.additionalLaunchArgs) {
-		args = args.concat(options.additionalLaunchArgs);
-	}
 	return innerRunTests(options.vscodeExecutablePath, args, options.testRunnerEnv);
 }
 

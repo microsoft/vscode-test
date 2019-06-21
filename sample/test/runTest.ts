@@ -1,6 +1,6 @@
 import * as path from 'path'
 
-import { runTests, downloadAndUnzipVSCode } from 'vscode-test'
+import { runTests, downloadAndUnzipVSCode } from '../../lib/index'
 
 async function go() {
   try {
@@ -13,8 +13,7 @@ async function go() {
      */
     await runTests({
       extensionPath,
-      testRunnerPath,
-      testWorkspace
+      testRunnerPath
     })
 
     const testRunnerPath2 = path.resolve(__dirname, './suite2')
@@ -25,8 +24,8 @@ async function go() {
      */
     await runTests({
       extensionPath,
-      testRunnerPath: testRunnerPath2,
-      testWorkspace: testWorkspace2
+			testRunnerPath: testRunnerPath2,
+			additionalLaunchArgs: [testWorkspace2]
     })
 
     /**
@@ -36,7 +35,7 @@ async function go() {
       version: '1.31.0',
       extensionPath,
       testRunnerPath,
-      testWorkspace
+      additionalLaunchArgs: [testWorkspace]
     })
 
     /**
@@ -46,7 +45,7 @@ async function go() {
       version: 'insiders',
       extensionPath,
       testRunnerPath,
-      testWorkspace
+      additionalLaunchArgs: [testWorkspace]
     })
 
     /**
@@ -62,7 +61,7 @@ async function go() {
       vscodeExecutablePath,
       extensionPath,
       testRunnerPath,
-      testWorkspace
+      additionalLaunchArgs: [testWorkspace]
     })
 
     /**
@@ -73,9 +72,11 @@ async function go() {
       vscodeExecutablePath,
       extensionPath,
       testRunnerPath,
-      testWorkspace,
-      // This disables all extensions except the one being testing
-      additionalLaunchArgs: ['--disable-extensions'],
+			additionalLaunchArgs: [
+				testWorkspace,
+	      // This disables all extensions except the one being testing
+				'--disable-extensions'
+			],
       // Custom environment variables for test runner
       testRunnerEnv: { foo: 'bar' }
     })
@@ -84,7 +85,7 @@ async function go() {
      * Manually specify all launch flags for VS Code
      */
     await runTests({
-      vscodeExecutablePath,
+			vscodeExecutablePath,
       launchArgs: [
         testWorkspace,
         `--extensionDevelopmentPath=${extensionPath}`,
