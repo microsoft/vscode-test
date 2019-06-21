@@ -71,41 +71,18 @@ export interface TestOptions extends BaseTestOptions {
 	additionalLaunchArgs?: string[];
 }
 
-export interface ExplicitTestOptions extends BaseTestOptions {
-	/**
-	 * A list of arguments used for launching VS Code executable.
-	 *
-	 * You need to provide `--extensionDevelopmentPath` and `--extensionTestsPath` manually when
-	 * using this option. If you want to open a specific file, folder or workspace when launching
-	 * VS Code, you need to pass its absolute path as first item in this list.
-	 *
-	 * You can also use this interface for setting up the extension testing environment, such as
-	 * using `--data-dir` to setup a user data directory, or using `--install-extension` to install
-	 * other extensions needed for testing.
-	 *
-	 * See `code --help` for possible arguments.
-	 */
-	launchArgs: string[];
-}
-
-export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
+export async function runTests(options: TestOptions): Promise<number> {
 	if (!options.vscodeExecutablePath) {
 		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
 	}
 
-	let args = [];
-	if ('launchArgs' in options) {
-		args = options.launchArgs;
-	} else {
-		args = [
-			'--extensionDevelopmentPath=' + options.extensionPath,
-			'--extensionTestsPath=' + options.testRunnerPath
-		];
+	let args = [
+		'--extensionDevelopmentPath=' + options.extensionPath,
+		'--extensionTestsPath=' + options.testRunnerPath
+	];
 
-		if (options.additionalLaunchArgs) {
-			args = options.additionalLaunchArgs.concat(args)
-		}
-
+	if (options.additionalLaunchArgs) {
+		args = options.additionalLaunchArgs.concat(args)
 	}
 
 	return innerRunTests(options.vscodeExecutablePath, args, options.testRunnerEnv);

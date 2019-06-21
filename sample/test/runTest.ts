@@ -81,17 +81,6 @@ async function go() {
       testRunnerEnv: { foo: 'bar' }
     })
 
-    /**
-     * Manually specify all launch flags for VS Code
-     */
-    await runTests({
-			vscodeExecutablePath,
-      launchArgs: [
-        testWorkspace,
-        `--extensionDevelopmentPath=${extensionPath}`,
-        `--extensionTestsPath=${testRunnerPath}`
-      ]
-    })
   } catch (err) {
     console.error('Failed to run tests')
     process.exit(1)
