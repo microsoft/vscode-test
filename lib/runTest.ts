@@ -57,7 +57,7 @@ export interface TestOptions extends BaseTestOptions {
 	testRunnerPath: string;
 
 	/**
-	 * A list of arguments appended to the default VS Code launch arguments below:
+	 * A list of arguments prepended to the default VS Code launch arguments below:
 	 *
 	 * ```ts
 	 * [
@@ -76,8 +76,12 @@ export interface ExplicitTestOptions extends BaseTestOptions {
 	 * A list of arguments used for launching VS Code executable.
 	 *
 	 * You need to provide `--extensionDevelopmentPath` and `--extensionTestsPath` manually when
-	 * using this option. If you want to open a specific workspace for testing, you need to pass
-	 * the absolute path of the workspace as first item in this list.
+	 * using this option. If you want to open a specific file, folder or workspace when launching
+	 * VS Code, you need to pass its absolute path as first item in this list.
+	 *
+	 * You can also use this interface for setting up the extension testing environment, such as
+	 * using `--data-dir` to setup a user data directory, or using `--install-extension` to install
+	 * other extensions needed for testing.
 	 *
 	 * See `code --help` for possible arguments.
 	 */
