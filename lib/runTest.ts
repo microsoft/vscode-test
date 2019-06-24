@@ -6,13 +6,12 @@
 import * as cp from 'child_process';
 import { downloadAndUnzipVSCode } from './download';
 
-export interface TestOptions {
+interface TestOptions {
 	/**
 	 * The VS Code executable being used for testing.
 	 *
-	 * If not passed, will use options.version for downloading a copy of
-	 * VS Code for testing. If `version` is not specified either, will
-	 * download and use latest stable release.
+	 * If not passed, will use `options.version` to download a copy of VS Code for testing.
+	 * If `version` is not specified either, will download and use latest stable release.
 	 */
 	vscodeExecutablePath?: string;
 
@@ -21,7 +20,7 @@ export interface TestOptions {
 	 * - `'insiders'`
 	 * - `'1.32.0'`, `'1.31.1'`, etc
 	 *
-	 * Default to latest stable version.
+	 * Defaults to latest stable version.
 	 */
 	version?: string;
 
@@ -29,123 +28,63 @@ export interface TestOptions {
 	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
 	 * Must include a `package.json` Extension Manifest.
 	 */
-	extensionPath: string;
+	extensionDevelopmentPath: string;
 
 	/**
-	 * Absolute path to the test runner. Passed to `--extensionTestsPath`.
+	 * Absolute path to the extension tests runner. Passed to `--extensionTestsPath`.
 	 * Can be either a file path or a directory path that contains an `index.js`.
 	 * Must export a `run` function of the following signature:
 	 *
 	 * ```ts
-	 * function run(testsRoot: string, cb: (error: any, failures?: number) => void): void;
+	 * function run(): Promise<void>;
 	 * ```
 	 *
-	 * When running integration test, the Extension Development Host will call this function
-	 * that runs the test suite. The `cb` function should be called when the test suite finishes.
+	 * When running the extension test, the Extension Development Host will call this function
+	 * that runs the test suite. This function should throws an error if any test fails.
 	 *
 	 */
-	testRunnerPath: string;
+	extensionTestsPath: string;
 
 	/**
-	 * Environment variables being passed to the test runner.
+	 * Environment variables being passed to the extension test script.
 	 */
-	testRunnerEnv?: {
+	extensionTestsEnv?: {
 		[key: string]: string | undefined;
 	};
 
 	/**
-	 * Absolute path of the fixture workspace to launch for testing.
-	 * Passed as the first argument to `code` executable and can be:
+	 * A list of launch arguments passed to VS Code executable, in addition to `--extensionDevelopmentPath`
+	 * and `--extensionTestsPath` which are provided by `extensionDevelopmentPath` and `extensionTestsPath`
+	 * options.
 	 *
-	 * - File path: Open file on test start
-	 * - Folder path: Open folder on test start
-	 * - Workspace file path: Open workspace on test start
-	 */
-	testWorkspace?: string;
-
-	/**
-	 * A list of arguments appended to the default VS Code launch arguments below:
-	 *
-	 * ```ts
-	 * [
-	 *   options.testWorkspace,
-	 *   '--extensionDevelopmentPath=' + options.extPath,
-	 *   '--extensionTestsPath=' + options.testPath,
-	 *   '--locale=' + (options.locale || 'en')
-	 * ];
-	 * ```
+	 * If the first argument is a path to a file/folder/workspace, the launched VS Code instance
+	 * will open it.
 	 *
 	 * See `code --help` for possible arguments.
 	 */
-	additionalLaunchArgs?: string[];
-
-	/**
-	 * The locale to use (e.g. `en-US` or `zh-TW`).
-	 * If not specified, it defaults to `en`.
-	 */
-	locale?: string;
+	launchArgs?: string[];
 }
 
-export interface ExplicitTestOptions {
-	/**
-	 * The VS Code executable being used for testing.
-	 *
-	 * If not passed, will use options.version for downloading a copy of
-	 * VS Code for testing. If `version` is not specified either, will
-	 * download and use latest stable release.
-	 */
-	vscodeExecutablePath?: string;
-
-	/**
-	 * The VS Code version to download. Valid versions are:
-	 * - `'insiders'`
-	 * - `'1.32.0'`, `'1.31.1'`, etc
-	 *
-	 * Default to latest stable version.
-	 */
-	version?: string;
-
-	/**
-	 * A list of arguments used for launching VS Code executable.
-	 *
-	 * You need to provide `--extensionDevelopmentPath` and `--extensionTestsPath` manually when
-	 * using this option. If you want to open a specific workspace for testing, you need to pass
-	 * the absolute path of the workspace as first item in this list.
-	 *
-	 * See `code --help` for possible arguments.
-	 */
-	launchArgs: string[];
-
-	/**
-	 * Environment variables being passed to the test runner.
-	 */
-	testRunnerEnv?: {
-		[key: string]: string | undefined;
-	};
-}
-
-export async function runTests(options: TestOptions | ExplicitTestOptions): Promise<number> {
+/**
+ * Run VS Code extension test
+ *
+ * @returns The exit code of the command to launch VS Code extension test
+ */
+export async function runTests(options: TestOptions): Promise<number> {
 	if (!options.vscodeExecutablePath) {
 		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
 	}
 
-	if ('launchArgs' in options) {
-		return innerRunTests(options.vscodeExecutablePath, options.launchArgs, options.testRunnerEnv);
-	}
-
 	let args = [
-		'--extensionDevelopmentPath=' + options.extensionPath,
-		'--extensionTestsPath=' + options.testRunnerPath,
-		'--locale=' + (options.locale || 'en')
+		'--extensionDevelopmentPath=' + options.extensionDevelopmentPath,
+		'--extensionTestsPath=' + options.extensionTestsPath
 	];
-	if (options.testWorkspace) {
-		args.unshift(options.testWorkspace);
+
+	if (options.launchArgs) {
+		args = options.launchArgs.concat(args)
 	}
 
-	if (options.additionalLaunchArgs) {
-		args = args.concat(options.additionalLaunchArgs);
-	}
-	return innerRunTests(options.vscodeExecutablePath, args, options.testRunnerEnv);
+	return innerRunTests(options.vscodeExecutablePath, args, options.extensionTestsEnv);
 }
 
 async function innerRunTests(

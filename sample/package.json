@@ -25,7 +25,7 @@
 		"vscode:prepublish": "yarn run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/sample/test/runTest.js"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
@@ -35,8 +35,7 @@
 		"glob": "^7.1.4",
 		"mocha": "^6.1.4",
 		"tslint": "^5.12.1",
-		"typescript": "^3.3.1",
-		"vscode-test": "^0.4.1"
+		"typescript": "^3.3.1"
 	},
 	"dependencies": {}
 }
