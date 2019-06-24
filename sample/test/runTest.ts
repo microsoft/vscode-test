@@ -25,7 +25,7 @@ async function go() {
     await runTests({
       extensionDevelopmentPath,
       extensionTestsPath: extensionTestsPath2,
-      additionalLaunchArgs: [testWorkspace2]
+      launchArgs: [testWorkspace2]
     })
 
     /**
@@ -35,7 +35,7 @@ async function go() {
       version: '1.31.0',
       extensionDevelopmentPath,
       extensionTestsPath,
-      additionalLaunchArgs: [testWorkspace]
+      launchArgs: [testWorkspace]
     })
 
     /**
@@ -45,7 +45,7 @@ async function go() {
       version: 'insiders',
       extensionDevelopmentPath,
       extensionTestsPath,
-      additionalLaunchArgs: [testWorkspace]
+      launchArgs: [testWorkspace]
     })
 
     /**
@@ -61,7 +61,7 @@ async function go() {
       vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath,
-      additionalLaunchArgs: [testWorkspace]
+      launchArgs: [testWorkspace]
     })
 
     /**
@@ -72,7 +72,7 @@ async function go() {
       vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath,
-      additionalLaunchArgs: [
+      launchArgs: [
         testWorkspace,
         // This disables all extensions except the one being testing
         '--disable-extensions'
