@@ -81,7 +81,7 @@ export async function runTests(options: TestOptions): Promise<number> {
 	];
 
 	if (options.launchArgs) {
-		args = options.launchArgs.concat(args)
+		args = options.launchArgs.concat(args);
 	}
 
 	return innerRunTests(options.vscodeExecutablePath, args, options.extensionTestsEnv);
