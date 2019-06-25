@@ -115,7 +115,7 @@ function unzipVSCode(vscodeArchivePath: string) {
  * - `.vscode-test/vscode-insiders`.
  *
  * @param version The version of VS Code to download such as `1.32.0`. You can also use
- * `"insiders"` for downloading latest VS Code Insiders build.
+ * `'insiders'` for downloading latest VS Code Insiders build.
  * When unspecified, download latest stable version.
  */
 export async function downloadAndUnzipVSCode(version?: string): Promise<string> {
