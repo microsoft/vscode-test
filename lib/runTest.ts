@@ -6,7 +6,7 @@
 import * as cp from 'child_process';
 import { downloadAndUnzipVSCode } from './download';
 
-interface TestOptions {
+export interface TestOptions {
 	/**
 	 * The VS Code executable being used for testing.
 	 *
