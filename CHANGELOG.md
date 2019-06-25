@@ -1,5 +1,16 @@
 # Changelog
 
+### 1.0.0-next.0 | 2019-06-24
+
+- Updated API:
+	- One single set of options.
+	- `extensionPath` => `extensionDevelopmentPath` to align with VS Code launch flags
+	- `testRunnerPath` => `extensionTestsPath` to align with VS Code launch flags
+	- `testRunnerEnv` => `extensionTestsEnv` to align with VS Code launch flags
+	- `additionalLaunchArgs` => `launchArgs`
+	- `testWorkspace` removed. Pass path to file/folder/workspace as first argument to `launchArgs` instead.
+	- `locale` removed. Pass `--locale` to `launchArgs` instead.
+
 ### 0.4.3 | 2019-05-30
 
 - Improved API documentation.
