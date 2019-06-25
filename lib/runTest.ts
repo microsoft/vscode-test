@@ -99,17 +99,11 @@ async function innerRunTests(
 		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
 		cmd.stdout.on('data', function(data) {
-			const s = data.toString();
-			if (!s.includes('update#setState idle')) {
-				console.log(s);
-			}
+			console.log(data.toString());
 		});
 
 		cmd.stderr.on('data', function(data) {
-			const s = data.toString();
-			if (!s.includes('stty: stdin')) {
-				console.log(`Spawn Error: ${data.toString()}`);
-			}
+			console.error(data.toString());
 		});
 
 		cmd.on('error', function(data) {
