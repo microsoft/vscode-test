@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.0.0-next.1 | 2019-06-24
+
+- Improve console message for downloading VS Code. [microsoft/vscode#76090](https://github.com/microsoft/vscode/issues/76090).
+
 ### 1.0.0-next.0 | 2019-06-24
 
 - Updated API:

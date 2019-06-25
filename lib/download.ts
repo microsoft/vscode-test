@@ -42,7 +42,7 @@ async function downloadVSCodeArchive(version: string): Promise<string> {
 
 	return new Promise((resolve, reject) => {
 		const downloadUrl = getVSCodeDownloadUrl(version);
-		console.log(`Downloading VS Code from: ${downloadUrl}`)
+		console.log(`Downloading VS Code ${version} from ${downloadUrl}`);
 		const requestOptions = urlToOptions(downloadUrl);
 
 		https.get(requestOptions, res => {
@@ -136,17 +136,16 @@ export async function downloadAndUnzipVSCode(version?: string): Promise<string> 
 		}
 	}
 
-	console.log(`Downloading VS Code ${version} into .vscode-test/vscode-${version}.`);
 	try {
 		const vscodeArchivePath = await downloadVSCodeArchive(version);
 		if (fs.existsSync(vscodeArchivePath)) {
 			unzipVSCode(vscodeArchivePath);
-			console.log(`Downloaded VS Code ${version}`);
+			console.log(`Downloaded VS Code ${version} into .vscode-test/vscode-${version}`);
 			// Remove archive
 			fs.unlinkSync(vscodeArchivePath);
 		}
 	} catch (err) {
-		throw Error(`Failed to download and unzip VS Code ${version}`)
+		throw Error(`Failed to download and unzip VS Code ${version}`);
 	}
 
 	if (version === 'insiders') {
