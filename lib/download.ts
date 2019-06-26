@@ -30,12 +30,19 @@ async function isValidVersion(version: string) {
 }
 
 /**
+ * Adapted from https://github.com/microsoft/TypeScript/issues/29729
+ * Since `string | 'foo'` doesn't offer auto completion
+ */
+type StringLiteralUnion<T extends U, U = string> = T | (U & {});
+export type DownloadVersion = StringLiteralUnion<'insiders'>;
+
+/**
  * Download a copy of VS Code archive to `.vscode-test`.
  *
  * @param version The version of VS Code to download such as '1.32.0'. You can also use
  * 'insiders' for downloading latest Insiders.
  */
-async function downloadVSCodeArchive(version: string): Promise<string> {
+async function downloadVSCodeArchive(version: DownloadVersion): Promise<string> {
 	if (!fs.existsSync(vscodeTestDir)) {
 		fs.mkdirSync(vscodeTestDir);
 	}
