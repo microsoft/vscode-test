@@ -4,6 +4,7 @@
 
 - Improve console message for downloading VS Code. [microsoft/vscode#76090](https://github.com/microsoft/vscode/issues/76090).
 - Improve logging. No more prefix `Spawn Error` and direct `stdout` and `stderr` of launched process to `console.log` and `console.error`.
+- `stable` added as a download version option.
 
 ### 1.0.0-next.0 | 2019-06-24
 

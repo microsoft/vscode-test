@@ -34,13 +34,14 @@ async function isValidVersion(version: string) {
  * Since `string | 'foo'` doesn't offer auto completion
  */
 type StringLiteralUnion<T extends U, U = string> = T | (U & {});
-export type DownloadVersion = StringLiteralUnion<'insiders'>;
+export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
 
 /**
  * Download a copy of VS Code archive to `.vscode-test`.
  *
  * @param version The version of VS Code to download such as '1.32.0'. You can also use
- * 'insiders' for downloading latest Insiders.
+ * `'stable'` for downloading latest stable release.
+ * `'insiders'` for downloading latest Insiders.
  */
 async function downloadVSCodeArchive(version: DownloadVersion): Promise<string> {
 	if (!fs.existsSync(vscodeTestDir)) {
@@ -122,11 +123,12 @@ function unzipVSCode(vscodeArchivePath: string) {
  * - `.vscode-test/vscode-insiders`.
  *
  * @param version The version of VS Code to download such as `1.32.0`. You can also use
- * `'insiders'` for downloading latest VS Code Insiders build.
+ * `'stable'` for downloading latest stable release.
+ * `'insiders'` for downloading latest Insiders.
  * When unspecified, download latest stable version.
  */
-export async function downloadAndUnzipVSCode(version?: string): Promise<string> {
-	if (version) {
+export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise<string> {
+	if (version && version !== 'stable') {
 		if (!(await isValidVersion(version))) {
 			throw Error(`Invalid version ${version}`);
 		}

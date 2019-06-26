@@ -17,10 +17,11 @@ export interface TestOptions {
 
 	/**
 	 * The VS Code version to download. Valid versions are:
+	 * - `'stable'`
 	 * - `'insiders'`
 	 * - `'1.32.0'`, `'1.31.1'`, etc
 	 *
-	 * Defaults to latest stable version.
+	 * Defaults to `stable`, which is latest stable version.
 	 */
 	version?: DownloadVersion;
 
