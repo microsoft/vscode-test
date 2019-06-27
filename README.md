@@ -25,10 +25,6 @@ Supported:
 See [./sample](./sample) for a runnable sample, with [Azure Devops Pipelines](https://github.com/microsoft/vscode-test/blob/master/sample/azure-pipelines.yml) configuration.
 
 ```ts
-import * as path from 'path'
-
-import { runTests, downloadAndUnzipVSCode } from 'vscode-test'
-
 async function go() {
 
   const extensionDevelopmentPath = path.resolve(__dirname, '../../')
@@ -111,7 +107,7 @@ async function go() {
   })
 }
 
-go()
+go();
 ```
 
 ## License
@@ -120,7 +116,7 @@ go()
 
 ## Contributing
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.microsoft.com.
 
