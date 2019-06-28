@@ -23,9 +23,7 @@ steps:
   displayName: 'Install Node.js'
 
 - bash: |
-    set -e
-    /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
-    disown -ar
+    /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
     echo ">>> Started xvfb"
   displayName: Start xvfb
   condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
@@ -39,4 +37,4 @@ steps:
     yarn && yarn compile && yarn test
   displayName: Run Tests
   env:
-    DISPLAY: :10
+    DISPLAY: ':99.0'
