@@ -22,7 +22,7 @@ Supported:
 
 ## Usage
 
-See [./sample](./sample) for a runnable sample, with [Azure Devops Pipelines](https://github.com/microsoft/vscode-test/blob/master/azure-pipelines.yml) configuration.
+See [./sample](./sample) for a runnable sample, with [Azure Devops Pipelines](https://github.com/microsoft/vscode-test/blob/master/sample/azure-pipelines.yml) configuration.
 
 ```ts
 import * as path from 'path'
@@ -41,7 +41,7 @@ async function go() {
   await runTests({
     extensionDevelopmentPath,
     extensionTestsPath,
-    launchArgs: [testWorkspace1]
+    launchArgs: [testWorkspace]
   })
 
   const extensionTestsPath2 = path.resolve(__dirname, './suite2')

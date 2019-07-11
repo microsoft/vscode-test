@@ -122,6 +122,8 @@ function unzipVSCode(vscodeArchivePath: string) {
  * - `.vscode-test/vscode-<VERSION>`. For example, `./vscode-test/vscode-1.32.0`
  * - `.vscode-test/vscode-insiders`.
  *
+ * *If a local copy exists at `.vscode-test/vscode-<VERSION>`, skip download.*
+ *
  * @param version The version of VS Code to download such as `1.32.0`. You can also use
  * `'stable'` for downloading latest stable release.
  * `'insiders'` for downloading latest Insiders.

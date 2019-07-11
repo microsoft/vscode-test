@@ -22,6 +22,8 @@ export interface TestOptions {
 	 * - `'1.32.0'`, `'1.31.1'`, etc
 	 *
 	 * Defaults to `stable`, which is latest stable version.
+	 *
+	 * *If a local copy exists at `.vscode-test/vscode-<VERSION>`, skip download.*
 	 */
 	version?: DownloadVersion;
 
