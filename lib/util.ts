@@ -59,7 +59,7 @@ export function downloadDirToExecutablePath(dir: string) {
 	} else if (process.platform === 'darwin') {
 		return path.resolve(dir, 'Visual Studio Code.app/Contents/Resources/app/bin/code');
 	} else {
-		return path.resolve(dir, 'VSCode-linux-x64/code');
+		return path.resolve(dir, 'VSCode-linux-x64/bin/code');
 	}
 }
 
@@ -69,6 +69,6 @@ export function insidersDownloadDirToExecutablePath(dir: string) {
 	} else if (process.platform === 'darwin') {
 		return path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/Resources/app/bin/code');
 	} else {
-		return path.resolve(dir, 'VSCode-linux-x64/code-insiders');
+		return path.resolve(dir, 'VSCode-linux-x64/bin/code-insiders');
 	}
 }
