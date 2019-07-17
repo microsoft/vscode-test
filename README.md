@@ -25,6 +25,10 @@ Supported:
 See [./sample](./sample) for a runnable sample, with [Azure Devops Pipelines](https://github.com/microsoft/vscode-test/blob/master/sample/azure-pipelines.yml) configuration.
 
 ```ts
+import * as path from 'path'
+
+import { runTests, downloadAndUnzipVSCode } from 'vscode-test'
+
 async function go() {
 
   const extensionDevelopmentPath = path.resolve(__dirname, '../../')
