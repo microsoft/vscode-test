@@ -67,7 +67,7 @@ export function insidersDownloadDirToExecutablePath(dir: string) {
 	if (process.platform === 'win32') {
 		return path.resolve(dir, 'Code - Insiders.exe');
 	} else if (process.platform === 'darwin') {
-		return path.resolve(dir, 'Visual Studio Code - Insiders.app/Resources/app/bin/code');
+		return path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/Resources/app/bin/code');
 	} else {
 		return path.resolve(dir, 'VSCode-linux-x64/code-insiders');
 	}
