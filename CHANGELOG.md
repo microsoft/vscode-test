@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.0.1 | 2019-07-16
+
+- Use correct CLI path for launching VS Code on macOS / Linux. [#29](https://github.com/Microsoft/vscode-test/issues/29).
+
 ### 1.0.0 | 2019-07-03
 
 - Stable release for changes introduced in the `next` tags.
