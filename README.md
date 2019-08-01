@@ -57,10 +57,10 @@ async function go() {
   })
 
   /**
-   * Use 1.31.0 release for testing
+   * Use 1.36.1 release for testing
    */
   await runTests({
-    version: '1.31.0',
+    version: '1.36.1',
     extensionDevelopmentPath,
     extensionTestsPath,
     launchArgs: [testWorkspace]
@@ -77,15 +77,15 @@ async function go() {
   })
 
   /**
-   * Manually download VS Code 1.31.0 release for testing.
-   * Noop, since 1.31.0 already downloaded by the previous command to '.vscode-test/vscode-1.31.0'.
+   * Manually download VS Code 1.36.1 release for testing.
+   * Noop, since 1.36.1 already downloaded by the previous command to '.vscode-test/vscode-1.36.1'.
    */
-  await downloadAndUnzipVSCode('1.31.0')
+  await downloadAndUnzipVSCode('1.36.1')
 
   /**
-   * Manually download VS Code 1.30.0 release and run tests on it.
+   * Manually download VS Code 1.35.0 release and run tests on it.
    */
-  const vscodeExecutablePath = await downloadAndUnzipVSCode('1.30.0')
+  const vscodeExecutablePath = await downloadAndUnzipVSCode('1.35.0')
   await runTests({
     vscodeExecutablePath,
     extensionDevelopmentPath,
