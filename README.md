@@ -22,7 +22,7 @@ Supported:
 
 ## Usage
 
-See [./sample](./sample) for a runnable sample, with [Azure Devops Pipelines](https://github.com/microsoft/vscode-test/blob/master/sample/azure-pipelines.yml) configuration.
+See [./sample](./sample) for a runnable sample, with [Azure DevOps Pipelines](https://github.com/microsoft/vscode-test/blob/master/sample/azure-pipelines.yml) and [Travis CI](https://github.com/microsoft/vscode-test/blob/master/.travis.yml) configuration.
 
 ```ts
 import * as path from 'path'
