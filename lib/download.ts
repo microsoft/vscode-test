@@ -128,6 +128,8 @@ function unzipVSCode(vscodeArchivePath: string) {
  * `'stable'` for downloading latest stable release.
  * `'insiders'` for downloading latest Insiders.
  * When unspecified, download latest stable version.
+ *
+ * @returns Pormise of `vscodeExecutablePath`.
  */
 export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise<string> {
 	if (version && version !== 'stable') {

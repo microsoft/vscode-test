@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.1.0
+
+- Add `resolveCliPathFromExecutablePath` that would resolve `vscodeExecutablePath` to path of VS Code CLI, which can be used
+for extension management such as `--install-extension` and `--uninstall-extension`. [#31](https://github.com/microsoft/vscode-test/issues/31).
+
 ### 1.0.2 | 2019-07-17
 
 - Revert faulty fix for #29.
