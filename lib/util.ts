@@ -91,7 +91,7 @@ export function insidersDownloadDirToExecutablePath(dir: string) {
  *
  * @param vscodeExecutablePath The `vscodeExecutablePath` from `downloadAndUnzipVSCode`.
  */
-export function resolveCliPathFromExecutablePath(vscodeExecutablePath: string) {
+export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string) {
 	if (process.platform === 'win32') {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
 			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');

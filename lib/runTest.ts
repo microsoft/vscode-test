@@ -8,7 +8,7 @@ import { downloadAndUnzipVSCode, DownloadVersion } from './download';
 
 export interface TestOptions {
 	/**
-	 * The VS Code executable being used for testing.
+	 * The VS Code executable path used for testing.
 	 *
 	 * If not passed, will use `options.version` to download a copy of VS Code for testing.
 	 * If `version` is not specified either, will download and use latest stable release.

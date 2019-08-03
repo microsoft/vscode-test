@@ -5,4 +5,4 @@
 
 export { downloadAndUnzipVSCode } from './download';
 export { runTests } from './runTest';
-export { resolveCliPathFromExecutablePath } from './util';
+export { resolveCliPathFromVSCodeExecutablePath } from './util';
