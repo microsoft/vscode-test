@@ -72,3 +72,39 @@ export function insidersDownloadDirToExecutablePath(dir: string) {
 		return path.resolve(dir, 'VSCode-linux-x64/code-insiders');
 	}
 }
+
+/**
+ * Resolve the VS Code cli path from executable path returned from `downloadAndUnzipVSCode`.
+ * You can use this path to spawn processes for extension management. For example:
+ *
+ * ```ts
+ * const cp = require('child_process');
+ * const { downloadAndUnzipVSCode, resolveCliPathFromExecutablePath } = require('vscode-test')
+ * const vscodeExecutablePath = await downloadAndUnzipVSCode('1.36.0');
+ * const cliPath = resolveCliPathFromExecutablePath(vscodeExecutablePath);
+ *
+ * cp.spawnSync(cliPath, ['--install-extension', '<EXTENSION-ID-OR-PATH-TO-VSIX>'], {
+ *   encoding: 'utf-8',
+ *   stdio: 'inherit'
+ * });
+ * ```
+ *
+ * @param vscodeExecutablePath The `vscodeExecutablePath` from `downloadAndUnzipVSCode`.
+ */
+export function resolveCliPathFromExecutablePath(vscodeExecutablePath: string) {
+	if (process.platform === 'win32') {
+		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
+			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');
+		} else {
+			return path.resolve(vscodeExecutablePath, '../bin/code.cmd');
+		}
+	} else if (process.platform === 'darwin') {
+		return path.resolve(vscodeExecutablePath, '../../../Contents/Resources/app/bin/code');
+	} else {
+		if (vscodeExecutablePath.endsWith('code-insiders')) {
+			return path.resolve(vscodeExecutablePath, '../bin/code-insiders');
+		} else {
+			return path.resolve(vscodeExecutablePath, '../bin/code');
+		}
+	}
+}

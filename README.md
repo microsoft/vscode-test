@@ -94,6 +94,15 @@ async function go() {
   })
 
   /**
+   * Install Python extension
+   */
+  const cliPath = resolveCliPathFromExecutablePath(vscodeExecutablePath);
+  cp.spawnSync(cliPath, ['--install-extension', 'ms-python.python'], {
+    encoding: 'utf-8',
+    stdio: 'inherit'
+  });
+
+  /**
    * - Add additional launch flags for VS Code.
    * - Pass custom environment variables to test runner.
    */
