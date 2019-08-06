@@ -12,10 +12,12 @@
   },
   "dependencies": {
     "http-proxy-agent": "^2.1.0",
-    "https-proxy-agent": "^2.2.1"
+    "https-proxy-agent": "^2.2.1",
+    "rimraf": "^2.6.3"
   },
   "devDependencies": {
     "@types/node": "8",
+    "@types/rimraf": "^2.0.2",
     "typescript": "^3.4.3"
   },
   "license": "MIT",
