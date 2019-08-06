@@ -8,7 +8,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as request from './request';
-import { getVSCodeDownloadUrl, urlToOptions, downloadDirToExecutablePath, insidersDownloadDirToExecutablePath } from './util';
+import * as del from './del';
+import { getVSCodeDownloadUrl, urlToOptions, downloadDirToExecutablePath, insidersDownloadDirToExecutablePath, insidersDownloadDirMetadata, getLatestInsidersMetadata, downloadPlatform } from './util';
 
 const extensionRoot = process.cwd();
 const vscodeTestDir = path.resolve(extensionRoot, '.vscode-test');
@@ -140,12 +141,30 @@ export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise
 		version = await fetchLatestStableVersion();
 	}
 
-	if (fs.existsSync(path.resolve(vscodeTestDir, `vscode-${version}`))) {
-		console.log(`Found .vscode-test/vscode-${version}. Skipping download.`);
+	const downloadedPath = path.resolve(vscodeTestDir, `vscode-${version}`);
+	if (fs.existsSync(downloadedPath)) {
 		if (version === 'insiders') {
-			return Promise.resolve(insidersDownloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`)));
+			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(downloadedPath);
+
+			const { version: latestHash, timestamp: latestTimestamp } = await getLatestInsidersMetadata(downloadPlatform);
+			if (currentHash === latestHash) {
+				console.log(`Found .vscode-test/vscode-insiders matching latest Insiders release. Skipping download.`);
+				return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath));
+			} else {
+				try {
+					console.log(`Remove outdated Insiders at ${downloadedPath} and re-downloading.`);
+					console.log(`Old: ${currentHash} | ${currentDate}`);
+					console.log(`New: ${latestHash} | ${new Date(parseInt(latestTimestamp, 10)).toISOString()}`);
+					await del.rmdir(downloadedPath);
+					console.log(`Removed ${downloadedPath}`);
+				} catch (err) {
+					console.log(`Failed to remove outdated Insiders at ${downloadedPath}.`);
+				}
+			}
 		} else {
-			return Promise.resolve(downloadDirToExecutablePath(path.resolve(vscodeTestDir, `vscode-${version}`)));
+			console.log(`Found .vscode-test/vscode-${version}. Skipping download.`);
+
+			return Promise.resolve(downloadDirToExecutablePath(downloadedPath));
 		}
 	}
 

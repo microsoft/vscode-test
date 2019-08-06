@@ -6,8 +6,9 @@
 import * as path from 'path';
 import { parse as parseUrl } from 'url';
 import * as https from 'https';
+import * as request from './request';
 
-let downloadPlatform;
+export let downloadPlatform;
 
 switch (process.platform) {
 	case 'darwin':
@@ -71,6 +72,28 @@ export function insidersDownloadDirToExecutablePath(dir: string) {
 	} else {
 		return path.resolve(dir, 'VSCode-linux-x64/code-insiders');
 	}
+}
+
+export function insidersDownloadDirMetadata(dir: string) {
+	let productJsonPath;
+	if (process.platform === 'win32') {
+		productJsonPath = path.resolve(dir, 'resources/app/product.json');
+	} else if (process.platform === 'darwin') {
+		productJsonPath = path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/Resources/app/product.json');
+	} else {
+		productJsonPath = path.resolve(dir, 'VSCode-linux-x64/resources/app/product.json');
+	}
+	const productJson = require(productJsonPath);
+
+	return {
+		version: productJson.commit,
+		date: productJson.date
+	};
+}
+
+export async function getLatestInsidersMetadata(platform: string) {
+	const remoteUrl = `https://update.code.visualstudio.com/api/update/${platform}/insider/latest`;
+	return await request.getJSON(remoteUrl);
 }
 
 /**
