@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.0 | 2019-08-06
+
+- Remove downloaded Insiders at `.vscode-test/vscode-insiders` if it's outdated. [#25](https://github.com/microsoft/vscode-test/issues/25).
+
 ### 1.1.0 | 2019-08-02
 
 - Add `resolveCliPathFromVSCodeExecutablePath` that would resolve `vscodeExecutablePath` to VS Code CLI path, which can be used
