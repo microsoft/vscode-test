@@ -5,7 +5,7 @@ import { runTests, downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePat
 
 async function go() {
 	try {
-		const extensionDevelopmentPath = path.resolve(__dirname, '../../')
+		const extensionDevelopmentPath = path.resolve(__dirname, '../../../')
 		const extensionTestsPath = path.resolve(__dirname, './suite')
 		const testWorkspace = path.resolve(__dirname, '../../test-fixtures/fixture1')
 
