@@ -6,7 +6,7 @@ import { before } from 'mocha';
 import * as vscode from 'vscode';
 // import * as myExtension from '../extension';
 
-suite('Extension Test Suite', () => {
+suite('Extension Test Suite 2', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
 	test('Sample test', () => {
