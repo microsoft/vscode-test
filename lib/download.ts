@@ -71,18 +71,20 @@ async function downloadVSCodeArchive(version: DownloadVersion): Promise<string> 
 				outStream.on('close', () => {
 					resolve(archivePath);
 				});
+
 				https.get(archiveRequestOptions, res => {
 					res.pipe(outStream);
-				});
+				}).on('error', e => reject(e));
 			} else {
 				const zipPath = path.resolve(vscodeTestDir, `vscode-${version}.tgz`);
 				const outStream = fs.createWriteStream(zipPath);
-				https.get(archiveRequestOptions, res => {
-					res.pipe(outStream);
-				});
 				outStream.on('close', () => {
 					resolve(zipPath);
 				});
+
+				https.get(archiveRequestOptions, res => {
+					res.pipe(outStream);
+				}).on('error', e => reject(e));
 			}
 		});
 	});
