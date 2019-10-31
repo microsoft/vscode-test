@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.1 | 2019-10-31
+
+- Update https-proxy-agent for https://www.npmjs.com/advisories/1184.
+
 ### 1.2.0 | 2019-08-06
 
 - Remove downloaded Insiders at `.vscode-test/vscode-insiders` if it's outdated. [#25](https://github.com/microsoft/vscode-test/issues/25).
