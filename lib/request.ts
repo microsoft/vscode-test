@@ -20,7 +20,13 @@ export async function getJSON(api: string): Promise<any> {
 			});
 
 			res.on('end', () => {
-				resolve(JSON.parse(data));
+				try {
+					const jsonData = JSON.parse(data);
+					resolve(jsonData);
+				} catch (err) {
+					console.error(`Failed to parse response from ${api} as JSON`);
+					reject(err);
+				}
 			});
 
 			res.on('error', err => {

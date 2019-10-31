@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.2.2 | 2019-10-31
+
+- Reject `downloadAndUnzipVSCode` when `https.get` fails to parse the JSON sent back from VS Code update server. #44.
+- Reject `downloadAndUnzipVSCode` promise when download fails due to network error. #49.
+
 ### 1.2.1 | 2019-10-31
 
 - Update https-proxy-agent for https://www.npmjs.com/advisories/1184.
