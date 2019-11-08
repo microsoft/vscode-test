@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.3 | 2019-10-31
+
+- Add `--no-sandbox` option to default `launchArgs` for https://github.com/microsoft/vscode/issues/84238.
+
 ### 1.2.2 | 2019-10-31
 
 - Reject `downloadAndUnzipVSCode` when `https.get` fails to parse the JSON sent back from VS Code update server. #44.
