@@ -89,6 +89,18 @@ async function go() {
 			// Custom environment variables for extension test script
 			extensionTestsEnv: { foo: 'bar' }
 		});
+
+		/**
+		 * Use win64 instead of win32 for testing Windows
+		 */
+		if (process.platform === 'win32') {
+			await runTests({
+				extensionDevelopmentPath,
+				extensionTestsPath,
+				version: '1.40.0',
+				platform: 'win32-x64-archive'
+			});
+		}
 	} catch (err) {
 		console.error('Failed to run tests');
 		process.exit(1);
