@@ -1,7 +1,9 @@
 # Changelog
 
-### 1.2.4 | 2019-12-11
+### 1.3.0 | 2019-12-11
 
+- Add `platform` option. By default, Windows/macOS/Linux defaults to use `win32-archive`, `darwin` and `linux-x64`.
+  On Windows, `win32-x64-archive` is also available for using 64 bit version of VS Code. #18.
 - Allow running offline when `version` is specified and a matching version is found locally. #51.
 - Show error when failing to unzip downloaded vscode archive. #50.
 
