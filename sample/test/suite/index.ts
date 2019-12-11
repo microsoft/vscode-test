@@ -23,6 +23,7 @@ export function run(testsRoot: string, cb: (error: any, failures?: number) => vo
 				cb(null, failures);
 			});
 		} catch (err) {
+			console.error(err);
 			cb(err);
 		}
 	});
