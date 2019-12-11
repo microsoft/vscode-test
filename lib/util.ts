@@ -7,21 +7,24 @@ import * as path from 'path';
 import { parse as parseUrl } from 'url';
 import * as https from 'https';
 import * as request from './request';
+import { DownloadPlatform } from './download';
 
-export let downloadPlatform;
+export let systemDefaultPlatform;
 
 switch (process.platform) {
 	case 'darwin':
-		downloadPlatform = 'darwin';
+		systemDefaultPlatform = 'darwin';
 		break;
 	case 'win32':
-		downloadPlatform = 'win32-archive';
+		systemDefaultPlatform = 'win32-archive';
 		break;
 	default:
-		downloadPlatform = 'linux-x64';
+		systemDefaultPlatform = 'linux-x64';
 }
 
-export function getVSCodeDownloadUrl(version: string) {
+export function getVSCodeDownloadUrl(version: string, platform?: DownloadPlatform) {
+	const downloadPlatform = platform || systemDefaultPlatform;
+
 	if (version === 'insiders') {
 		return `https://update.code.visualstudio.com/latest/${downloadPlatform}/insider`;
 	}

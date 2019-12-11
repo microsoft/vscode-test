@@ -9,7 +9,15 @@ import * as path from 'path';
 import * as cp from 'child_process';
 import * as request from './request';
 import * as del from './del';
-import { getVSCodeDownloadUrl, urlToOptions, downloadDirToExecutablePath, insidersDownloadDirToExecutablePath, insidersDownloadDirMetadata, getLatestInsidersMetadata, downloadPlatform } from './util';
+import {
+	getVSCodeDownloadUrl,
+	urlToOptions,
+	downloadDirToExecutablePath,
+	insidersDownloadDirToExecutablePath,
+	insidersDownloadDirMetadata,
+	getLatestInsidersMetadata,
+	systemDefaultPlatform
+} from './util';
 
 const extensionRoot = process.cwd();
 const vscodeTestDir = path.resolve(extensionRoot, '.vscode-test');
@@ -36,6 +44,7 @@ async function isValidVersion(version: string) {
  */
 type StringLiteralUnion<T extends U, U = string> = T | (U & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
+export type DownloadPlatform = StringLiteralUnion<'darwin' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64'>;
 
 /**
  * Download a copy of VS Code archive to `.vscode-test`.
@@ -44,13 +53,13 @@ export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
  * `'stable'` for downloading latest stable release.
  * `'insiders'` for downloading latest Insiders.
  */
-async function downloadVSCodeArchive(version: DownloadVersion): Promise<string> {
+async function downloadVSCodeArchive(version: DownloadVersion, platform?: DownloadPlatform): Promise<string> {
 	if (!fs.existsSync(vscodeTestDir)) {
 		fs.mkdirSync(vscodeTestDir);
 	}
 
 	return new Promise((resolve, reject) => {
-		const downloadUrl = getVSCodeDownloadUrl(version);
+		const downloadUrl = getVSCodeDownloadUrl(version, platform);
 		console.log(`Downloading VS Code ${version} from ${downloadUrl}`);
 		const requestOptions = urlToOptions(downloadUrl);
 
@@ -72,9 +81,11 @@ async function downloadVSCodeArchive(version: DownloadVersion): Promise<string> 
 					resolve(archivePath);
 				});
 
-				https.get(archiveRequestOptions, res => {
-					res.pipe(outStream);
-				}).on('error', e => reject(e));
+				https
+					.get(archiveRequestOptions, res => {
+						res.pipe(outStream);
+					})
+					.on('error', e => reject(e));
 			} else {
 				const zipPath = path.resolve(vscodeTestDir, `vscode-${version}.tgz`);
 				const outStream = fs.createWriteStream(zipPath);
@@ -82,9 +93,11 @@ async function downloadVSCodeArchive(version: DownloadVersion): Promise<string> 
 					resolve(zipPath);
 				});
 
-				https.get(archiveRequestOptions, res => {
-					res.pipe(outStream);
-				}).on('error', e => reject(e));
+				https
+					.get(archiveRequestOptions, res => {
+						res.pipe(outStream);
+					})
+					.on('error', e => reject(e));
 			}
 		});
 	});
@@ -103,7 +116,8 @@ function unzipVSCode(vscodeArchivePath: string) {
 		if (process.platform === 'win32') {
 			res = cp.spawnSync('powershell.exe', [
 				'-NoProfile',
-				'-ExecutionPolicy', 'Bypass',
+				'-ExecutionPolicy',
+				'Bypass',
 				'-NonInteractive',
 				'-NoLogo',
 				'-Command',
@@ -139,7 +153,7 @@ function unzipVSCode(vscodeArchivePath: string) {
  *
  * @returns Pormise of `vscodeExecutablePath`.
  */
-export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise<string> {
+export async function downloadAndUnzipVSCode(version?: DownloadVersion, platform?: DownloadPlatform): Promise<string> {
 	if (version) {
 		if (version === 'stable') {
 			version = await fetchLatestStableVersion();
@@ -162,7 +176,9 @@ export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise
 		if (version === 'insiders') {
 			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(downloadedPath);
 
-			const { version: latestHash, timestamp: latestTimestamp } = await getLatestInsidersMetadata(downloadPlatform);
+			const { version: latestHash, timestamp: latestTimestamp } = await getLatestInsidersMetadata(
+				systemDefaultPlatform
+			);
 			if (currentHash === latestHash) {
 				console.log(`Found .vscode-test/vscode-insiders matching latest Insiders release. Skipping download.`);
 				return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath));
@@ -186,7 +202,7 @@ export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise
 	}
 
 	try {
-		const vscodeArchivePath = await downloadVSCodeArchive(version);
+		const vscodeArchivePath = await downloadVSCodeArchive(version, platform);
 		if (fs.existsSync(vscodeArchivePath)) {
 			unzipVSCode(vscodeArchivePath);
 			console.log(`Downloaded VS Code ${version} into .vscode-test/vscode-${version}`);

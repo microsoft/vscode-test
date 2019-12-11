@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as cp from 'child_process';
-import { downloadAndUnzipVSCode, DownloadVersion } from './download';
+import { downloadAndUnzipVSCode, DownloadVersion, DownloadPlatform } from './download';
 
 export interface TestOptions {
 	/**
@@ -26,6 +26,16 @@ export interface TestOptions {
 	 * *If a local copy exists at `.vscode-test/vscode-<VERSION>`, skip download.*
 	 */
 	version?: DownloadVersion;
+
+	/**
+	 * The VS Code platform to download. If not specified, defaults to:
+	 * - Windows: `win32-archive`
+	 * - macOS: `darwin`
+	 * - Linux: `linux-x64`
+	 *
+	 * Possible values are: `win32-archive`, `win32-x64-archive`, `darwin` and `linux-x64`.
+	 */
+	platform?: DownloadPlatform;
 
 	/**
 	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
@@ -75,7 +85,7 @@ export interface TestOptions {
  */
 export async function runTests(options: TestOptions): Promise<number> {
 	if (!options.vscodeExecutablePath) {
-		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version);
+		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version, options.platform);
 	}
 
 	let args = [
