@@ -3,6 +3,7 @@
 ### 1.2.4 | 2019-12-11
 
 - Allow running offline when `version` is specified and a matching version is found locally. #51.
+- Show error when failing to unzip downloaded vscode archive. #50.
 
 ### 1.2.3 | 2019-10-31
 

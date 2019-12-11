@@ -98,9 +98,10 @@ function unzipVSCode(vscodeArchivePath: string) {
 	const dirName = path.parse(vscodeArchivePath).name;
 	const extractDir = path.resolve(vscodeTestDir, dirName);
 
+	let res: cp.SpawnSyncReturns<string>;
 	if (vscodeArchivePath.endsWith('.zip')) {
 		if (process.platform === 'win32') {
-			cp.spawnSync('powershell.exe', [
+			res = cp.spawnSync('powershell.exe', [
 				'-NoProfile',
 				'-ExecutionPolicy', 'Bypass',
 				'-NonInteractive',
@@ -109,14 +110,18 @@ function unzipVSCode(vscodeArchivePath: string) {
 				`Microsoft.PowerShell.Archive\\Expand-Archive -Path "${vscodeArchivePath}" -DestinationPath "${extractDir}"`
 			]);
 		} else {
-			cp.spawnSync('unzip', [vscodeArchivePath, '-d', `${extractDir}`]);
+			res = cp.spawnSync('unzip', [vscodeArchivePath, '-d', `${extractDir}`]);
 		}
 	} else {
 		// tar does not create extractDir by default
 		if (!fs.existsSync(extractDir)) {
 			fs.mkdirSync(extractDir);
 		}
-		cp.spawnSync('tar', ['-xzf', vscodeArchivePath, '-C', extractDir]);
+		res = cp.spawnSync('tar', ['-xzf', vscodeArchivePath, '-C', extractDir]);
+	}
+
+	if (res && !(res.status === 0 && res.signal === null)) {
+		throw Error(`Failed to unzip downloaded vscode at ${vscodeArchivePath}`);
 	}
 }
 
@@ -169,7 +174,8 @@ export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise
 					await del.rmdir(downloadedPath);
 					console.log(`Removed ${downloadedPath}`);
 				} catch (err) {
-					console.log(`Failed to remove outdated Insiders at ${downloadedPath}.`);
+					console.error(err);
+					throw Error(`Failed to remove outdated Insiders at ${downloadedPath}.`);
 				}
 			}
 		} else {
@@ -188,6 +194,7 @@ export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise
 			fs.unlinkSync(vscodeArchivePath);
 		}
 	} catch (err) {
+		console.error(err);
 		throw Error(`Failed to download and unzip VS Code ${version}`);
 	}
 
