@@ -135,9 +135,18 @@ function unzipVSCode(vscodeArchivePath: string) {
  * @returns Pormise of `vscodeExecutablePath`.
  */
 export async function downloadAndUnzipVSCode(version?: DownloadVersion): Promise<string> {
-	if (version && version !== 'stable') {
-		if (!(await isValidVersion(version))) {
-			throw Error(`Invalid version ${version}`);
+	if (version) {
+		if (version === 'stable') {
+			version = await fetchLatestStableVersion();
+		} else {
+			/**
+			 * Only validate version against server when no local download that matches version exists
+			 */
+			if (!fs.existsSync(path.resolve(vscodeTestDir, `vscode-${version}`))) {
+				if (!(await isValidVersion(version))) {
+					throw Error(`Invalid version ${version}`);
+				}
+			}
 		}
 	} else {
 		version = await fetchLatestStableVersion();

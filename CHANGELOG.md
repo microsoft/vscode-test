@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.4 | 2019-12-11
+
+- Allow running offline when `version` is specified and a matching version is found locally. #51.
+
 ### 1.2.3 | 2019-10-31
 
 - Add `--no-sandbox` option to default `launchArgs` for https://github.com/microsoft/vscode/issues/84238.
