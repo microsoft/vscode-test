@@ -101,6 +101,11 @@ async function innerRunTests(
 ): Promise<number> {
 	return new Promise((resolve, reject) => {
 		const fullEnv = Object.assign({}, process.env, testRunnerEnv);
+		console.log('===TEST===');
+		console.log(`Executable: ${executable}`);
+		console.log(`Args: ${JSON.stringify(args, null, 2)}`);
+		console.log(`Env: ${JSON.stringify(fullEnv, null, 2)}`);
+		console.log('===TEST===');
 		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
 		cmd.stdout.on('data', function (data) {
