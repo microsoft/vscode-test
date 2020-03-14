@@ -4,6 +4,7 @@
     "target": "es6",
     "outDir": "out",
     "lib": ["es6"],
+    "typeRoots" : ["./node_modules/@types/"],
     "sourceMap": true
 	},
 	"include": [

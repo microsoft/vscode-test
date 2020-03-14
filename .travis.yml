@@ -2,7 +2,7 @@ language: node_js
 os:
   - osx
   - linux
-node_js: 8
+node_js: 10
 
 install:
   - |
@@ -13,8 +13,8 @@ install:
 
 script:
   - |
-    echo ">>> Compile vscode-test"
-    yarn && yarn compile
+    echo ">>> Compile vscode-test and run tests"
+    yarn && yarn compile && yarn test --ci
     echo ">>> Compiled vscode-test"
     cd sample
     echo ">>> Run sample integration test"
