@@ -125,10 +125,12 @@ async function innerRunTests(
 			console.log('Test error: ' + data.toString());
 		});
 
-		cmd.on('close', function(code) {
+		cmd.on('close', function(code, signal) {
 			console.log(`Exit code:   ${code}`);
 
-			if (code !== 0) {
+			if (code === null) {
+				reject(signal);
+			} else if (code !== 0) {
 				reject('Failed');
 			}
 
