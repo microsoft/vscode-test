@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.4.0 | 2020-04-11
+
+- Propagate signal when subprocess terminates. [#56](https://github.com/microsoft/vscode-test/pull/56).
+
 ### 1.3.0 | 2019-12-11
 
 - Add `platform` option. By default, Windows/macOS/Linux defaults to use `win32-archive`, `darwin` and `linux-x64`.
