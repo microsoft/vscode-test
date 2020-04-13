@@ -133,6 +133,13 @@ async function go() {
 go()
 ```
 
+## Development
+
+- `yarn install`
+- Make necessary changes in [`lib`](./lib)
+- `yarn compile` (or `yarn watch`)
+- In [`sample`](./sample), run `yarn install`, `yarn compile` and `yarn test` to make sure integration test can run successfully
+
 ## License
 
 [MIT](LICENSE)
