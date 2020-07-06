@@ -3,6 +3,7 @@
 	"displayName": "vscode-test-sample",
 	"description": "",
 	"version": "0.0.1",
+	"private": "true",
 	"engines": {
 		"vscode": "^1.32.0"
 	},

@@ -7,6 +7,7 @@ import * as https from 'https';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
+import * as readLine from 'readline';
 import * as request from './request';
 import * as del from './del';
 import {
@@ -36,6 +37,22 @@ async function fetchLatestStableVersion(): Promise<string> {
 async function isValidVersion(version: string) {
 	const validVersions: string[] = await request.getJSON(vscodeStableReleasesAPI);
 	return version === 'insiders' || validVersions.indexOf(version) !== -1;
+}
+
+function writeStream(stream: NodeJS.WriteStream, message: string) {
+	if (!stream.isTTY) {
+		return;
+	}
+	stream.write(message);
+}
+
+function clearStream(stream: NodeJS.WriteStream) {
+	if (!stream.isTTY) {
+		return;
+	}
+
+	readLine.clearLine(stream, 1);
+	readLine.cursorTo(stream, 0);
 }
 
 /**
@@ -74,31 +91,41 @@ async function downloadVSCodeArchive(version: DownloadVersion, platform?: Downlo
 			}
 
 			const archiveRequestOptions = urlToOptions(archiveUrl);
-			if (archiveUrl.endsWith('.zip')) {
-				const archivePath = path.resolve(vscodeTestDir, `vscode-${version}.zip`);
-				const outStream = fs.createWriteStream(archivePath);
-				outStream.on('close', () => {
-					resolve(archivePath);
-				});
+			const ext = archiveUrl.endsWith('.zip') ? 'zip' : 'tgz';
+			const outFilePath = path.resolve(vscodeTestDir, `vscode-${version}.${ext}`);
 
-				https
-					.get(archiveRequestOptions, res => {
-						res.pipe(outStream);
-					})
-					.on('error', e => reject(e));
-			} else {
-				const zipPath = path.resolve(vscodeTestDir, `vscode-${version}.tgz`);
-				const outStream = fs.createWriteStream(zipPath);
-				outStream.on('close', () => {
-					resolve(zipPath);
-				});
+			const outStream = fs.createWriteStream(outFilePath);
+			const stream = process.stdout;
 
-				https
-					.get(archiveRequestOptions, res => {
-						res.pipe(outStream);
-					})
-					.on('error', e => reject(e));
-			}
+			outStream.on('close', () => {
+				clearStream(stream);
+				resolve(outFilePath);
+			});
+
+			const showProgress = (totalByTes: number, recievedBytes: number) => {
+				const percentage = ((recievedBytes * 100) / totalByTes).toFixed(2);
+				const recievedSize = (recievedBytes / (1024 * 1024)).toFixed(2);
+				const totalSize = (totalByTes / (1024 * 1024)).toFixed(2);
+
+				const message = `Downloading: ${percentage}% | Recieved: ${recievedSize}MB of ${totalSize}MB`;
+
+				clearStream(stream);
+				writeStream(stream, message);
+			};
+
+			https
+				.get(archiveRequestOptions, res => {
+					const totalByTes = parseInt(res.headers['content-length'], 10);
+					let recievedBytes = 0;
+
+					const onData = (chunk: Buffer) => {
+						recievedBytes += chunk.length;
+						showProgress(totalByTes, recievedBytes);
+					};
+					res.pipe(outStream);
+					res.on('data', onData);
+				})
+				.on('error', e => reject(e));
 		});
 	});
 }
