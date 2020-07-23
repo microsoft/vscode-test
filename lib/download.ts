@@ -39,20 +39,42 @@ async function isValidVersion(version: string) {
 	return version === 'insiders' || validVersions.indexOf(version) !== -1;
 }
 
-function writeStream(stream: NodeJS.WriteStream, message: string) {
-	if (!stream.isTTY) {
-		return;
-	}
-	stream.write(message);
-}
+/**
+ * Simple progress
+ */
+class Progress {
+	stream = process.stderr;
+	totalBytes = 0;
+	recievedBytes = 0;
 
-function clearStream(stream: NodeJS.WriteStream) {
-	if (!stream.isTTY) {
-		return;
+	write(message: string): void {
+		this.clear();
+		if (!this.stream.isTTY) {
+			return;
+		}
+		this.stream.write(message);
 	}
 
-	readLine.clearLine(stream, 1);
-	readLine.cursorTo(stream, 0);
+	clear(): void {
+		if (!this.stream.isTTY) {
+			return;
+		}
+
+		readLine.clearLine(this.stream, 1);
+		readLine.cursorTo(this.stream, 0);
+	}
+
+	update(chunk: Buffer) {
+		this.recievedBytes += chunk.length;
+
+		const percentage = ((this.recievedBytes * 100) / this.totalBytes).toFixed(2);
+		const recievedSize = (this.recievedBytes / (1024 * 1024)).toFixed(2);
+		const totalSize = (this.totalBytes / (1024 * 1024)).toFixed(2);
+
+		const message = `Downloading: ${percentage}% | Recieved: ${recievedSize}MB of ${totalSize}MB`;
+
+		this.write(message);
+	}
 }
 
 /**
@@ -95,35 +117,19 @@ async function downloadVSCodeArchive(version: DownloadVersion, platform?: Downlo
 			const outFilePath = path.resolve(vscodeTestDir, `vscode-${version}.${ext}`);
 
 			const outStream = fs.createWriteStream(outFilePath);
-			const stream = process.stdout;
+
+			const progress = new Progress();
 
 			outStream.on('close', () => {
-				clearStream(stream);
+				progress.clear();
 				resolve(outFilePath);
 			});
 
-			const showProgress = (totalByTes: number, recievedBytes: number) => {
-				const percentage = ((recievedBytes * 100) / totalByTes).toFixed(2);
-				const recievedSize = (recievedBytes / (1024 * 1024)).toFixed(2);
-				const totalSize = (totalByTes / (1024 * 1024)).toFixed(2);
-
-				const message = `Downloading: ${percentage}% | Recieved: ${recievedSize}MB of ${totalSize}MB`;
-
-				clearStream(stream);
-				writeStream(stream, message);
-			};
-
 			https
 				.get(archiveRequestOptions, res => {
-					const totalByTes = parseInt(res.headers['content-length'], 10);
-					let recievedBytes = 0;
-
-					const onData = (chunk: Buffer) => {
-						recievedBytes += chunk.length;
-						showProgress(totalByTes, recievedBytes);
-					};
+					progress.totalBytes = parseInt(res.headers['content-length'], 10);
 					res.pipe(outStream);
-					res.on('data', onData);
+					res.on('data', (chunk: Buffer) => progress.update(chunk));
 				})
 				.on('error', e => reject(e));
 		});
