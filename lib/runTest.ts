@@ -130,6 +130,7 @@ async function innerRunTests(
 			if (finished) {
 				return;
 			}
+			finished = true;
 			console.log(`Exit code:   ${code}`);
 
 			if (code === null) {
@@ -146,6 +147,7 @@ async function innerRunTests(
 			if (finished) {
 				return;
 			}
+			finished = true;
 			console.log(`Exit code:   ${code}`);
 
 			if (code === null) {
