@@ -125,7 +125,12 @@ async function innerRunTests(
 			console.log('Test error: ' + data.toString());
 		});
 
-		cmd.on('close', function (code, signal) {
+		let finished = false;
+		function onProcessClosed(code: number | null, signal: NodeJS.Signals | null): void {
+			if (finished) {
+				return;
+			}
+			finished = true;
 			console.log(`Exit code:   ${code}`);
 
 			if (code === null) {
@@ -136,6 +141,10 @@ async function innerRunTests(
 
 			console.log('Done\n');
 			resolve(code);
-		});
+		}
+
+		cmd.on('close', onProcessClosed);
+
+		cmd.on('exit', onProcessClosed);
 	});
 }
