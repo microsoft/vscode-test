@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.4.1 | 2020-10-27
+
+- Use "exit" event in runTest.ts. [#74](https://github.com/microsoft/vscode-test/issues/74).
+
 ### 1.4.0 | 2020-04-11
 
 - Propagate signal when subprocess terminates. [#56](https://github.com/microsoft/vscode-test/pull/56).
