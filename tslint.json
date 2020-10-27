@@ -1,6 +1,9 @@
 {
 	"rules": {
-		"indent": [true, "tabs"],
+		"indent": [
+			true,
+			"tabs"
+		],
 		"no-unused-expression": true,
 		"no-unreachable": true,
 		"no-duplicate-variable": true,
@@ -13,7 +16,10 @@
 		"no-unexternalized-strings": [
 			true,
 			{
-				"signatures": ["localize", "nls.localize"],
+				"signatures": [
+					"localize",
+					"nls.localize"
+				],
 				"keyIndex": 0,
 				"messageIndex": 1
 			}
