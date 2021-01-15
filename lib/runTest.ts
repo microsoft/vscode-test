@@ -109,7 +109,7 @@ async function innerRunTests(
 		[key: string]: string | undefined;
 	}
 ): Promise<number> {
-	return new Promise((resolve, reject) => {
+	return new Promise<number>((resolve, reject) => {
 		const fullEnv = Object.assign({}, process.env, testRunnerEnv);
 		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
@@ -140,7 +140,7 @@ async function innerRunTests(
 			}
 
 			console.log('Done\n');
-			resolve(code);
+			resolve(code ?? -1);
 		}
 
 		cmd.on('close', onProcessClosed);

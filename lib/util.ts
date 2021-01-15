@@ -4,12 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { parse as parseUrl } from 'url';
+import { URL } from 'url';
 import * as https from 'https';
 import * as request from './request';
 import { DownloadPlatform } from './download';
+import * as createHttpProxyAgent from 'https-proxy-agent';
+import * as createHttpsProxyAgent from 'http-proxy-agent';
+import { readFileSync } from 'fs';
 
-export let systemDefaultPlatform;
+export let systemDefaultPlatform: string;
 
 switch (process.platform) {
 	case 'darwin':
@@ -31,29 +34,28 @@ export function getVSCodeDownloadUrl(version: string, platform?: DownloadPlatfor
 	return `https://update.code.visualstudio.com/${version}/${downloadPlatform}/stable`;
 }
 
-const HttpsProxyAgent = require('https-proxy-agent');
-const HttpProxyAgent = require('http-proxy-agent');
-
-let PROXY_AGENT = undefined;
-let HTTPS_PROXY_AGENT = undefined;
+let PROXY_AGENT: createHttpProxyAgent.HttpsProxyAgent | undefined = undefined;
+let HTTPS_PROXY_AGENT: createHttpsProxyAgent.HttpProxyAgent | undefined = undefined;
 
 if (process.env.npm_config_proxy) {
-	PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
-	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
+	PROXY_AGENT = createHttpProxyAgent(process.env.npm_config_proxy);
+	HTTPS_PROXY_AGENT = createHttpsProxyAgent(process.env.npm_config_proxy);
 }
 if (process.env.npm_config_https_proxy) {
-	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
+	HTTPS_PROXY_AGENT = createHttpsProxyAgent(process.env.npm_config_https_proxy);
 }
 
 export function urlToOptions(url: string): https.RequestOptions {
-	const options: https.RequestOptions = parseUrl(url);
-	if (PROXY_AGENT && options.protocol.startsWith('http:')) {
+	const parsed = new URL(url);
+	const options: https.RequestOptions = {};
+	if (PROXY_AGENT && parsed.protocol.startsWith('http:')) {
 		options.agent = PROXY_AGENT;
 	}
 
-	if (HTTPS_PROXY_AGENT && options.protocol.startsWith('https:')) {
+	if (HTTPS_PROXY_AGENT && parsed.protocol.startsWith('https:')) {
 		options.agent = HTTPS_PROXY_AGENT;
 	}
+
 	return options;
 }
 
@@ -86,7 +88,7 @@ export function insidersDownloadDirMetadata(dir: string) {
 	} else {
 		productJsonPath = path.resolve(dir, 'VSCode-linux-x64/resources/app/product.json');
 	}
-	const productJson = require(productJsonPath);
+	const productJson = JSON.parse(readFileSync(productJsonPath, 'utf-8'));
 
 	return {
 		version: productJson.commit,
@@ -94,9 +96,20 @@ export function insidersDownloadDirMetadata(dir: string) {
 	};
 }
 
+export interface IUpdateMetadata {
+	url: string;
+	name: string;
+	version: string;
+	productVersion: string;
+	hash: string;
+	timestamp: number;
+	sha256hash: string;
+	supportsFastUpdate: boolean;
+}
+
 export async function getLatestInsidersMetadata(platform: string) {
 	const remoteUrl = `https://update.code.visualstudio.com/api/update/${platform}/insider/latest`;
-	return await request.getJSON(remoteUrl);
+	return await request.getJSON<IUpdateMetadata>(remoteUrl);
 }
 
 /**

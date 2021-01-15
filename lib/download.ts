@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as https from 'https';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
@@ -11,13 +10,13 @@ import * as request from './request';
 import * as del from './del';
 import {
 	getVSCodeDownloadUrl,
-	urlToOptions,
 	downloadDirToExecutablePath,
 	insidersDownloadDirToExecutablePath,
 	insidersDownloadDirMetadata,
 	getLatestInsidersMetadata,
 	systemDefaultPlatform
 } from './util';
+import { IncomingMessage } from 'http';
 
 const extensionRoot = process.cwd();
 const vscodeTestDir = path.resolve(extensionRoot, '.vscode-test');
@@ -42,6 +41,7 @@ async function isValidVersion(version: string) {
  * Adapted from https://github.com/microsoft/TypeScript/issues/29729
  * Since `string | 'foo'` doesn't offer auto completion
  */
+// eslint-disable-next-line @typescript-eslint/ban-types
 type StringLiteralUnion<T extends U, U = string> = T | (U & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
 export type DownloadPlatform = StringLiteralUnion<'darwin' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64'>;
@@ -58,48 +58,76 @@ async function downloadVSCodeArchive(version: DownloadVersion, platform?: Downlo
 		fs.mkdirSync(vscodeTestDir);
 	}
 
-	return new Promise((resolve, reject) => {
-		const downloadUrl = getVSCodeDownloadUrl(version, platform);
-		console.log(`Downloading VS Code ${version} from ${downloadUrl}`);
-		const requestOptions = urlToOptions(downloadUrl);
+	const downloadUrl = getVSCodeDownloadUrl(version, platform);
+	const text = `Downloading VS Code ${version} from ${downloadUrl}`;
+	process.stdout.write(text);
 
-		https.get(requestOptions, res => {
-			if (res.statusCode !== 302) {
-				reject('Failed to get VS Code archive location');
-			}
-			const archiveUrl = res.headers.location;
-			if (!archiveUrl) {
-				reject('Failed to get VS Code archive location');
-				return;
-			}
+	const res = await request.getStream(downloadUrl)
+	if (res.statusCode !== 302) {
+		throw 'Failed to get VS Code archive location';
+	}
+	const archiveUrl = res.headers.location;
+	if (!archiveUrl) {
+		throw 'Failed to get VS Code archive location';
+	}
 
-			const archiveRequestOptions = urlToOptions(archiveUrl);
-			if (archiveUrl.endsWith('.zip')) {
-				const archivePath = path.resolve(vscodeTestDir, `vscode-${version}.zip`);
-				const outStream = fs.createWriteStream(archivePath);
-				outStream.on('close', () => {
-					resolve(archivePath);
-				});
+	let result: Promise<string>;
+	if (archiveUrl.endsWith('.zip')) {
+		const archivePath = path.resolve(vscodeTestDir, `vscode-${version}.zip`);
+		const outStream = fs.createWriteStream(archivePath);
+		result = new Promise((resolve, reject) =>
+			outStream
+				.on('close', () => resolve(archivePath))
+				.on('error', reject)
+		);
 
-				https
-					.get(archiveRequestOptions, res => {
-						res.pipe(outStream);
-					})
-					.on('error', e => reject(e));
-			} else {
-				const zipPath = path.resolve(vscodeTestDir, `vscode-${version}.tgz`);
-				const outStream = fs.createWriteStream(zipPath);
-				outStream.on('close', () => {
-					resolve(zipPath);
-				});
+		const res = await request.getStream(archiveUrl);
+		printProgress(text, res);
+		res.pipe(outStream);
+	} else {
+		const zipPath = path.resolve(vscodeTestDir, `vscode-${version}.tgz`);
+		const outStream = fs.createWriteStream(zipPath);
+		result = new Promise((resolve, reject) =>
+			outStream
+				.on('close', () => resolve(zipPath))
+				.on('error', reject)
+		);
 
-				https
-					.get(archiveRequestOptions, res => {
-						res.pipe(outStream);
-					})
-					.on('error', e => reject(e));
-			}
-		});
+		const res = await request.getStream(archiveUrl);
+		printProgress(text, res);
+		res.pipe(outStream);
+	}
+
+	return await result;
+}
+
+function printProgress(baseText: string, res: IncomingMessage) {
+	const total = Number(res.headers['content-length']);
+	let received = 0;
+	let timeout: NodeJS.Timeout | undefined;
+
+	const reset = '\x1b[G\x1b[0K';
+	res.on('data', chunk => {
+		if (!timeout) {
+			timeout = setTimeout(() => {
+				process.stdout.write(`${reset}${baseText}: ${received}/${total} (${(received / total * 100).toFixed()}%)`);
+				timeout = undefined;
+			}, 100);
+		}
+
+		received += chunk.length;
+	});
+
+	res.on('end', () => {
+		if (timeout) {
+			clearTimeout(timeout);
+		}
+
+		console.log(`${reset}${baseText}: complete`);
+	});
+
+	res.on('error', err => {
+		throw err;
 	});
 }
 
@@ -186,7 +214,7 @@ export async function downloadAndUnzipVSCode(version?: DownloadVersion, platform
 				try {
 					console.log(`Remove outdated Insiders at ${downloadedPath} and re-downloading.`);
 					console.log(`Old: ${currentHash} | ${currentDate}`);
-					console.log(`New: ${latestHash} | ${new Date(parseInt(latestTimestamp, 10)).toISOString()}`);
+					console.log(`New: ${latestHash} | ${new Date(latestTimestamp).toISOString()}`);
 					await del.rmdir(downloadedPath);
 					console.log(`Removed ${downloadedPath}`);
 				} catch (err) {
