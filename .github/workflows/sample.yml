@@ -12,16 +12,13 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: 8.x
+          node-version: 12.x
       - name: Install root project dependencies
-        run: npm install
+        run: yarn
       - name: Install sample project dependencies
-        run: npm install
-        working-directory: ./sample
-      - name: Compile sample project
-        run: npm run compile
+        run: yarn
         working-directory: ./sample
       - name: Run tests
         uses: GabrielBB/xvfb-action@v1.0
         with:
-          run: npm run test --prefix ./sample
+          run: yarn test --prefix ./sample
