@@ -6,6 +6,7 @@
 - Make installation platform aware [#78](https://github.com/microsoft/vscode-test/issues/78)
 - Download and unzip directly for faster setup
 - Add download progress indicator
+- Show signal that caused vscode to quit if no exit code is present [#64](https://github.com/microsoft/vscode-test/issues/64)
 
 ### 1.4.1 | 2020-10-27
 

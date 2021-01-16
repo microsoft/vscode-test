@@ -131,7 +131,7 @@ async function innerRunTests(
 				return;
 			}
 			finished = true;
-			console.log(`Exit code:   ${code}`);
+			console.log(`Exit code:   ${code ?? signal}`);
 
 			if (code === null) {
 				reject(signal);
