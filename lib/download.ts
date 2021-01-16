@@ -122,7 +122,7 @@ async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' |
 		// However it has problems that prevent it working on OSX:
 		// - https://github.com/ZJONSSON/node-unzipper/issues/216 (avoidable)
 		// - https://github.com/ZJONSSON/node-unzipper/issues/115 (not avoidable)
-		if (process.platform === 'win32') {
+		if (process.platform !== 'darwin') {
 			await new Promise((resolve, reject) =>
 				stream
 					.pipe(extract({ path: extractDir }))
