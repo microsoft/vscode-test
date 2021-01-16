@@ -71,34 +71,9 @@ async function downloadVSCodeArchive(version: DownloadVersion, platform?: Downlo
 		throw 'Failed to get VS Code archive location';
 	}
 
-	let result: Promise<string>;
-	if (archiveUrl.endsWith('.zip')) {
-		const archivePath = path.resolve(vscodeTestDir, `vscode-${version}.zip`);
-		const outStream = fs.createWriteStream(archivePath);
-		result = new Promise((resolve, reject) =>
-			outStream
-				.on('close', () => resolve(archivePath))
-				.on('error', reject)
-		);
-
-		const res = await request.getStream(archiveUrl);
-		printProgress(text, res);
-		res.pipe(outStream);
-	} else {
-		const zipPath = path.resolve(vscodeTestDir, `vscode-${version}.tgz`);
-		const outStream = fs.createWriteStream(zipPath);
-		result = new Promise((resolve, reject) =>
-			outStream
-				.on('close', () => resolve(zipPath))
-				.on('error', reject)
-		);
-
-		const res = await request.getStream(archiveUrl);
-		printProgress(text, res);
-		res.pipe(outStream);
-	}
-
-	return await result;
+	const download = await request.getStream(archiveUrl);
+	printProgress(text, download);
+	return { stream: download, format: archiveUrl.endsWith('.zip') ? 'zip' : 'tgz'} as const;
 }
 
 function printProgress(baseText: string, res: IncomingMessage) {
@@ -132,38 +107,33 @@ function printProgress(baseText: string, res: IncomingMessage) {
 }
 
 /**
- * Unzip a .zip or .tar.gz VS Code archive
+ * Unzip a .zip or .tar.gz VS Code archive stream.
  */
-function unzipVSCode(vscodeArchivePath: string) {
-	// The 'vscode-1.32' out of '.../vscode-1.32.zip'
-	const dirName = path.parse(vscodeArchivePath).name;
-	const extractDir = path.resolve(vscodeTestDir, dirName);
-
-	let res: cp.SpawnSyncReturns<string>;
-	if (vscodeArchivePath.endsWith('.zip')) {
-		if (process.platform === 'win32') {
-			res = cp.spawnSync('powershell.exe', [
-				'-NoProfile',
-				'-ExecutionPolicy',
-				'Bypass',
-				'-NonInteractive',
-				'-NoLogo',
-				'-Command',
-				`Microsoft.PowerShell.Archive\\Expand-Archive -Path "${vscodeArchivePath}" -DestinationPath "${extractDir}"`
-			]);
-		} else {
-			res = cp.spawnSync('unzip', [vscodeArchivePath, '-d', `${extractDir}`]);
-		}
+async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' | 'tgz') {
+	if (format === 'zip') {
+		// note: this used to use Expand-Archive, but this caused a failure
+		// on longer file paths on windows. Instead use unzipper, which does
+		// not have this limitation
+		await new Promise((resolve, reject) =>
+			stream
+				.pipe(extract({ path: extractDir }))
+				.on('close', resolve)
+				.on('error', reject)
+		);
 	} else {
 		// tar does not create extractDir by default
 		if (!fs.existsSync(extractDir)) {
 			fs.mkdirSync(extractDir);
 		}
-		res = cp.spawnSync('tar', ['-xzf', vscodeArchivePath, '-C', extractDir]);
-	}
 
-	if (res && !(res.status === 0 && res.signal === null)) {
-		throw Error(`Failed to unzip downloaded vscode at ${vscodeArchivePath}`);
+		const child = cp.spawn('tar', ['-xzf', '-', '-C', extractDir], { stdio: 'pipe' });
+		stream.pipe(child.stdin);
+		child.stderr.pipe(process.stderr);
+		child.stdout.pipe(process.stdout);
+		await new Promise<void>((resolve, reject) => {
+			child.on('error', reject);
+			child.on('exit', code => code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`)));
+		})
 	}
 }
 
@@ -230,13 +200,8 @@ export async function downloadAndUnzipVSCode(version?: DownloadVersion, platform
 	}
 
 	try {
-		const vscodeArchivePath = await downloadVSCodeArchive(version, platform);
-		if (fs.existsSync(vscodeArchivePath)) {
-			unzipVSCode(vscodeArchivePath);
-			console.log(`Downloaded VS Code ${version} into .vscode-test/vscode-${version}`);
-			// Remove archive
-			fs.unlinkSync(vscodeArchivePath);
-		}
+		const { stream, format } = await downloadVSCodeArchive(version, platform);
+		await unzipVSCode(downloadedPath, stream, format);
 	} catch (err) {
 		console.error(err);
 		throw Error(`Failed to download and unzip VS Code ${version}`);
