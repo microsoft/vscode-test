@@ -1,5 +1,12 @@
 # Changelog
 
+### TBA
+
+- Fix download failing on windows with long file paths
+- Make installation platform aware [#78](https://github.com/microsoft/vscode-test/issues/78)
+- Download and unzip directly for faster setup
+- Add download progress indicator
+
 ### 1.4.1 | 2020-10-27
 
 - Use "exit" event in runTest.ts. [#74](https://github.com/microsoft/vscode-test/issues/74).
