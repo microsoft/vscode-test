@@ -18,7 +18,9 @@ import {
 } from './util';
 import { IncomingMessage } from 'http';
 import { Extract as extract } from 'unzipper';
-import { Readable } from 'stream';
+import { pipeline, Readable } from 'stream';
+import { tmpdir } from 'os';
+import { promisify } from 'util';
 
 const extensionRoot = process.cwd();
 const vscodeTestDir = path.resolve(extensionRoot, '.vscode-test');
@@ -115,28 +117,48 @@ async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' |
 	if (format === 'zip') {
 		// note: this used to use Expand-Archive, but this caused a failure
 		// on longer file paths on windows. Instead use unzipper, which does
-		// not have this limitation
-		await new Promise((resolve, reject) =>
-			stream
-				.pipe(extract({ path: extractDir }))
-				.on('close', resolve)
-				.on('error', reject)
-		);
+		// not have this limitation.
+		//
+		// However it has problems that prevent it working on OSX:
+		// - https://github.com/ZJONSSON/node-unzipper/issues/216 (avoidable)
+		// - https://github.com/ZJONSSON/node-unzipper/issues/115 (not avoidable)
+		if (process.platform === 'win32') {
+			await new Promise((resolve, reject) =>
+				stream
+					.pipe(extract({ path: extractDir }))
+					.on('close', resolve)
+					.on('error', reject)
+			);
+		} else {
+			const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
+
+			try {
+				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
+				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir]);
+			} finally {
+				// fs.unlink(stagingFile, () => undefined);
+			}
+		}
 	} else {
 		// tar does not create extractDir by default
 		if (!fs.existsSync(extractDir)) {
 			fs.mkdirSync(extractDir);
 		}
 
-		const child = cp.spawn('tar', ['-xzf', '-', '-C', extractDir], { stdio: 'pipe' });
-		stream.pipe(child.stdin);
-		child.stderr.pipe(process.stderr);
-		child.stdout.pipe(process.stdout);
-		await new Promise<void>((resolve, reject) => {
-			child.on('error', reject);
-			child.on('exit', code => code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`)));
-		})
+		await spawnDecompressorChild('tar', ['-xzf', '-', '-C', extractDir], stream);
 	}
+}
+
+function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, input?: Readable) {
+	const child = cp.spawn(command, args, { stdio: 'pipe' });
+	input?.pipe(child.stdin);
+	child.stderr.pipe(process.stderr);
+	child.stdout.pipe(process.stdout);
+
+	return new Promise<void>((resolve, reject) => {
+		child.on('error', reject);
+		child.on('exit', code => code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`)));
+	})
 }
 
 /**
