@@ -1,6 +1,6 @@
 # vscode-test
 
-![Test Status Badge](https://github.com/microsoft/vscode-test/workflows/.github/workflows/Tests/badge.svg)
+![Test Status Badge](https://github.com/microsoft/vscode-test/workflows/Tests/badge.svg)
 
 This module helps you test VS Code extensions.
 
