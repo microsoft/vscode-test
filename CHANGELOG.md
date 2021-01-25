@@ -1,6 +1,6 @@
 # Changelog
 
-### TBA
+### 1.5.0 | 2021-01-25
 
 - Fix download failing on windows with long file paths
 - Make installation platform aware [#78](https://github.com/microsoft/vscode-test/issues/78)
