@@ -1,14 +1,21 @@
 {
 	"compilerOptions": {
-		"target": "es5",
+		"target": "ES2019",
 		"module": "commonjs",
-		"lib": ["es2015"],
+		"lib": ["ES2019"],
 		"outDir": "out",
-		"declaration": true
+		"declaration": true,
+		"strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "alwaysStrict": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true
 	},
 	"include": [
-		"lib",
-		"jest-runner"
+		"src/core",
+		"src/jest"
 	],
-	"exclude": ["node_modules", "jest-runner/**/*.test.ts"]
+	"exclude": ["node_modules", "src/jest/**/*.test.ts"]
 }

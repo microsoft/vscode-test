@@ -3,12 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IncomingMessage } from 'http';
 import * as https from 'https';
 import { urlToOptions } from './util';
 
-export async function getJSON(api: string): Promise<any> {
+export async function getStream(api: string): Promise<IncomingMessage> {
+	return new Promise<IncomingMessage>((resolve, reject) => {
+		https.get(api, urlToOptions(api), res => resolve(res)).on('error', reject)
+	});
+}
+
+export async function getJSON<T>(api: string): Promise<T> {
 	return new Promise((resolve, reject) => {
-		https.get(urlToOptions(api), res => {
+		https.get(api, urlToOptions(api), res => {
 			if (res.statusCode !== 200) {
 				reject('Failed to get JSON');
 			}

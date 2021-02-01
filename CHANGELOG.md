@@ -1,5 +1,21 @@
 # Changelog
 
+### 1.5.0 | 2021-01-25
+
+- Fix download failing on windows with long file paths
+- Make installation platform aware [#78](https://github.com/microsoft/vscode-test/issues/78)
+- Download and unzip directly for faster setup
+- Add download progress indicator
+- Show signal that caused vscode to quit if no exit code is present [#64](https://github.com/microsoft/vscode-test/issues/64)
+
+### 1.4.1 | 2020-10-27
+
+- Use "exit" event in runTest.ts. [#74](https://github.com/microsoft/vscode-test/issues/74).
+
+### 1.4.0 | 2020-04-11
+
+- Propagate signal when subprocess terminates. [#56](https://github.com/microsoft/vscode-test/pull/56).
+
 ### 1.3.0 | 2019-12-11
 
 - Add `platform` option. By default, Windows/macOS/Linux defaults to use `win32-archive`, `darwin` and `linux-x64`.

@@ -1,15 +1,6 @@
-<p>
-  <h1 align="center">vscode-test</h1>
-</p>
+# vscode-test
 
-<p align="center">
-  <a href="https://dev.azure.com/vscode/vscode-test/_build?definitionId=15">
-    <img src="https://img.shields.io/azure-devops/build/vscode/350ef5c4-15fc-411a-9a5e-0622da4da69c/15.svg?label=Azure%20DevOps&logo=Azure%20Devops&style=flat-square">
-  </a>
-  <a href="https://travis-ci.org/microsoft/vscode-test">
-    <img src="https://img.shields.io/travis/microsoft/vscode-test.svg?label=Travis&logo=Travis&style=flat-square">
-  </a>
-</p>
+![Test Status Badge](https://github.com/microsoft/vscode-test/workflows/Tests/badge.svg)
 
 This module helps you test VS Code extensions.
 
@@ -38,7 +29,7 @@ yarn add vscode-test jest --dev
 
 ## Supported
 
-- Node >= 10.x
+- Node >= 12.x
 - Windows >= Windows Server 2012+ / Win10+ (anything with Powershell >= 5.0)
 - macOS
 - Linux
@@ -154,6 +145,13 @@ async function go() {
 
 go();
 ```
+
+## Development
+
+- `yarn install`
+- Make necessary changes in [`lib`](./lib)
+- `yarn compile` (or `yarn watch`)
+- In [`sample`](./sample), run `yarn install`, `yarn compile` and `yarn test` to make sure integration test can run successfully
 
 ## License
 

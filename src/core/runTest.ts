@@ -109,31 +109,42 @@ async function innerRunTests(
 		[key: string]: string | undefined;
 	}
 ): Promise<number> {
-	return new Promise((resolve, reject) => {
+	return new Promise<number>((resolve, reject) => {
 		const fullEnv = Object.assign({}, process.env, testRunnerEnv);
 		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
-		cmd.stdout.on('data', function(data) {
+		cmd.stdout.on('data', function (data) {
 			console.log(data.toString());
 		});
 
-		cmd.stderr.on('data', function(data) {
+		cmd.stderr.on('data', function (data) {
 			console.error(data.toString());
 		});
 
-		cmd.on('error', function(data) {
+		cmd.on('error', function (data) {
 			console.log('Test error: ' + data.toString());
 		});
 
-		cmd.on('close', function(code) {
-			console.log(`Exit code:   ${code}`);
+		let finished = false;
+		function onProcessClosed(code: number | null, signal: NodeJS.Signals | null): void {
+			if (finished) {
+				return;
+			}
+			finished = true;
+			console.log(`Exit code:   ${code ?? signal}`);
 
-			if (code !== 0) {
+			if (code === null) {
+				reject(signal);
+			} else if (code !== 0) {
 				reject('Failed');
 			}
 
 			console.log('Done\n');
-			resolve(code);
-		});
+			resolve(code ?? -1);
+		}
+
+		cmd.on('close', onProcessClosed);
+
+		cmd.on('exit', onProcessClosed);
 	});
 }
