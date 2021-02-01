@@ -13,9 +13,8 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true
 	},
+	"exclude": ["sample"],
 	"include": [
-		"src/core",
-		"src/jest"
-	],
-	"exclude": ["node_modules", "src/jest/**/*.test.ts"]
+		"src"
+	]
 }

@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 function colorize(colorCode: string) {
 	return (text: string): string => `\u001B[${colorCode}m${text}\u001B[0m`;
 }

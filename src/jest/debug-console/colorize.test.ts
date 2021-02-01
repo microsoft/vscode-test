@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import { bold, black, red, green, yellow, purple, redBg, greenBg, darkGray, white } from './colorize';
 
 test('adds bold formatting to text', () => {

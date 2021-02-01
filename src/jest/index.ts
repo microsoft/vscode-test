@@ -1,20 +1,30 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import * as path from 'path';
-import { runCLI } from '@jest/core';
+import { run as runJest } from 'jest-cli';
 import { logger } from './debug-console/logger';
-import createJestConfig from './create-jest-config';
-import getFailureMessages from './get-failure-messages';
 
-const rootDir = path.resolve(__dirname, '../../../../');
-const jestRunnerDir = __dirname;
+const rootDir = path.resolve(process.cwd(), '../../');
 
-export async function run(_testRoot: string, callback: (error: Error | null, failures?: any) => void): Promise<void> {
-	process.stdout.write = logger as any;
-	process.stderr.write = logger as any;
+export async function run(): Promise<void> {
+	process.stdout.write = (text: string) => !!logger(text);
+	process.stderr.write = (text: string) => !!logger(text);
 
-	try {
-		const { results } = await (runCLI as any)(createJestConfig(rootDir, jestRunnerDir), [rootDir]);
-		callback(null, getFailureMessages(results));
-	} catch (error) {
-		callback(error);
+	let args: string[] = [];
+	if (process.env.JEST_ARGS) {
+		args = JSON.parse(process.env.JEST_ARGS);
 	}
+
+	args.push(
+		'--runInBand',
+		'--env=vscode',
+		'--colors',
+		'--verbose',
+		`--setupFilesAfterEnv=${path.resolve(__dirname, './setup.js')}`
+	);
+
+	await runJest(args, rootDir);
 }
