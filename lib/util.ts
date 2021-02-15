@@ -8,8 +8,8 @@ import { URL } from 'url';
 import * as https from 'https';
 import * as request from './request';
 import { DownloadPlatform } from './download';
-import * as createHttpProxyAgent from 'https-proxy-agent';
-import * as createHttpsProxyAgent from 'http-proxy-agent';
+import * as createHttpsProxyAgent from 'https-proxy-agent';
+import * as createHttpProxyAgent from 'http-proxy-agent';
 import { readFileSync } from 'fs';
 
 export let systemDefaultPlatform: string;
@@ -34,8 +34,8 @@ export function getVSCodeDownloadUrl(version: string, platform?: DownloadPlatfor
 	return `https://update.code.visualstudio.com/${version}/${downloadPlatform}/stable`;
 }
 
-let PROXY_AGENT: createHttpProxyAgent.HttpsProxyAgent | undefined = undefined;
-let HTTPS_PROXY_AGENT: createHttpsProxyAgent.HttpProxyAgent | undefined = undefined;
+let PROXY_AGENT: createHttpProxyAgent.HttpProxyAgent | undefined = undefined;
+let HTTPS_PROXY_AGENT: createHttpsProxyAgent.HttpsProxyAgent | undefined = undefined;
 
 if (process.env.npm_config_proxy) {
 	PROXY_AGENT = createHttpProxyAgent(process.env.npm_config_proxy);
