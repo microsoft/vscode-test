@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.5.1 | 2021-01-25
+
+- Fix wrong http proxy agent used [#82](https://github.com/microsoft/vscode-test/issues/82)
+
 ### 1.5.0 | 2021-01-25
 
 - Fix download failing on windows with long file paths
