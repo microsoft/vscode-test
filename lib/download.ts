@@ -81,6 +81,10 @@ async function downloadVSCodeArchive(version: DownloadVersion, platform: Downloa
 }
 
 function printProgress(baseText: string, res: IncomingMessage) {
+	if (!process.stdout.isTTY) {
+		return;
+	}
+
 	const total = Number(res.headers['content-length']);
 	let received = 0;
 	let timeout: NodeJS.Timeout | undefined;
