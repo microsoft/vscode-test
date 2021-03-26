@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.5.2 | 2021-03-29
+
+- Don't write progress report when output is not connected to tty [#91](https://github.com/microsoft/vscode-test/pull/91)
+
 ### 1.5.1 | 2021-01-25
 
 - Fix wrong http proxy agent used [#82](https://github.com/microsoft/vscode-test/issues/82)
