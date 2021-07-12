@@ -177,7 +177,7 @@ function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, in
  * `'insiders'` for downloading latest Insiders.
  * When unspecified, download latest stable version.
  *
- * @returns Pormise of `vscodeExecutablePath`.
+ * @returns Promise of `vscodeExecutablePath`.
  */
 export async function downloadAndUnzipVSCode(version?: DownloadVersion, platform: DownloadPlatform = systemDefaultPlatform): Promise<string> {
 	if (version) {
