@@ -3,6 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export { downloadAndUnzipVSCode } from './download';
+export { download, downloadAndUnzipVSCode } from './download';
 export { runTests } from './runTest';
 export { resolveCliPathFromVSCodeExecutablePath } from './util';
