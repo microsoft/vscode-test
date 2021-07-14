@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.6.0 | 2021-07-14
+
+- Expose generic `download` API with support for `cachePath`
+
 ### 1.5.2 | 2021-03-29
 
 - Don't write progress report when output is not connected to tty [#91](https://github.com/microsoft/vscode-test/pull/91)
