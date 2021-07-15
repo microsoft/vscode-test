@@ -1,5 +1,5 @@
 {
-  "name": "vscode-test",
+  "name": "@vscode/test-electron",
   "version": "1.6.1",
   "scripts": {
     "compile": "tsc -p ./",

@@ -118,7 +118,7 @@ export async function getLatestInsidersMetadata(platform: string) {
  *
  * ```ts
  * const cp = require('child_process');
- * const { downloadAndUnzipVSCode, resolveCliPathFromExecutablePath } = require('vscode-test')
+ * const { downloadAndUnzipVSCode, resolveCliPathFromExecutablePath } = require('@vscode/test-electron')
  * const vscodeExecutablePath = await downloadAndUnzipVSCode('1.36.0');
  * const cliPath = resolveCliPathFromExecutablePath(vscodeExecutablePath);
  *
