@@ -1,5 +1,13 @@
 # Changelog
 
+### 1.6.2 | 2021-07-15
+
+- Add `--disable-workspace-trust` flag when running tests by default
+
+### 1.6.1 | 2021-07-15
+
+- Rename to `@vscode/test-electron`
+
 ### 1.6.0 | 2021-07-14
 
 - Expose generic `download` API with support for `cachePath`

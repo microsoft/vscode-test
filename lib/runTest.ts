@@ -91,6 +91,7 @@ export async function runTests(options: TestOptions): Promise<number> {
 	let args = [
 		// https://github.com/microsoft/vscode/issues/84238
 		'--no-sandbox',
+		'--disable-workspace-trust',
 		'--extensionDevelopmentPath=' + options.extensionDevelopmentPath,
 		'--extensionTestsPath=' + options.extensionTestsPath
 	];
