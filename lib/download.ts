@@ -21,6 +21,7 @@ import { Extract as extract } from 'unzipper';
 import { pipeline, Readable } from 'stream';
 import { tmpdir } from 'os';
 import { promisify } from 'util';
+import { Console } from 'console';
 
 const extensionRoot = process.cwd();
 
@@ -53,6 +54,10 @@ export interface DownloadOptions {
 	readonly cachePath: string;
 	readonly version: DownloadVersion;
 	readonly platform: DownloadPlatform;
+	/** Whether or not to suppress output to stdout/stderr. */
+	readonly silent: boolean;
+	/** Whether or not to log all output to stderr instead of stdout. */
+	readonly useStderr: boolean;
 }
 
 /**
@@ -67,9 +72,12 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 		fs.mkdirSync(options.cachePath);
 	}
 
+	const { silent } = options;
+
+	const output = options.useStderr ? process.stderr : process.stdout;
 	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform);
 	const text = `Downloading VS Code ${options.version} from ${downloadUrl}`;
-	process.stdout.write(text);
+	silent || output.write(text);
 
 	const res = await request.getStream(downloadUrl)
 	if (res.statusCode !== 302) {
@@ -81,12 +89,12 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 	}
 
 	const download = await request.getStream(archiveUrl);
-	printProgress(text, download);
+	silent || printProgress(text, download, output);
 	return { stream: download, format: archiveUrl.endsWith('.zip') ? 'zip' : 'tgz' } as const;
 }
 
-function printProgress(baseText: string, res: IncomingMessage) {
-	if (!process.stdout.isTTY) {
+function printProgress(baseText: string, res: IncomingMessage, output: NodeJS.WriteStream) {
+	if (!output.isTTY) {
 		return;
 	}
 
@@ -98,7 +106,7 @@ function printProgress(baseText: string, res: IncomingMessage) {
 	res.on('data', chunk => {
 		if (!timeout) {
 			timeout = setTimeout(() => {
-				process.stdout.write(`${reset}${baseText}: ${received}/${total} (${(received / total * 100).toFixed()}%)`);
+				output.write(`${reset}${baseText}: ${received}/${total} (${((received / total) * 100).toFixed()}%)`);
 				timeout = undefined;
 			}, 100);
 		}
@@ -111,7 +119,7 @@ function printProgress(baseText: string, res: IncomingMessage) {
 			clearTimeout(timeout);
 		}
 
-		console.log(`${reset}${baseText}: complete`);
+		output.write(`${reset}${baseText}: complete\n`);
 	});
 
 	res.on('error', err => {
@@ -122,7 +130,13 @@ function printProgress(baseText: string, res: IncomingMessage) {
 /**
  * Unzip a .zip or .tar.gz VS Code archive stream.
  */
-async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' | 'tgz') {
+async function unzipVSCode(
+	extractDir: string,
+	stream: Readable,
+	format: 'zip' | 'tgz',
+	silent = false,
+	useStderr = false
+) {
 	if (format === 'zip') {
 		// note: this used to use Expand-Archive, but this caused a failure
 		// on longer file paths on windows. Instead use unzipper, which does
@@ -143,7 +157,7 @@ async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' |
 
 			try {
 				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
-				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir]);
+				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir], undefined, silent, useStderr);
 			} finally {
 				// fs.unlink(stagingFile, () => undefined);
 			}
@@ -154,15 +168,23 @@ async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' |
 			fs.mkdirSync(extractDir);
 		}
 
-		await spawnDecompressorChild('tar', ['-xzf', '-', '-C', extractDir], stream);
+		await spawnDecompressorChild('tar', ['-xzf', '-', '-C', extractDir], stream, silent, useStderr);
 	}
 }
 
-function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, input?: Readable) {
+function spawnDecompressorChild(
+	command: string,
+	args: ReadonlyArray<string>,
+	input?: Readable,
+	silent = false,
+	useStderr = false
+) {
 	const child = cp.spawn(command, args, { stdio: 'pipe' });
 	input?.pipe(child.stdin);
-	child.stderr.pipe(process.stderr);
-	child.stdout.pipe(process.stdout);
+	if (!silent) {
+		child.stderr.pipe(process.stderr);
+		child.stdout.pipe(useStderr ? process.stderr : process.stdout);
+	}
 
 	return new Promise<void>((resolve, reject) => {
 		child.on('error', reject);
@@ -178,6 +200,10 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
 	let version = options?.version;
 	let platform = options?.platform ?? systemDefaultPlatform;
 	let cachePath = options?.cachePath ?? path.resolve(extensionRoot, '.vscode-test');
+	const silent = options?.silent ?? false;
+	const useStderr = options?.useStderr ?? false;
+
+	const logger = useStderr ? new Console(process.stderr) : console;
 
 	if (version) {
 		if (version === 'stable') {
@@ -205,33 +231,33 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
 				systemDefaultPlatform
 			);
 			if (currentHash === latestHash) {
-				console.log(`Found insiders matching latest Insiders release. Skipping download.`);
+				silent || logger.log(`Found insiders matching latest Insiders release. Skipping download.`);
 				return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath));
 			} else {
 				try {
-					console.log(`Remove outdated Insiders at ${downloadedPath} and re-downloading.`);
-					console.log(`Old: ${currentHash} | ${currentDate}`);
-					console.log(`New: ${latestHash} | ${new Date(latestTimestamp).toISOString()}`);
+					silent || logger.log(`Remove outdated Insiders at ${downloadedPath} and re-downloading.`);
+					silent || logger.log(`Old: ${currentHash} | ${currentDate}`);
+					silent || logger.log(`New: ${latestHash} | ${new Date(latestTimestamp).toISOString()}`);
 					await del.rmdir(downloadedPath);
-					console.log(`Removed ${downloadedPath}`);
+					silent || logger.log(`Removed ${downloadedPath}`);
 				} catch (err) {
-					console.error(err);
+					silent || logger.error(err);
 					throw Error(`Failed to remove outdated Insiders at ${downloadedPath}.`);
 				}
 			}
 		} else {
-			console.log(`Found ${downloadedPath}. Skipping download.`);
+			silent || logger.log(`Found ${downloadedPath}. Skipping download.`);
 
 			return Promise.resolve(downloadDirToExecutablePath(downloadedPath));
 		}
 	}
 
 	try {
-		const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath });
-		await unzipVSCode(downloadedPath, stream, format);
-		console.log(`Downloaded VS Code ${version} into ${downloadedPath}`);
+		const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, silent, useStderr });
+		await unzipVSCode(downloadedPath, stream, format, silent, useStderr);
+		silent || logger.log(`Downloaded VS Code ${version} into ${downloadedPath}`);
 	} catch (err) {
-		console.error(err);
+		silent || logger.error(err);
 		throw Error(`Failed to download and unzip VS Code ${version}`);
 	}
 
@@ -253,9 +279,16 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
  * `'stable'` for downloading latest stable release.
  * `'insiders'` for downloading latest Insiders.
  * When unspecified, download latest stable version.
+ * @param silent Whether or not to suppress output to stdout/stderr.
+ * @param useStderr Whether or not to log all output to stderr instead of stdout.
  *
  * @returns Promise of `vscodeExecutablePath`.
  */
-export async function downloadAndUnzipVSCode(version?: DownloadVersion, platform: DownloadPlatform = systemDefaultPlatform): Promise<string> {
-	return await download({ version, platform });
+export async function downloadAndUnzipVSCode(
+	version?: DownloadVersion,
+	platform: DownloadPlatform = systemDefaultPlatform,
+	silent = false,
+	useStderr = false
+): Promise<string> {
+	return await download({ version, platform, silent, useStderr });
 }
