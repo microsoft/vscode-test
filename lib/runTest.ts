@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as cp from 'child_process';
-import { downloadAndUnzipVSCode, DownloadVersion, DownloadPlatform } from './download';
+import * as path from 'path';
+import { downloadAndUnzipVSCode, DownloadVersion, DownloadPlatform, defaultCachePath } from './download';
 
 export interface TestOptions {
 	/**
@@ -36,6 +37,15 @@ export interface TestOptions {
 	 * Possible values are: `win32-archive`, `win32-x64-archive`, `darwin` and `linux-x64`.
 	 */
 	platform?: DownloadPlatform;
+
+	/**
+	 * Whether VS Code should be launched using default settings and extensions
+	 * installed on this machine. If `false`, then separate directories will be
+	 * used inside the `.vscode-test` folder within the project.
+	 *
+	 * Defaults to `false`.
+	 */
+	reuseMachineInstall?: boolean;
 
 	/**
 	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
@@ -91,6 +101,8 @@ export async function runTests(options: TestOptions): Promise<number> {
 	let args = [
 		// https://github.com/microsoft/vscode/issues/84238
 		'--no-sandbox',
+		'--skip-welcome',
+		'--skip-release-notes',
 		'--disable-workspace-trust',
 		'--extensionDevelopmentPath=' + options.extensionDevelopmentPath,
 		'--extensionTestsPath=' + options.extensionTestsPath
@@ -100,7 +112,21 @@ export async function runTests(options: TestOptions): Promise<number> {
 		args = options.launchArgs.concat(args);
 	}
 
+	if (!options.reuseMachineInstall) {
+		if (!hasArg('extensions-dir', args)) {
+			args.push(`--extensions-dir=${path.join(defaultCachePath, 'extensions')}`)
+		}
+
+		if (!hasArg('user-data-dir', args)) {
+			args.push(`--user-data-dir=${path.join(defaultCachePath, 'user-data')}`)
+		}
+	}
+
 	return innerRunTests(options.vscodeExecutablePath, args, options.extensionTestsEnv);
+}
+
+function hasArg(argName: string, argList: readonly string[]) {
+	return argList.some(a => a === `--${argName}` || a.startsWith(`--${argName}=`));
 }
 
 async function innerRunTests(

@@ -170,14 +170,16 @@ function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, in
 	})
 }
 
+export const defaultCachePath = path.resolve(extensionRoot, '.vscode-test');
+
 /**
  * Download and unzip a copy of VS Code.
  * @returns Promise of `vscodeExecutablePath`.
  */
 export async function download(options?: Partial<DownloadOptions>): Promise<string> {
 	let version = options?.version;
-	let platform = options?.platform ?? systemDefaultPlatform;
-	let cachePath = options?.cachePath ?? path.resolve(extensionRoot, '.vscode-test');
+	const platform = options?.platform ?? systemDefaultPlatform;
+	const cachePath = options?.cachePath ?? defaultCachePath;
 
 	if (version) {
 		if (version === 'stable') {

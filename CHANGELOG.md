@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.0.0 | 2021-12-14
+
+- Run tests using a separate instance of VS Code by default. This can be disabled by setting `reuseMachineInstall: true`.
+
 ### 1.6.2 | 2021-07-15
 
 - Add `--disable-workspace-trust` flag when running tests by default
