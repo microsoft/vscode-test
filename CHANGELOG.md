@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.0.1 | 2021-12-29
+
+- Fix extra new lines added to test output
+
 ### 2.0.0 | 2021-12-14
 
 - Run tests using a separate instance of VS Code by default. This can be disabled by setting `reuseMachineInstall: true`.
