@@ -113,13 +113,8 @@ async function innerRunTests(
 		const fullEnv = Object.assign({}, process.env, testRunnerEnv);
 		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
-		cmd.stdout.on('data', function (data) {
-			console.log(data.toString());
-		});
-
-		cmd.stderr.on('data', function (data) {
-			console.error(data.toString());
-		});
+		cmd.stdout.on('data', d => process.stdout.write(d));
+		cmd.stderr.on('data', d => process.stderr.write(d));
 
 		cmd.on('error', function (data) {
 			console.log('Test error: ' + data.toString());
