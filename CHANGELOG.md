@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.0.2 | 2021-12-29
+
+- Add `resolveCliArgsFromVSCodeExecutablePath`
+
 ### 2.0.1 | 2021-12-29
 
 - Fix extra new lines added to test output

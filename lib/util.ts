@@ -11,6 +11,7 @@ import { DownloadPlatform } from './download';
 import * as createHttpsProxyAgent from 'https-proxy-agent';
 import * as createHttpProxyAgent from 'http-proxy-agent';
 import { readFileSync } from 'fs';
+import { getProfileArguments, TestOptions } from './runTest';
 
 export let systemDefaultPlatform: string;
 
@@ -112,23 +113,10 @@ export async function getLatestInsidersMetadata(platform: string) {
 	return await request.getJSON<IUpdateMetadata>(remoteUrl);
 }
 
+
 /**
  * Resolve the VS Code cli path from executable path returned from `downloadAndUnzipVSCode`.
- * You can use this path to spawn processes for extension management. For example:
- *
- * ```ts
- * const cp = require('child_process');
- * const { downloadAndUnzipVSCode, resolveCliPathFromExecutablePath } = require('@vscode/test-electron')
- * const vscodeExecutablePath = await downloadAndUnzipVSCode('1.36.0');
- * const cliPath = resolveCliPathFromExecutablePath(vscodeExecutablePath);
- *
- * cp.spawnSync(cliPath, ['--install-extension', '<EXTENSION-ID-OR-PATH-TO-VSIX>'], {
- *   encoding: 'utf-8',
- *   stdio: 'inherit'
- * });
- * ```
- *
- * @param vscodeExecutablePath The `vscodeExecutablePath` from `downloadAndUnzipVSCode`.
+ * Usually you will want {@link resolveCliArgsFromVSCodeExecutablePath} instead.
  */
 export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string) {
 	if (process.platform === 'win32') {
@@ -146,4 +134,30 @@ export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: str
 			return path.resolve(vscodeExecutablePath, '../bin/code');
 		}
 	}
+}
+/**
+ * Resolve the VS Code cli arguments from executable path returned from `downloadAndUnzipVSCode`.
+ * You can use this path to spawn processes for extension management. For example:
+ *
+ * ```ts
+ * const cp = require('child_process');
+ * const { downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath } = require('@vscode/test-electron')
+ * const vscodeExecutablePath = await downloadAndUnzipVSCode('1.36.0');
+ * const [cli, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
+ *
+ * cp.spawnSync(cli, [...args, '--install-extension', '<EXTENSION-ID-OR-PATH-TO-VSIX>'], {
+ *   encoding: 'utf-8',
+ *   stdio: 'inherit'
+ * });
+ * ```
+ *
+ * @param vscodeExecutablePath The `vscodeExecutablePath` from `downloadAndUnzipVSCode`.
+ */
+export function resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath: string, options?: Pick<TestOptions, 'reuseMachineInstall'>) {
+	const args = [resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath)];
+	if (!options?.reuseMachineInstall) {
+		args.push(...getProfileArguments(args));
+	}
+
+	return args;
 }

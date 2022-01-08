@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as cp from 'child_process';
 
-import { runTests, downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath } from '../../lib/index';
+import { runTests, downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath } from '../../lib/index';
 
 async function go() {
 	try {
@@ -67,8 +67,8 @@ async function go() {
 		/**
 		 * Install Python extension
 		 */
-		const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-		cp.spawnSync(cliPath, ['--install-extension', 'ms-python.python'], {
+		const [cli, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
+		cp.spawnSync(cli, [...args, '--install-extension', 'ms-python.python'], {
 			encoding: 'utf-8',
 			stdio: 'inherit'
 		});

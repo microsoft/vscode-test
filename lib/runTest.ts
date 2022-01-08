@@ -113,16 +113,24 @@ export async function runTests(options: TestOptions): Promise<number> {
 	}
 
 	if (!options.reuseMachineInstall) {
-		if (!hasArg('extensions-dir', args)) {
-			args.push(`--extensions-dir=${path.join(defaultCachePath, 'extensions')}`)
-		}
-
-		if (!hasArg('user-data-dir', args)) {
-			args.push(`--user-data-dir=${path.join(defaultCachePath, 'user-data')}`)
-		}
+		args.push(...getProfileArguments(args));
 	}
 
 	return innerRunTests(options.vscodeExecutablePath, args, options.extensionTestsEnv);
+}
+
+/** Adds the extensions and user data dir to the arguments for the VS Code CLI */
+export function getProfileArguments(args: readonly string[]) {
+	const out: string[] = [];
+	if (!hasArg('extensions-dir', args)) {
+		out.push(`--extensions-dir=${path.join(defaultCachePath, 'extensions')}`)
+	}
+
+	if (!hasArg('user-data-dir', args)) {
+		out.push(`--user-data-dir=${path.join(defaultCachePath, 'user-data')}`)
+	}
+
+	return out;
 }
 
 function hasArg(argName: string, argList: readonly string[]) {
