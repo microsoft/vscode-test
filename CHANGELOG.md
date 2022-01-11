@@ -3,6 +3,7 @@
 ### 2.0.3 | 2021-01-11
 
 - Fix `@vscode/test-electron` auto updating
+- Use arm64 version of VS Code on relevant platforms
 
 ### 2.0.2 | 2021-01-07
 

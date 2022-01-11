@@ -14,7 +14,8 @@ import {
 	insidersDownloadDirToExecutablePath,
 	insidersDownloadDirMetadata,
 	getLatestInsidersMetadata,
-	systemDefaultPlatform
+	systemDefaultPlatform,
+	systemDefaultArchitecture
 } from './util';
 import { IncomingMessage } from 'http';
 import { Extract as extract } from 'unzipper';
@@ -49,10 +50,17 @@ type StringLiteralUnion<T extends U, U = string> = T | (U & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
 export type DownloadPlatform = StringLiteralUnion<'darwin' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64'>;
 
+export const enum DownloadArchitecture {
+	X64 = 'x64',
+	X86 = 'ia32',
+	ARM64 = 'arm64',
+}
+
 export interface DownloadOptions {
 	readonly cachePath: string;
 	readonly version: DownloadVersion;
 	readonly platform: DownloadPlatform;
+	readonly architecture: DownloadArchitecture;
 }
 
 /**
@@ -67,7 +75,7 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 		fs.mkdirSync(options.cachePath);
 	}
 
-	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform);
+	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform, options.architecture);
 	const text = `Downloading VS Code ${options.version} from ${downloadUrl}`;
 	process.stdout.write(text);
 
@@ -179,6 +187,7 @@ export const defaultCachePath = path.resolve(extensionRoot, '.vscode-test');
 export async function download(options?: Partial<DownloadOptions>): Promise<string> {
 	let version = options?.version;
 	const platform = options?.platform ?? systemDefaultPlatform;
+	const architecture = options?.architecture ?? systemDefaultArchitecture;
 	const cachePath = options?.cachePath ?? defaultCachePath;
 
 	if (version) {
@@ -229,7 +238,7 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
 	}
 
 	try {
-		const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath });
+		const { stream, format } = await downloadVSCodeArchive({ version, architecture, platform, cachePath });
 		await unzipVSCode(downloadedPath, stream, format);
 		console.log(`Downloaded VS Code ${version} into ${downloadedPath}`);
 	} catch (err) {

@@ -7,13 +7,13 @@ import * as path from 'path';
 import { URL } from 'url';
 import * as https from 'https';
 import * as request from './request';
-import { DownloadPlatform } from './download';
+import { DownloadArchitecture, DownloadPlatform } from './download';
 import * as createHttpsProxyAgent from 'https-proxy-agent';
 import * as createHttpProxyAgent from 'http-proxy-agent';
 import { readFileSync } from 'fs';
 import { getProfileArguments, TestOptions } from './runTest';
 
-export let systemDefaultPlatform: string;
+export let systemDefaultPlatform: DownloadPlatform;
 
 switch (process.platform) {
 	case 'darwin':
@@ -26,13 +26,31 @@ switch (process.platform) {
 		systemDefaultPlatform = 'linux-x64';
 }
 
-export function getVSCodeDownloadUrl(version: string, platform?: DownloadPlatform) {
-	const downloadPlatform = platform || systemDefaultPlatform;
+export const systemDefaultArchitecture = process.arch === 'arm64'
+	? DownloadArchitecture.ARM64
+	: process.arch === 'ia32'
+	? DownloadArchitecture.X86
+	: DownloadArchitecture.X64;
+
+export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPlatform, architecture = systemDefaultArchitecture) {
+
+	let downloadSegment: string;
+	switch (platform) {
+		case 'darwin':
+			downloadSegment = architecture === DownloadArchitecture.ARM64 ? 'darwin-arm64' : 'darwin';
+			break;
+		case 'win32-archive':
+			downloadSegment = architecture === DownloadArchitecture.ARM64 ? 'win32-arm64-archive' : 'win32-archive';
+			break;
+		default:
+			downloadSegment = platform;
+			break;
+	}
 
 	if (version === 'insiders') {
-		return `https://update.code.visualstudio.com/latest/${downloadPlatform}/insider`;
+		return `https://update.code.visualstudio.com/latest/${downloadSegment}/insider`;
 	}
-	return `https://update.code.visualstudio.com/${version}/${downloadPlatform}/stable`;
+	return `https://update.code.visualstudio.com/${version}/${downloadSegment}/stable`;
 }
 
 let PROXY_AGENT: createHttpProxyAgent.HttpProxyAgent | undefined = undefined;
