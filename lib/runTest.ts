@@ -101,6 +101,8 @@ export async function runTests(options: TestOptions): Promise<number> {
 	let args = [
 		// https://github.com/microsoft/vscode/issues/84238
 		'--no-sandbox',
+		// https://github.com/microsoft/vscode-test/issues/120
+		'--disable-updates',
 		'--skip-welcome',
 		'--skip-release-notes',
 		'--disable-workspace-trust',
