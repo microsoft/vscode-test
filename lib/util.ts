@@ -111,7 +111,7 @@ export function insidersDownloadDirMetadata(dir: string) {
 
 	return {
 		version: productJson.commit,
-		date: productJson.date
+		date: new Date(productJson.date)
 	};
 }
 

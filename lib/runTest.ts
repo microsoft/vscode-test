@@ -6,6 +6,7 @@
 import * as cp from 'child_process';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, DownloadVersion, DownloadPlatform, defaultCachePath } from './download';
+import { ProgressReporter } from './progress';
 
 export interface TestOptions {
 	/**
@@ -86,6 +87,13 @@ export interface TestOptions {
 	 * See `code --help` for possible arguments.
 	 */
 	launchArgs?: string[];
+
+	/**
+	 * Progress reporter to use while VS Code is downloaded. Defaults to a
+	 * console reporter. A {@link SilentReporter} is also available, and you
+	 * may implement your own.
+	 */
+	reporter?: ProgressReporter;
 }
 
 /**
@@ -95,7 +103,7 @@ export interface TestOptions {
  */
 export async function runTests(options: TestOptions): Promise<number> {
 	if (!options.vscodeExecutablePath) {
-		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version, options.platform);
+		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version, options.platform, options.reporter);
 	}
 
 	let args = [

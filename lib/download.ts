@@ -3,25 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from 'fs';
-import * as path from 'path';
 import * as cp from 'child_process';
-import * as request from './request';
-import * as del from './del';
-import {
-	getVSCodeDownloadUrl,
-	downloadDirToExecutablePath,
-	insidersDownloadDirToExecutablePath,
-	insidersDownloadDirMetadata,
-	getLatestInsidersMetadata,
-	systemDefaultPlatform,
-	systemDefaultArchitecture
-} from './util';
-import { IncomingMessage } from 'http';
-import { Extract as extract } from 'unzipper';
-import { pipeline, Readable } from 'stream';
+import * as fs from 'fs';
 import { tmpdir } from 'os';
+import * as path from 'path';
+import { pipeline, Readable } from 'stream';
+import { Extract as extract } from 'unzipper';
 import { promisify } from 'util';
+import * as del from './del';
+import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
+import * as request from './request';
+import {
+	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, systemDefaultArchitecture, systemDefaultPlatform
+} from './util';
 
 const extensionRoot = process.cwd();
 
@@ -61,6 +55,7 @@ export interface DownloadOptions {
 	readonly version: DownloadVersion;
 	readonly platform: DownloadPlatform;
 	readonly architecture: DownloadArchitecture;
+	readonly reporter?: ProgressReporter;
 }
 
 /**
@@ -76,55 +71,33 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 	}
 
 	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform, options.architecture);
-	const text = `Downloading VS Code ${options.version} from ${downloadUrl}`;
-	process.stdout.write(text);
-
+	options.reporter?.report({ stage: ProgressReportStage.ResolvingCDNLocation, url: downloadUrl });
 	const res = await request.getStream(downloadUrl)
 	if (res.statusCode !== 302) {
 		throw 'Failed to get VS Code archive location';
 	}
-	const archiveUrl = res.headers.location;
-	if (!archiveUrl) {
+	const url = res.headers.location;
+	if (!url) {
 		throw 'Failed to get VS Code archive location';
 	}
 
-	const download = await request.getStream(archiveUrl);
-	printProgress(text, download);
-	return { stream: download, format: archiveUrl.endsWith('.zip') ? 'zip' : 'tgz' } as const;
-}
+	res.destroy();
 
-function printProgress(baseText: string, res: IncomingMessage) {
-	if (!process.stdout.isTTY) {
-		return;
-	}
+	const download = await request.getStream(url);
+	const totalBytes = Number(download.headers['content-length']);
+	options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: 0, totalBytes });
 
-	const total = Number(res.headers['content-length']);
-	let received = 0;
-	let timeout: NodeJS.Timeout | undefined;
-
-	const reset = '\x1b[G\x1b[0K';
-	res.on('data', chunk => {
-		if (!timeout) {
-			timeout = setTimeout(() => {
-				process.stdout.write(`${reset}${baseText}: ${received}/${total} (${(received / total * 100).toFixed()}%)`);
-				timeout = undefined;
-			}, 100);
-		}
-
-		received += chunk.length;
+	let bytesSoFar = 0;
+	download.on('data', chunk => {
+		bytesSoFar += chunk.length;
+		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar, totalBytes });
 	});
 
-	res.on('end', () => {
-		if (timeout) {
-			clearTimeout(timeout);
-		}
-
-		console.log(`${reset}${baseText}: complete`);
+	download.on('end', () => {
+		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: totalBytes, totalBytes });
 	});
 
-	res.on('error', err => {
-		throw err;
-	});
+	return { stream: download, format: url.endsWith('.zip') ? 'zip' : 'tgz' } as const;
 }
 
 /**
@@ -189,6 +162,7 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
 	const platform = options?.platform ?? systemDefaultPlatform;
 	const architecture = options?.architecture ?? systemDefaultArchitecture;
 	const cachePath = options?.cachePath ?? defaultCachePath;
+	const reporter = options?.reporter ?? new ConsoleReporter(process.stdout.isTTY);
 
 	if (version) {
 		if (version === 'stable') {
@@ -207,42 +181,48 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
 		version = await fetchLatestStableVersion();
 	}
 
+	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version });
+
 	const downloadedPath = path.resolve(cachePath, `vscode-${platform}-${version}`);
 	if (fs.existsSync(downloadedPath)) {
 		if (version === 'insiders') {
+			reporter.report({ stage: ProgressReportStage.FetchingInsidersMetadata });
 			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(downloadedPath);
 
 			const { version: latestHash, timestamp: latestTimestamp } = await getLatestInsidersMetadata(
 				systemDefaultPlatform
 			);
 			if (currentHash === latestHash) {
-				console.log(`Found insiders matching latest Insiders release. Skipping download.`);
+				reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
 				return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath));
 			} else {
 				try {
-					console.log(`Remove outdated Insiders at ${downloadedPath} and re-downloading.`);
-					console.log(`Old: ${currentHash} | ${currentDate}`);
-					console.log(`New: ${latestHash} | ${new Date(latestTimestamp).toISOString()}`);
+					reporter.report({
+						stage: ProgressReportStage.ReplacingOldInsiders,
+						downloadedPath,
+						oldDate: currentDate,
+						oldHash: currentHash,
+						newDate: new Date(latestTimestamp),
+						newHash: latestHash,
+					});
 					await del.rmdir(downloadedPath);
-					console.log(`Removed ${downloadedPath}`);
 				} catch (err) {
-					console.error(err);
+					reporter.error(err);
 					throw Error(`Failed to remove outdated Insiders at ${downloadedPath}.`);
 				}
 			}
 		} else {
-			console.log(`Found ${downloadedPath}. Skipping download.`);
-
+			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
 			return Promise.resolve(downloadDirToExecutablePath(downloadedPath));
 		}
 	}
 
 	try {
-		const { stream, format } = await downloadVSCodeArchive({ version, architecture, platform, cachePath });
+		const { stream, format } = await downloadVSCodeArchive({ version, architecture, platform, cachePath, reporter });
 		await unzipVSCode(downloadedPath, stream, format);
-		console.log(`Downloaded VS Code ${version} into ${downloadedPath}`);
+		reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
 	} catch (err) {
-		console.error(err);
+		reporter.error(err);
 		throw Error(`Failed to download and unzip VS Code ${version}`);
 	}
 
@@ -267,6 +247,10 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
  *
  * @returns Promise of `vscodeExecutablePath`.
  */
-export async function downloadAndUnzipVSCode(version?: DownloadVersion, platform: DownloadPlatform = systemDefaultPlatform): Promise<string> {
-	return await download({ version, platform });
+export async function downloadAndUnzipVSCode(
+	version?: DownloadVersion,
+	platform: DownloadPlatform = systemDefaultPlatform,
+	reporter?: ProgressReporter,
+): Promise<string> {
+	return await download({ version, platform, reporter });
 }
