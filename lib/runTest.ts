@@ -94,6 +94,12 @@ export interface TestOptions {
 	 * may implement your own.
 	 */
 	reporter?: ProgressReporter;
+
+	/**
+	 * Whether the downloaded zip should be synchronously extracted. Should be
+	 * omitted unless you're experiencing issues installing VS Code versions.
+	 */
+	extractSync?: boolean;
 }
 
 /**
@@ -103,7 +109,7 @@ export interface TestOptions {
  */
 export async function runTests(options: TestOptions): Promise<number> {
 	if (!options.vscodeExecutablePath) {
-		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options.version, options.platform, options.reporter);
+		options.vscodeExecutablePath = await downloadAndUnzipVSCode(options);
 	}
 
 	let args = [

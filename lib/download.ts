@@ -56,6 +56,7 @@ export interface DownloadOptions {
 	readonly platform: DownloadPlatform;
 	readonly architecture: DownloadArchitecture;
 	readonly reporter?: ProgressReporter;
+	readonly extractSync?: boolean;
 }
 
 /**
@@ -103,7 +104,9 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 /**
  * Unzip a .zip or .tar.gz VS Code archive stream.
  */
-async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' | 'tgz') {
+async function unzipVSCode(reporter: ProgressReporter, extractDir: string, extractSync: boolean, stream: Readable, format: 'zip' | 'tgz') {
+	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
+
 	if (format === 'zip') {
 		// note: this used to use Expand-Archive, but this caused a failure
 		// on longer file paths on windows. Instead use unzipper, which does
@@ -112,21 +115,31 @@ async function unzipVSCode(extractDir: string, stream: Readable, format: 'zip' |
 		// However it has problems that prevent it working on OSX:
 		// - https://github.com/ZJONSSON/node-unzipper/issues/216 (avoidable)
 		// - https://github.com/ZJONSSON/node-unzipper/issues/115 (not avoidable)
-		if (process.platform !== 'darwin') {
+		if (process.platform === 'win32' && extractSync) {
+			try {
+				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
+				reporter.report({ stage: ProgressReportStage.ExtractingSynchonrously });
+				await spawnDecompressorChild('powershell.exe', [
+					'-NoProfile', '-ExecutionPolicy', 'Bypass', '-NonInteractive', '-NoLogo',
+					'-Command', `Microsoft.PowerShell.Archive\\Expand-Archive -Path "${stagingFile}" -DestinationPath "${extractDir}"`
+				]);
+			} finally {
+				fs.unlink(stagingFile, () => undefined);
+			}
+		} else if (process.platform !== 'darwin' && !extractSync) {
 			await new Promise((resolve, reject) =>
 				stream
 					.pipe(extract({ path: extractDir }))
 					.on('close', resolve)
 					.on('error', reject)
 			);
-		} else {
-			const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
-
+		}  else { // darwin or *nix sync
 			try {
 				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
+				reporter.report({ stage: ProgressReportStage.ExtractingSynchonrously });
 				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir]);
 			} finally {
-				// fs.unlink(stagingFile, () => undefined);
+				fs.unlink(stagingFile, () => undefined);
 			}
 		}
 	} else {
@@ -157,12 +170,15 @@ export const defaultCachePath = path.resolve(extensionRoot, '.vscode-test');
  * Download and unzip a copy of VS Code.
  * @returns Promise of `vscodeExecutablePath`.
  */
-export async function download(options?: Partial<DownloadOptions>): Promise<string> {
+export async function download(options: Partial<DownloadOptions> = {}): Promise<string> {
 	let version = options?.version;
-	const platform = options?.platform ?? systemDefaultPlatform;
-	const architecture = options?.architecture ?? systemDefaultArchitecture;
-	const cachePath = options?.cachePath ?? defaultCachePath;
-	const reporter = options?.reporter ?? new ConsoleReporter(process.stdout.isTTY);
+	const {
+		platform = systemDefaultPlatform,
+		architecture = systemDefaultArchitecture,
+		cachePath = defaultCachePath,
+		reporter = new ConsoleReporter(process.stdout.isTTY),
+		extractSync = false,
+	} = options;
 
 	if (version) {
 		if (version === 'stable') {
@@ -219,7 +235,7 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
 
 	try {
 		const { stream, format } = await downloadVSCodeArchive({ version, architecture, platform, cachePath, reporter });
-		await unzipVSCode(downloadedPath, stream, format);
+		await unzipVSCode(reporter, downloadedPath, extractSync, stream, format);
 		reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
 	} catch (err) {
 		reporter.error(err);
@@ -247,10 +263,22 @@ export async function download(options?: Partial<DownloadOptions>): Promise<stri
  *
  * @returns Promise of `vscodeExecutablePath`.
  */
+export async function downloadAndUnzipVSCode(options: Partial<DownloadOptions>): Promise<string>;
 export async function downloadAndUnzipVSCode(
 	version?: DownloadVersion,
-	platform: DownloadPlatform = systemDefaultPlatform,
+	platform?: DownloadPlatform,
 	reporter?: ProgressReporter,
+	extractSync?: boolean,
+): Promise<string>;
+export async function downloadAndUnzipVSCode(
+	versionOrOptions?: DownloadVersion | Partial<DownloadOptions>,
+	platform?: DownloadPlatform,
+	reporter?: ProgressReporter,
+	extractSync?: boolean,
 ): Promise<string> {
-	return await download({ version, platform, reporter });
+	return await download(
+		typeof versionOrOptions === 'object'
+			? versionOrOptions as Partial<DownloadOptions>
+			: { version: versionOrOptions, platform, reporter, extractSync }
+	);
 }

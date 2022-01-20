@@ -19,6 +19,8 @@ export enum ProgressReportStage {
 	ResolvingCDNLocation = 'resolvingCDNLocation',
 	/** Fired continuously while a download happens */
 	Downloading = 'downloading',
+	/** Fired when the command is issued to do a synchronous extraction. May not fire depending on the platform and options. */
+	ExtractingSynchonrously = 'extractingSynchonrously',
 	/** Fired after folder is downloaded and unzipped */
 	NewInstallComplete = 'newInstallComplete',
 }
@@ -31,6 +33,7 @@ export type ProgressReport =
 	| { stage: ProgressReportStage.FoundMatchingInstall; downloadedPath: string }
 	| { stage: ProgressReportStage.ResolvingCDNLocation; url: string }
 	| { stage: ProgressReportStage.Downloading; url: string; totalBytes: number; bytesSoFar: number; }
+	| { stage: ProgressReportStage.ExtractingSynchonrously; }
 	| { stage: ProgressReportStage.NewInstallComplete, downloadedPath: string; }
 
 export interface ProgressReporter {
