@@ -83,7 +83,7 @@ export class ConsoleReporter implements ProgressReporter {
 				console.log(`Downloading VS Code ${this.version} from ${report.url}`)
 				break;
 			case ProgressReportStage.Downloading:
-				if (!this.showDownloadProgress) {
+				if (!this.showDownloadProgress && report.bytesSoFar === 0) {
 					console.log(`Downloading VS Code (${report.totalBytes}B)`);
 				} else if (!this.downloadReport) {
 					this.downloadReport = { timeout: setTimeout(() => this.reportDownload(), 100), report };
