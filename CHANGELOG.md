@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.1 | 2021-01-20
+
+- Fix excessive logging when running in CI
+
 ### 2.1.0 | 2021-01-14
 
 - Add a progress `reporter` option on the `TestOptions`, which can be used to see more detail or silence download progress.
