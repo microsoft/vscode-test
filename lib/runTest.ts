@@ -183,10 +183,10 @@ async function innerRunTests(
 				reject(signal);
 			} else if (code !== 0) {
 				reject('Failed');
+			} else {
+			        console.log('Done\n');
+			        resolve(code ?? -1);
 			}
-
-			console.log('Done\n');
-			resolve(code ?? -1);
 		}
 
 		cmd.on('close', onProcessClosed);
