@@ -137,7 +137,7 @@ export async function getLatestInsidersMetadata(platform: string) {
  * Usually you will want {@link resolveCliArgsFromVSCodeExecutablePath} instead.
  */
 export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string, platform: DownloadPlatform) {
-	if (platform === 'win32') {
+	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
 			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');
 		} else {
@@ -172,7 +172,7 @@ export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: str
  * @param vscodeExecutablePath The `vscodeExecutablePath` from `downloadAndUnzipVSCode`.
  */
 export function resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath: string, options?: Pick<TestOptions, 'reuseMachineInstall' | 'platform'>) {
-	const args = [resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, options?.platform ?? process.platform)];
+	const args = [resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, options?.platform ?? systemDefaultPlatform)];
 	if (!options?.reuseMachineInstall) {
 		args.push(...getProfileArguments(args));
 	}
