@@ -78,31 +78,31 @@ export function urlToOptions(url: string): https.RequestOptions {
 	return options;
 }
 
-export function downloadDirToExecutablePath(dir: string) {
-	if (process.platform === 'win32') {
+export function downloadDirToExecutablePath(dir: string, platform: DownloadPlatform) {
+	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
 		return path.resolve(dir, 'Code.exe');
-	} else if (process.platform === 'darwin') {
+	} else if (platform === 'darwin') {
 		return path.resolve(dir, 'Visual Studio Code.app/Contents/MacOS/Electron');
 	} else {
 		return path.resolve(dir, 'VSCode-linux-x64/code');
 	}
 }
 
-export function insidersDownloadDirToExecutablePath(dir: string) {
-	if (process.platform === 'win32') {
+export function insidersDownloadDirToExecutablePath(dir: string, platform: DownloadPlatform) {
+	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
 		return path.resolve(dir, 'Code - Insiders.exe');
-	} else if (process.platform === 'darwin') {
+	} else if (platform === 'darwin') {
 		return path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron');
 	} else {
 		return path.resolve(dir, 'VSCode-linux-x64/code-insiders');
 	}
 }
 
-export function insidersDownloadDirMetadata(dir: string) {
+export function insidersDownloadDirMetadata(dir: string, platform: DownloadPlatform) {
 	let productJsonPath;
-	if (process.platform === 'win32') {
+	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
 		productJsonPath = path.resolve(dir, 'resources/app/product.json');
-	} else if (process.platform === 'darwin') {
+	} else if (platform === 'darwin') {
 		productJsonPath = path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/Resources/app/product.json');
 	} else {
 		productJsonPath = path.resolve(dir, 'VSCode-linux-x64/resources/app/product.json');
@@ -136,14 +136,14 @@ export async function getLatestInsidersMetadata(platform: string) {
  * Resolve the VS Code cli path from executable path returned from `downloadAndUnzipVSCode`.
  * Usually you will want {@link resolveCliArgsFromVSCodeExecutablePath} instead.
  */
-export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string) {
-	if (process.platform === 'win32') {
+export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string, platform: DownloadPlatform) {
+	if (platform === 'win32') {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
 			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');
 		} else {
 			return path.resolve(vscodeExecutablePath, '../bin/code.cmd');
 		}
-	} else if (process.platform === 'darwin') {
+	} else if (platform === 'darwin') {
 		return path.resolve(vscodeExecutablePath, '../../../Contents/Resources/app/bin/code');
 	} else {
 		if (vscodeExecutablePath.endsWith('code-insiders')) {
@@ -171,8 +171,8 @@ export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: str
  *
  * @param vscodeExecutablePath The `vscodeExecutablePath` from `downloadAndUnzipVSCode`.
  */
-export function resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath: string, options?: Pick<TestOptions, 'reuseMachineInstall'>) {
-	const args = [resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath)];
+export function resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath: string, options?: Pick<TestOptions, 'reuseMachineInstall' | 'platform'>) {
+	const args = [resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, options?.platform ?? process.platform)];
 	if (!options?.reuseMachineInstall) {
 		args.push(...getProfileArguments(args));
 	}

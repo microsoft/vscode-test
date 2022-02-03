@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.2 | TBD
+
+- Fix executable path being returned incorrectly on cross-platform downloads
+
 ### 2.1.1 | 2021-01-20
 
 - Fix excessive logging when running in CI

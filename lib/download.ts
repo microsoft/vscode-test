@@ -203,14 +203,14 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	if (fs.existsSync(downloadedPath)) {
 		if (version === 'insiders') {
 			reporter.report({ stage: ProgressReportStage.FetchingInsidersMetadata });
-			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(downloadedPath);
+			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(downloadedPath, platform);
 
 			const { version: latestHash, timestamp: latestTimestamp } = await getLatestInsidersMetadata(
 				systemDefaultPlatform
 			);
 			if (currentHash === latestHash) {
 				reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
-				return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath));
+				return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform));
 			} else {
 				try {
 					reporter.report({
@@ -229,7 +229,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			}
 		} else {
 			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
-			return Promise.resolve(downloadDirToExecutablePath(downloadedPath));
+			return Promise.resolve(downloadDirToExecutablePath(downloadedPath, platform));
 		}
 	}
 
@@ -243,9 +243,9 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	}
 
 	if (version === 'insiders') {
-		return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath));
+		return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform));
 	} else {
-		return downloadDirToExecutablePath(downloadedPath);
+		return downloadDirToExecutablePath(downloadedPath, platform);
 	}
 }
 
