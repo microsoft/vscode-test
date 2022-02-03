@@ -87,7 +87,7 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 	const download = await request.getStream(url);
 	const totalBytes = Number(download.headers['content-length']);
 	const contentType = download.headers['content-type'];
-	const isZip = contentType ? contentType === 'application/zip' : url.endsWith('.zip')
+	const isZip = contentType ? contentType === 'application/zip' : url.endsWith('.zip');
 
 	options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: 0, totalBytes });
 
