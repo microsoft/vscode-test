@@ -86,6 +86,9 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 
 	const download = await request.getStream(url);
 	const totalBytes = Number(download.headers['content-length']);
+	const contentType = download.headers['content-type'];
+	const isZip = contentType ? contentType === 'application/zip' : url.endsWith('.zip');
+
 	options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: 0, totalBytes });
 
 	let bytesSoFar = 0;
@@ -98,7 +101,7 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: totalBytes, totalBytes });
 	});
 
-	return { stream: download, format: url.endsWith('.zip') ? 'zip' : 'tgz' } as const;
+	return { stream: download, format: isZip ? 'zip' : 'tgz' } as const;
 }
 
 /**
