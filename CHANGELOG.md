@@ -3,6 +3,7 @@
 ### 2.1.2 | TBD
 
 - Fix executable path being returned incorrectly on cross-platform downloads
+- Fix tests sometimes failing with EACCESS errors on OSX
 
 ### 2.1.1 | 2021-01-20
 
