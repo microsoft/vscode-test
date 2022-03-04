@@ -42,6 +42,9 @@ export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPl
 		case 'win32-archive':
 			downloadSegment = architecture === DownloadArchitecture.ARM64 ? 'win32-arm64-archive' : 'win32-archive';
 			break;
+		case 'linux-x64':
+			downloadSegment = architecture === DownloadArchitecture.ARM64 ? 'linux-arm64' : 'linux-x64';
+		break;
 		default:
 			downloadSegment = platform;
 			break;

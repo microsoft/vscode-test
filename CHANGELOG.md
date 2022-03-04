@@ -1,24 +1,28 @@
 # Changelog
 
-### 2.1.2 | TBD
+### 2.1.3 | 2022-03-04
+
+- Support arm64 builds on Linux
+
+### 2.1.2 | 2022-02-04
 
 - Fix executable path being returned incorrectly on cross-platform downloads
 - Fix tests sometimes failing with EACCESS errors on OSX
 
-### 2.1.1 | 2021-01-20
+### 2.1.1 | 2022-01-20
 
 - Fix excessive logging when running in CI
 
-### 2.1.0 | 2021-01-14
+### 2.1.0 | 2022-01-14
 
 - Add a progress `reporter` option on the `TestOptions`, which can be used to see more detail or silence download progress.
 
-### 2.0.3 | 2021-01-11
+### 2.0.3 | 2022-01-11
 
 - Fix `@vscode/test-electron` auto updating
 - Use arm64 version of VS Code on relevant platforms
 
-### 2.0.2 | 2021-01-07
+### 2.0.2 | 2022-01-07
 
 - Add `resolveCliArgsFromVSCodeExecutablePath`
 
