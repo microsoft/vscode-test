@@ -7,7 +7,7 @@ import * as path from 'path';
 import { URL } from 'url';
 import * as https from 'https';
 import * as request from './request';
-import { DownloadArchitecture, DownloadPlatform } from './download';
+import { DownloadPlatform } from './download';
 import * as createHttpsProxyAgent from 'https-proxy-agent';
 import * as createHttpProxyAgent from 'http-proxy-agent';
 import { readFileSync } from 'fs';
@@ -15,45 +15,33 @@ import { getProfileArguments, TestOptions } from './runTest';
 
 export let systemDefaultPlatform: DownloadPlatform;
 
+const windowsPlatforms = new Set<DownloadPlatform>(['win32-archive', 'win32-x64-archive', 'win32-arm64-archive']);
+const darwinPlatforms = new Set<DownloadPlatform>(['darwin-arm64', 'darwin']);
+
 switch (process.platform) {
 	case 'darwin':
-		systemDefaultPlatform = 'darwin';
+		systemDefaultPlatform = process.arch === 'arm64' ? 'darwin-arm64' : 'darwin';
 		break;
 	case 'win32':
-		systemDefaultPlatform = 'win32-archive';
+		systemDefaultPlatform = process.arch === 'arm64'
+			? 'win32-arm64-archive'
+			: process.arch === 'ia32'
+			? 'win32-archive'
+			: 'win32-x64-archive';
 		break;
 	default:
-		systemDefaultPlatform = 'linux-x64';
+		systemDefaultPlatform = process.arch === 'arm64'
+			? 'linux-arm64'
+			: process.arch === 'arm'
+			? 'linux-armhf'
+			: 'linux-x64';
 }
 
-export const systemDefaultArchitecture = process.arch === 'arm64'
-	? DownloadArchitecture.ARM64
-	: process.arch === 'ia32'
-	? DownloadArchitecture.X86
-	: DownloadArchitecture.X64;
-
-export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPlatform, architecture = systemDefaultArchitecture) {
-
-	let downloadSegment: string;
-	switch (platform) {
-		case 'darwin':
-			downloadSegment = architecture === DownloadArchitecture.ARM64 ? 'darwin-arm64' : 'darwin';
-			break;
-		case 'win32-archive':
-			downloadSegment = architecture === DownloadArchitecture.ARM64 ? 'win32-arm64-archive' : 'win32-archive';
-			break;
-		case 'linux-x64':
-			downloadSegment = architecture === DownloadArchitecture.ARM64 ? 'linux-arm64' : 'linux-x64';
-		break;
-		default:
-			downloadSegment = platform;
-			break;
-	}
-
+export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPlatform) {
 	if (version === 'insiders') {
-		return `https://update.code.visualstudio.com/latest/${downloadSegment}/insider`;
+		return `https://update.code.visualstudio.com/latest/${platform}/insider`;
 	}
-	return `https://update.code.visualstudio.com/${version}/${downloadSegment}/stable`;
+	return `https://update.code.visualstudio.com/${version}/${platform}/stable`;
 }
 
 let PROXY_AGENT: createHttpProxyAgent.HttpProxyAgent | undefined = undefined;
@@ -82,33 +70,33 @@ export function urlToOptions(url: string): https.RequestOptions {
 }
 
 export function downloadDirToExecutablePath(dir: string, platform: DownloadPlatform) {
-	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
+	if (windowsPlatforms.has(platform)) {
 		return path.resolve(dir, 'Code.exe');
-	} else if (platform === 'darwin') {
+	} else if (darwinPlatforms.has(platform)) {
 		return path.resolve(dir, 'Visual Studio Code.app/Contents/MacOS/Electron');
 	} else {
-		return path.resolve(dir, 'VSCode-linux-x64/code');
+		return path.resolve(dir, 'code');
 	}
 }
 
 export function insidersDownloadDirToExecutablePath(dir: string, platform: DownloadPlatform) {
-	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
+	if (windowsPlatforms.has(platform)) {
 		return path.resolve(dir, 'Code - Insiders.exe');
-	} else if (platform === 'darwin') {
+	} else if (darwinPlatforms.has(platform)) {
 		return path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron');
 	} else {
-		return path.resolve(dir, 'VSCode-linux-x64/code-insiders');
+		return path.resolve(dir, 'code-insiders');
 	}
 }
 
 export function insidersDownloadDirMetadata(dir: string, platform: DownloadPlatform) {
 	let productJsonPath;
-	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
+	if (windowsPlatforms.has(platform)) {
 		productJsonPath = path.resolve(dir, 'resources/app/product.json');
-	} else if (platform === 'darwin') {
+	} else if (darwinPlatforms.has(platform)) {
 		productJsonPath = path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/Resources/app/product.json');
 	} else {
-		productJsonPath = path.resolve(dir, 'VSCode-linux-x64/resources/app/product.json');
+		productJsonPath = path.resolve(dir, 'resources/app/product.json');
 	}
 	const productJson = JSON.parse(readFileSync(productJsonPath, 'utf-8'));
 
@@ -140,13 +128,13 @@ export async function getLatestInsidersMetadata(platform: string) {
  * Usually you will want {@link resolveCliArgsFromVSCodeExecutablePath} instead.
  */
 export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string, platform: DownloadPlatform) {
-	if (platform === 'win32-archive' || platform === 'win32-x64-archive') {
+	if (windowsPlatforms.has(platform)) {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
 			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');
 		} else {
 			return path.resolve(vscodeExecutablePath, '../bin/code.cmd');
 		}
-	} else if (platform === 'darwin') {
+	} else if (darwinPlatforms.has(platform)) {
 		return path.resolve(vscodeExecutablePath, '../../../Contents/Resources/app/bin/code');
 	} else {
 		if (vscodeExecutablePath.endsWith('code-insiders')) {
