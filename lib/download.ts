@@ -14,7 +14,7 @@ import * as del from './del';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
 import * as request from './request';
 import {
-	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, systemDefaultArchitecture, systemDefaultPlatform
+	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, systemDefaultPlatform
 } from './util';
 
 const extensionRoot = process.cwd();
@@ -42,19 +42,12 @@ async function isValidVersion(version: string) {
 // eslint-disable-next-line @typescript-eslint/ban-types
 type StringLiteralUnion<T extends U, U = string> = T | (U & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
-export type DownloadPlatform = StringLiteralUnion<'darwin' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64'>;
-
-export const enum DownloadArchitecture {
-	X64 = 'x64',
-	X86 = 'ia32',
-	ARM64 = 'arm64',
-}
+export type DownloadPlatform = StringLiteralUnion<'darwin' | 'darwin-arm64' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'>;
 
 export interface DownloadOptions {
 	readonly cachePath: string;
 	readonly version: DownloadVersion;
 	readonly platform: DownloadPlatform;
-	readonly architecture: DownloadArchitecture;
 	readonly reporter?: ProgressReporter;
 	readonly extractSync?: boolean;
 }
@@ -71,7 +64,7 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 		fs.mkdirSync(options.cachePath);
 	}
 
-	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform, options.architecture);
+	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform);
 	options.reporter?.report({ stage: ProgressReportStage.ResolvingCDNLocation, url: downloadUrl });
 	const res = await request.getStream(downloadUrl)
 	if (res.statusCode !== 302) {
@@ -151,7 +144,7 @@ async function unzipVSCode(reporter: ProgressReporter, extractDir: string, extra
 			fs.mkdirSync(extractDir);
 		}
 
-		await spawnDecompressorChild('tar', ['-xzf', '-', '-C', extractDir], stream);
+		await spawnDecompressorChild('tar', ['-xzf', '-', '--strip-components=1', '-C', extractDir], stream);
 	}
 }
 
@@ -177,7 +170,6 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	let version = options?.version;
 	const {
 		platform = systemDefaultPlatform,
-		architecture = systemDefaultArchitecture,
 		cachePath = defaultCachePath,
 		reporter = new ConsoleReporter(process.stdout.isTTY),
 		extractSync = false,
@@ -237,7 +229,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	}
 
 	try {
-		const { stream, format } = await downloadVSCodeArchive({ version, architecture, platform, cachePath, reporter });
+		const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter });
 		await unzipVSCode(reporter, downloadedPath, extractSync, stream, format);
 		reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
 	} catch (err) {

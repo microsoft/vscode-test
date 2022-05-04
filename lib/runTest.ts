@@ -30,12 +30,18 @@ export interface TestOptions {
 	version?: DownloadVersion;
 
 	/**
-	 * The VS Code platform to download. If not specified, defaults to:
-	 * - Windows: `win32-archive`
-	 * - macOS: `darwin`
-	 * - Linux: `linux-x64`
+	 * The VS Code platform to download. If not specified, it defaults to the
+	 * current platform.
 	 *
-	 * Possible values are: `win32-archive`, `win32-x64-archive`, `darwin` and `linux-x64`.
+	 * Possible values are:
+	 * 	- `win32-archive`
+	 * 	- `win32-x64-archive`
+	 * 	- `win32-arm64-archive		`
+	 * 	- `darwin`
+	 * 	- `darwin-arm64`
+	 * 	- `linux-x64`
+	 * 	- `linux-arm64`
+	 * 	- `linux-armhf`
 	 */
 	platform?: DownloadPlatform;
 
@@ -184,8 +190,8 @@ async function innerRunTests(
 			} else if (code !== 0) {
 				reject('Failed');
 			} else {
-			        console.log('Done\n');
-			        resolve(code ?? -1);
+				console.log('Done\n');
+				resolve(code ?? -1);
 			}
 		}
 
