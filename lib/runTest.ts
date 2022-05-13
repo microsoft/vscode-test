@@ -58,7 +58,7 @@ export interface TestOptions {
 	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
 	 * Must include a `package.json` Extension Manifest.
 	 */
-	extensionDevelopmentPath: string;
+	extensionDevelopmentPath: string | string[];
 
 	/**
 	 * Absolute path to the extension tests runner. Passed to `--extensionTestsPath`.
@@ -126,9 +126,15 @@ export async function runTests(options: TestOptions): Promise<number> {
 		'--skip-welcome',
 		'--skip-release-notes',
 		'--disable-workspace-trust',
-		'--extensionDevelopmentPath=' + options.extensionDevelopmentPath,
 		'--extensionTestsPath=' + options.extensionTestsPath
 	];
+
+	if (Array.isArray(options.extensionDevelopmentPath)) {
+		args.push(...options.extensionDevelopmentPath.map(devPath =>
+			`--extensionDevelopmentPath=${devPath}`));
+	} else {
+		args.push(`--extensionDevelopmentPath=${options.extensionDevelopmentPath}`);
+	}
 
 	if (options.launchArgs) {
 		args = options.launchArgs.concat(args);
