@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.4 | 2022-06-10
+
+- Fix uncaught error when failing to connect to the extension service
+
 ### 2.1.3 | 2022-03-04
 
 - Support arm64 builds on Linux
