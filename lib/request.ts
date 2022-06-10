@@ -36,9 +36,7 @@ export async function getJSON<T>(api: string): Promise<T> {
 				}
 			});
 
-			res.on('error', err => {
-				reject(err);
-			});
-		});
+			res.on('error', reject);
+		}).on('error', reject);
 	});
 }
