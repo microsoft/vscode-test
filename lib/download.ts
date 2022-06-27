@@ -21,6 +21,8 @@ const extensionRoot = process.cwd();
 
 const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releases/stable`;
 
+const DOWNLOAD_ATTEMPTS = 3;
+
 async function fetchLatestStableVersion(): Promise<string> {
 	const versions = await request.getJSON(vscodeStableReleasesAPI);
 	if (!versions || !Array.isArray(versions) || !versions[0]) {
@@ -228,14 +230,22 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		}
 	}
 
-	try {
-		const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter });
-		await unzipVSCode(reporter, downloadedPath, extractSync, stream, format);
-		reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
-	} catch (err) {
-		reporter.error(err);
-		throw Error(`Failed to download and unzip VS Code ${version}`);
+	for (let i = 0;; i++) {
+		try {
+			const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter });
+			await unzipVSCode(reporter, downloadedPath, extractSync, stream, format);
+			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
+			break;
+		} catch (error) {
+			if (i++ < DOWNLOAD_ATTEMPTS) {
+				reporter.report({ stage: ProgressReportStage.Retrying, attempt: i, error: error as Error, totalAttempts: DOWNLOAD_ATTEMPTS });
+			} else {
+				reporter.error(error);
+				throw Error(`Failed to download and unzip VS Code ${version}`);
+			}
+		}
 	}
+	reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
 
 	if (version === 'insiders') {
 		return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform));

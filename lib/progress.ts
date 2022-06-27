@@ -21,6 +21,8 @@ export enum ProgressReportStage {
 	Downloading = 'downloading',
 	/** Fired when the command is issued to do a synchronous extraction. May not fire depending on the platform and options. */
 	ExtractingSynchonrously = 'extractingSynchonrously',
+	/** Fired when the download fails and a retry will be attempted */
+	Retrying = 'retrying',
 	/** Fired after folder is downloaded and unzipped */
 	NewInstallComplete = 'newInstallComplete',
 }
@@ -33,6 +35,7 @@ export type ProgressReport =
 	| { stage: ProgressReportStage.FoundMatchingInstall; downloadedPath: string }
 	| { stage: ProgressReportStage.ResolvingCDNLocation; url: string }
 	| { stage: ProgressReportStage.Downloading; url: string; totalBytes: number; bytesSoFar: number; }
+	| { stage: ProgressReportStage.Retrying; error: Error, attempt: number; totalAttempts: number }
 	| { stage: ProgressReportStage.ExtractingSynchonrously; }
 	| { stage: ProgressReportStage.NewInstallComplete, downloadedPath: string; }
 
@@ -76,9 +79,6 @@ export class ConsoleReporter implements ProgressReporter {
 			case ProgressReportStage.FoundMatchingInstall:
 				console.log(`Found existing install in ${report.downloadedPath}. Skipping download`);
 				break;
-			case ProgressReportStage.NewInstallComplete:
-				console.log(`Downloaded VS Code ${this.version} into ${report.downloadedPath}`);
-				break;
 			case ProgressReportStage.ResolvingCDNLocation:
 				console.log(`Downloading VS Code ${this.version} from ${report.url}`)
 				break;
@@ -91,13 +91,12 @@ export class ConsoleReporter implements ProgressReporter {
 					this.downloadReport.report = report;
 				}
 				break;
+			case ProgressReportStage.Retrying:
+				this.flushDownloadReport();
+				console.log(`Error downloading, retrying (attempt ${report.attempt} of ${report.totalAttempts}): ${report.error.message}`);
+				break;
 			case ProgressReportStage.NewInstallComplete:
-				if (this.downloadReport) {
-					clearTimeout(this.downloadReport.timeout);
-				}
-				if (this.showDownloadProgress) {
-					console.log('');
-				}
+				this.flushDownloadReport();
 				console.log(`Downloaded VS Code into ${report.downloadedPath}`);
 				break;
 		}
@@ -105,6 +104,13 @@ export class ConsoleReporter implements ProgressReporter {
 
 	public error(err: unknown) {
 		console.error(err);
+	}
+
+	private flushDownloadReport() {
+		if (this.showDownloadProgress) {
+			this.reportDownload();
+			console.log('');
+		}
 	}
 
 	private reportDownload() {
