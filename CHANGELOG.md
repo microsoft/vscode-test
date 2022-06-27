@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.4 | 2022-06-27
+
+- Automatically retry if VS Code download fails
+
 ### 2.1.4 | 2022-06-10
 
 - Fix uncaught error when failing to connect to the extension service
