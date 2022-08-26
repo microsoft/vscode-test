@@ -8,17 +8,19 @@
     "test": "eslint lib --ext ts && vitest && tsc --noEmit"
   },
   "main": "./out/index.js",
+  "bin": "./out/bin.js",
   "engines": {
     "node": ">=8.9.3"
   },
   "dependencies": {
+    "@pkgjs/parseargs": "^0.10.0",
     "http-proxy-agent": "^4.0.1",
     "https-proxy-agent": "^5.0.0",
     "rimraf": "^3.0.2",
     "unzipper": "^0.10.11"
   },
   "devDependencies": {
-    "@types/node": "^12",
+    "@types/node": "^18",
     "@types/rimraf": "^3.0.0",
     "@types/unzipper": "^0.10.3",
     "@typescript-eslint/eslint-plugin": "^4.13.0",
