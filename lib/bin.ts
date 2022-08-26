@@ -12,7 +12,6 @@ const options = {
 	platform: { type: 'string' },
 	'reuse-machine-install': { type: 'boolean' },
 	'extension-development-path': { type: 'string', multiple: true },
-	'extension-tests-path': { type: 'string' },
 	'launch-args': { type: 'string', multiple: true },
 	'extract-sync': { type: 'boolean' },
 	'help': { type: 'boolean' },
@@ -27,7 +26,6 @@ Options
                                 the current platform.
 	--reuse-machine-install       Whether VS Code should be launched using default settings and
                                 extensions installed on this machine.
-	--extension-tests-path        Absolute path to the extension tests runner.
 	--launch-args                 A list of launch arguments passed to VS Code executable,
 	--extract-sync                Whether the downloaded zip should be synchronously extracted.
 	--help                        Show this help message.
