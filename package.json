@@ -4,11 +4,13 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "prepublish": "tsc -p ./",
+    "prepack": "tsc -p ./",
     "test": "eslint lib --ext ts && vitest && tsc --noEmit"
   },
   "main": "./out/index.js",
-  "bin": "./out/bin.js",
+  "bin": {
+    "code-test": "./out/bin.js"
+  },
   "engines": {
     "node": ">=8.9.3"
   },
