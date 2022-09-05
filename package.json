@@ -4,7 +4,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "prepack": "tsc -p ./",
+    "prepublish": "tsc -p ./",
     "test": "eslint lib --ext ts && vitest && tsc --noEmit"
   },
   "main": "./out/index.js",
