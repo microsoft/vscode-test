@@ -22,7 +22,8 @@
     "unzipper": "^0.10.11"
   },
   "devDependencies": {
-    "@types/node": "^18",
+    "@types/node": "^12",
+    "@types/pkgjs__parseargs": "^0.10.0",
     "@types/rimraf": "^3.0.0",
     "@types/unzipper": "^0.10.3",
     "@typescript-eslint/eslint-plugin": "^4.13.0",

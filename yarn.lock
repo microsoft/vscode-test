@@ -111,10 +111,15 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.6.9.tgz#ffeee23afdc19ab16e979338e7b536fdebbbaeaf"
   integrity sha512-+YB9FtyxXGyD54p8rXwWaN1EWEyar5L58GlGWgtH2I9rGmLGBQcw63+0jw+ujqVavNuO47S1ByAjm9zdHMnskw==
 
-"@types/node@^18":
-  version "18.7.13"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.7.13.tgz#23e6c5168333480d454243378b69e861ab5c011a"
-  integrity sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==
+"@types/node@^12":
+  version "12.19.14"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.19.14.tgz#59e5029a3c2aea34f68b717955381692fd47cafb"
+  integrity sha512-2U9uLN46+7dv9PiS8VQJcHhuoOjiDPZOLAt0WuA1EanEknIMae+2QbMhayF7cgGqjvRVIfNpt+6jLPczJZFiRw==
+
+"@types/pkgjs__parseargs@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@types/pkgjs__parseargs/-/pkgjs__parseargs-0.10.0.tgz#730ffc04dc07359814dc53ede0114aed2f09ae82"
+  integrity sha512-r+RVVyOIM7MKzUcqySfA19WanRBqMwhcIc30b88SirlJSni31JAxrZq/5u2QCOVp/QACJQefXHTPJGYQH5mqjA==
 
 "@types/rimraf@^3.0.0":
   version "3.0.0"
