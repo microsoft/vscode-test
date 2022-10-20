@@ -40,8 +40,11 @@ switch (process.platform) {
 export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPlatform) {
 	if (version === 'insiders') {
 		return `https://update.code.visualstudio.com/latest/${platform}/insider`;
+	} else if (version === 'stable' || version.includes('.')) { // stable or 1.2.3 version string
+		return `https://update.code.visualstudio.com/${version}/${platform}/stable`;
+	} else { // insiders commit hash
+		return `https://update.code.visualstudio.com/commit:${version}/${platform}/insider`;
 	}
-	return `https://update.code.visualstudio.com/${version}/${platform}/stable`;
 }
 
 let PROXY_AGENT: createHttpProxyAgent.HttpProxyAgent | undefined = undefined;
