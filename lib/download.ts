@@ -14,7 +14,7 @@ import * as del from './del';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
 import * as request from './request';
 import {
-	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, systemDefaultPlatform
+	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, isStableVersionIdentifier, systemDefaultPlatform
 } from './util';
 
 const extensionRoot = process.cwd();
@@ -236,9 +236,12 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 					throw Error(`Failed to remove outdated Insiders at ${downloadedPath}.`);
 				}
 			}
-		} else {
+		} else if (isStableVersionIdentifier(version)) {
 			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
 			return Promise.resolve(downloadDirToExecutablePath(downloadedPath, platform));
+		} else {
+			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
+			return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform))
 		}
 	}
 
@@ -259,10 +262,10 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	}
 	reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
 
-	if (version === 'insiders') {
-		return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform));
-	} else {
+	if (isStableVersionIdentifier(version)) {
 		return downloadDirToExecutablePath(downloadedPath, platform);
+	} else {
+		return insidersDownloadDirToExecutablePath(downloadedPath, platform);
 	}
 }
 
