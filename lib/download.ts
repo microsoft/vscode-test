@@ -14,12 +14,13 @@ import * as del from './del';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
 import * as request from './request';
 import {
-	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, systemDefaultPlatform
+	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, isStableVersionIdentifier, systemDefaultPlatform
 } from './util';
 
 const extensionRoot = process.cwd();
 
 const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releases/stable`;
+const vscodeInsiderCommitsAPI = (platform: string) => `https://update.code.visualstudio.com/api/commits/insider/${platform}`;
 
 const DOWNLOAD_ATTEMPTS = 3;
 
@@ -32,9 +33,20 @@ async function fetchLatestStableVersion(): Promise<string> {
 	return versions[0];
 }
 
-async function isValidVersion(version: string) {
-	const validVersions: string[] = await request.getJSON(vscodeStableReleasesAPI);
-	return version === 'insiders' || validVersions.indexOf(version) !== -1;
+async function isValidVersion(version: string, platform: string) {
+	if (version === 'insiders') {
+		return true;
+	}
+
+	const stableVersionNumbers: string[] = await request.getJSON(vscodeStableReleasesAPI);
+	if (stableVersionNumbers.includes(version)) {
+		return true;
+	}
+
+	const insiderCommits: string[] = await request.getJSON(vscodeInsiderCommitsAPI(platform));
+	if (insiderCommits.includes(version)) {
+		return true;
+	}
 }
 
 /**
@@ -185,7 +197,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			 * Only validate version against server when no local download that matches version exists
 			 */
 			if (!fs.existsSync(path.resolve(cachePath, `vscode-${platform}-${version}`))) {
-				if (!(await isValidVersion(version))) {
+				if (!(await isValidVersion(version, platform))) {
 					throw Error(`Invalid version ${version}`);
 				}
 			}
@@ -224,9 +236,12 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 					throw Error(`Failed to remove outdated Insiders at ${downloadedPath}.`);
 				}
 			}
-		} else {
+		} else if (isStableVersionIdentifier(version)) {
 			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
 			return Promise.resolve(downloadDirToExecutablePath(downloadedPath, platform));
+		} else {
+			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
+			return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform))
 		}
 	}
 
@@ -247,10 +262,10 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	}
 	reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
 
-	if (version === 'insiders') {
-		return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform));
-	} else {
+	if (isStableVersionIdentifier(version)) {
 		return downloadDirToExecutablePath(downloadedPath, platform);
+	} else {
+		return insidersDownloadDirToExecutablePath(downloadedPath, platform);
 	}
 }
 
