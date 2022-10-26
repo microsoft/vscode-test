@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import { pipeline, Readable } from 'stream';
-import { Extract as extract } from 'unzipper';
+import { Extract as extract } from 'unzip-stream';
 import { promisify } from 'util';
 import * as del from './del';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
@@ -119,12 +119,16 @@ async function unzipVSCode(reporter: ProgressReporter, extractDir: string, extra
 
 	if (format === 'zip') {
 		// note: this used to use Expand-Archive, but this caused a failure
-		// on longer file paths on windows. Instead use unzipper, which does
+		// on longer file paths on windows. Then used unzipper, which does
 		// not have this limitation.
 		//
 		// However it has problems that prevent it working on OSX:
 		// - https://github.com/ZJONSSON/node-unzipper/issues/216 (avoidable)
 		// - https://github.com/ZJONSSON/node-unzipper/issues/115 (not avoidable)
+		// and unzipper was unmaintained and contained CVE in the chain of dependency
+		// - https://github.com/ZJONSSON/node-unzipper/issues/261
+		//
+		// Then switched to unzip-stream
 		if (process.platform === 'win32' && extractSync) {
 			try {
 				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
