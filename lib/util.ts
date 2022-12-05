@@ -126,7 +126,7 @@ export interface IUpdateMetadata {
 
 export async function getLatestInsidersMetadata(platform: string) {
 	const remoteUrl = `https://update.code.visualstudio.com/api/update/${platform}/insider/latest`;
-	return await request.getJSON<IUpdateMetadata>(remoteUrl);
+	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
 }
 
 
