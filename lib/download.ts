@@ -24,8 +24,8 @@ const vscodeInsiderCommitsAPI = (platform: string) => `https://update.code.visua
 
 const DOWNLOAD_ATTEMPTS = 3;
 
-async function fetchLatestStableVersion(): Promise<string> {
-	const versions = await request.getJSON(vscodeStableReleasesAPI);
+async function fetchLatestStableVersion(timeout: number): Promise<string> {
+	const versions = await request.getJSON(vscodeStableReleasesAPI, timeout);
 	if (!versions || !Array.isArray(versions) || !versions[0]) {
 		throw Error('Failed to get latest VS Code version');
 	}
@@ -33,17 +33,17 @@ async function fetchLatestStableVersion(): Promise<string> {
 	return versions[0];
 }
 
-async function isValidVersion(version: string, platform: string) {
+async function isValidVersion(version: string, platform: string, timeout: number) {
 	if (version === 'insiders') {
 		return true;
 	}
 
-	const stableVersionNumbers: string[] = await request.getJSON(vscodeStableReleasesAPI);
+	const stableVersionNumbers: string[] = await request.getJSON(vscodeStableReleasesAPI, timeout);
 	if (stableVersionNumbers.includes(version)) {
 		return true;
 	}
 
-	const insiderCommits: string[] = await request.getJSON(vscodeInsiderCommitsAPI(platform));
+	const insiderCommits: string[] = await request.getJSON(vscodeInsiderCommitsAPI(platform), timeout);
 	if (insiderCommits.includes(version)) {
 		return true;
 	}
@@ -64,6 +64,7 @@ export interface DownloadOptions {
 	readonly platform: DownloadPlatform;
 	readonly reporter?: ProgressReporter;
 	readonly extractSync?: boolean;
+	readonly timeout?: number;
 }
 
 /**
@@ -78,9 +79,10 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 		fs.mkdirSync(options.cachePath);
 	}
 
+	const timeout = options.timeout!;
 	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform);
 	options.reporter?.report({ stage: ProgressReportStage.ResolvingCDNLocation, url: downloadUrl });
-	const res = await request.getStream(downloadUrl)
+	const res = await request.getStream(downloadUrl, timeout)
 	if (res.statusCode !== 302) {
 		throw 'Failed to get VS Code archive location';
 	}
@@ -91,21 +93,29 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 
 	res.destroy();
 
-	const download = await request.getStream(url);
+	const download = await request.getStream(url, timeout);
 	const totalBytes = Number(download.headers['content-length']);
 	const contentType = download.headers['content-type'];
 	const isZip = contentType ? contentType === 'application/zip' : url.endsWith('.zip');
 
+	const timeoutCtrl = new request.TimeoutController(timeout);
 	options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: 0, totalBytes });
 
 	let bytesSoFar = 0;
 	download.on('data', chunk => {
 		bytesSoFar += chunk.length;
+		timeoutCtrl.touch();
 		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar, totalBytes });
 	});
 
 	download.on('end', () => {
+		timeoutCtrl.dispose();
 		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: totalBytes, totalBytes });
+	});
+
+	timeoutCtrl.signal.addEventListener('abort', () => {
+		download.emit('error', new request.TimeoutError(timeout));
+		download.destroy();
 	});
 
 	return { stream: download, format: isZip ? 'zip' : 'tgz' } as const;
@@ -139,11 +149,12 @@ async function unzipVSCode(reporter: ProgressReporter, extractDir: string, extra
 		} else if (process.platform !== 'darwin' && !extractSync) {
 			await new Promise((resolve, reject) =>
 				stream
+					.on('error', reject)
 					.pipe(extract({ path: extractDir }))
 					.on('close', resolve)
 					.on('error', reject)
 			);
-		}  else { // darwin or *nix sync
+		} else { // darwin or *nix sync
 			try {
 				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
 				reporter.report({ stage: ProgressReportStage.ExtractingSynchonrously });
@@ -163,12 +174,16 @@ async function unzipVSCode(reporter: ProgressReporter, extractDir: string, extra
 }
 
 function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, input?: Readable) {
-	const child = cp.spawn(command, args, { stdio: 'pipe' });
-	input?.pipe(child.stdin);
-	child.stderr.pipe(process.stderr);
-	child.stdout.pipe(process.stdout);
-
 	return new Promise<void>((resolve, reject) => {
+		const child = cp.spawn(command, args, { stdio: 'pipe' });
+		if (input) {
+			input.on('error', reject);
+			input.pipe(child.stdin);
+		}
+
+		child.stderr.pipe(process.stderr);
+		child.stdout.pipe(process.stdout);
+
 		child.on('error', reject);
 		child.on('exit', code => code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`)));
 	})
@@ -187,23 +202,24 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		cachePath = defaultCachePath,
 		reporter = new ConsoleReporter(process.stdout.isTTY),
 		extractSync = false,
+		timeout = 15_000,
 	} = options;
 
 	if (version) {
 		if (version === 'stable') {
-			version = await fetchLatestStableVersion();
+			version = await fetchLatestStableVersion(timeout);
 		} else {
 			/**
 			 * Only validate version against server when no local download that matches version exists
 			 */
 			if (!fs.existsSync(path.resolve(cachePath, `vscode-${platform}-${version}`))) {
-				if (!(await isValidVersion(version, platform))) {
+				if (!(await isValidVersion(version, platform, timeout))) {
 					throw Error(`Invalid version ${version}`);
 				}
 			}
 		}
 	} else {
-		version = await fetchLatestStableVersion();
+		version = await fetchLatestStableVersion(timeout);
 	}
 
 	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version });
@@ -245,9 +261,9 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		}
 	}
 
-	for (let i = 0;; i++) {
+	for (let i = 0; ; i++) {
 		try {
-			const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter });
+			const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter, timeout });
 			await unzipVSCode(reporter, downloadedPath, extractSync, stream, format);
 			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
 			break;

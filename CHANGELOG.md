@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.6 | 2022-06-27
+
+- Add a `timeout` option
+
 ### 2.1.5 | 2022-06-27
 
 - Automatically retry if VS Code download fails
