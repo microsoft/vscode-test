@@ -1,8 +1,8 @@
 # Changelog
 
-### 2.1.6 | 2022-06-27
+### 2.2.1 | 2022-12-06
 
-- Add a `timeout` option
+- Add an idle `timeout` for downloads
 
 ### 2.1.5 | 2022-06-27
 
