@@ -1,6 +1,6 @@
 {
   "name": "@vscode/test-electron",
-  "version": "2.1.5",
+  "version": "2.2.1",
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
@@ -12,7 +12,7 @@
     "code-test": "./out/bin.js"
   },
   "engines": {
-    "node": ">=8.9.3"
+    "node": ">=16"
   },
   "dependencies": {
     "@pkgjs/parseargs": "^0.10.0",
@@ -22,7 +22,7 @@
     "unzipper": "^0.10.11"
   },
   "devDependencies": {
-    "@types/node": "^12",
+    "@types/node": "^18",
     "@types/pkgjs__parseargs": "^0.10.0",
     "@types/rimraf": "^3.0.0",
     "@types/unzipper": "^0.10.3",

@@ -49,6 +49,16 @@ async function go() {
 		});
 
 		/**
+		 * Use a specific Insiders commit for testing
+		 */
+		await runTests({
+			version: '9d3fbb3d9a50055be0a8c6d721625d02c9de492d',
+			extensionDevelopmentPath,
+			extensionTestsPath,
+			launchArgs: [testWorkspace]
+		});
+
+		/**
 		 * Noop, since 1.36.1 already downloaded to .vscode-test/vscode-1.36.1
 		 */
 		await downloadAndUnzipVSCode('1.36.1');

@@ -106,6 +106,13 @@ export interface TestOptions {
 	 * omitted unless you're experiencing issues installing VS Code versions.
 	 */
 	extractSync?: boolean;
+
+	/**
+	 * Number of milliseconds after which to time out if no data is received from
+	 * the remote when downloading VS Code. Note that this is an 'idle' timeout
+	 * and does not enforce the total time VS Code may take to download.
+	 */
+	timeout?: number;
 }
 
 /**
