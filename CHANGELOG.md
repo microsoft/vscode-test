@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.2.2 | 2022-01-09
+
+- Add default for platform in `resolveCliPathFromVSCodeExecutablePath` to match docs
+
 ### 2.2.1 | 2022-12-06
 
 - Add an idle `timeout` for downloads
