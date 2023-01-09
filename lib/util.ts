@@ -129,12 +129,11 @@ export async function getLatestInsidersMetadata(platform: string) {
 	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
 }
 
-
 /**
  * Resolve the VS Code cli path from executable path returned from `downloadAndUnzipVSCode`.
  * Usually you will want {@link resolveCliArgsFromVSCodeExecutablePath} instead.
  */
-export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string, platform: DownloadPlatform) {
+export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string, platform: DownloadPlatform = systemDefaultPlatform) {
 	if (windowsPlatforms.has(platform)) {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
 			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');
