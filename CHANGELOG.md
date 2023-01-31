@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.2.3 | 2022-01-30
+
+- Fix tests sometimes hanging on windows
+
 ### 2.2.2 | 2022-01-09
 
 - Add default for platform in `resolveCliPathFromVSCodeExecutablePath` to match docs

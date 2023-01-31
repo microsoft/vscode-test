@@ -198,6 +198,11 @@ async function innerRunTests(
 			finished = true;
 			console.log(`Exit code:   ${code ?? signal}`);
 
+			// fix: on windows, it seems like these descriptors can linger for an
+			// indeterminate amount of time, causing the process to hang.
+			cmd.stdout.destroy();
+			cmd.stderr.destroy();
+
 			if (code === null) {
 				reject(signal);
 			} else if (code !== 0) {
