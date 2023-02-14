@@ -54,7 +54,7 @@ async function isValidVersion(version: string, platform: string, timeout: number
  * Since `string | 'foo'` doesn't offer auto completion
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
-type StringLiteralUnion<T extends U, U = string> = T | (U & {});
+type StringLiteralUnion<T extends string> = T | (string & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
 export type DownloadPlatform = StringLiteralUnion<'darwin' | 'darwin-arm64' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'>;
 
