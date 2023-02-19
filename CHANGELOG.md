@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.2.4 | 2022-02-19
+
+- Use existing downloads if internet is inaccessible
+
 ### 2.2.3 | 2022-01-30
 
 - Fix tests sometimes hanging on windows

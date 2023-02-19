@@ -14,7 +14,7 @@ import * as del from './del';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
 import * as request from './request';
 import {
-	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, isStableVersionIdentifier, systemDefaultPlatform
+	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, isDefined, isStableVersionIdentifier, systemDefaultPlatform
 } from './util';
 
 const extensionRoot = process.cwd();
@@ -22,12 +22,34 @@ const extensionRoot = process.cwd();
 const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releases/stable`;
 const vscodeInsiderCommitsAPI = (platform: string) => `https://update.code.visualstudio.com/api/commits/insider/${platform}`;
 
+const downloadDirNameFormat = /^vscode-(?<platform>[a-z]+)-(?<version>[0-9.]+)$/;
+const makeDownloadDirName = (platform: string, version: string) => `vscode-${platform}-${version}`;
+
 const DOWNLOAD_ATTEMPTS = 3;
 
-async function fetchLatestStableVersion(timeout: number): Promise<string> {
-	const versions = await request.getJSON(vscodeStableReleasesAPI, timeout);
-	if (!versions || !Array.isArray(versions) || !versions[0]) {
-		throw Error('Failed to get latest VS Code version');
+/**
+ * Returns the stable version to run tests against. Attempts to get the latest
+ * version from the update sverice, but falls back to local installs if
+ * not available (e.g. if the machine is offline).
+ */
+async function fetchTargetStableVersion(timeout: number, cachePath: string, platform: string): Promise<string> {
+	let versions: string[] = [];
+	try {
+		versions = await request.getJSON<string[]>(vscodeStableReleasesAPI, timeout);
+	} catch (e) {
+		const entries = await fs.promises.readdir(cachePath).catch(() => []);
+		const [fallbackTo] = entries.map(e => downloadDirNameFormat.exec(e))
+			.filter(isDefined)
+			.filter(e => e.groups!.platform === platform)
+			.map(e => e.groups!.version)
+			.sort((a, b) => Number(b) - Number(a));
+
+		if (fallbackTo) {
+			console.warn(`Error retrieving VS Code versions, using already-installed version ${fallbackTo}`, e);
+			return fallbackTo;
+		}
+
+		throw e;
 	}
 
 	return versions[0];
@@ -205,26 +227,22 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		timeout = 15_000,
 	} = options;
 
-	if (version) {
-		if (version === 'stable') {
-			version = await fetchLatestStableVersion(timeout);
-		} else {
-			/**
-			 * Only validate version against server when no local download that matches version exists
-			 */
-			if (!fs.existsSync(path.resolve(cachePath, `vscode-${platform}-${version}`))) {
-				if (!(await isValidVersion(version, platform, timeout))) {
-					throw Error(`Invalid version ${version}`);
-				}
+	if (version && version !== 'stable') {
+		/**
+		 * Only validate version against server when no local download that matches version exists
+		 */
+		if (!fs.existsSync(path.resolve(cachePath, `vscode-${platform}-${version}`))) {
+			if (!(await isValidVersion(version, platform, timeout))) {
+				throw Error(`Invalid version ${version}`);
 			}
 		}
 	} else {
-		version = await fetchLatestStableVersion(timeout);
+		version = await fetchTargetStableVersion(timeout, cachePath, platform);
 	}
 
 	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version });
 
-	const downloadedPath = path.resolve(cachePath, `vscode-${platform}-${version}`);
+	const downloadedPath = path.resolve(cachePath, makeDownloadDirName(platform, version));
 	if (fs.existsSync(downloadedPath)) {
 		if (version === 'insiders') {
 			reporter.report({ stage: ProgressReportStage.FetchingInsidersMetadata });
