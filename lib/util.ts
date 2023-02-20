@@ -176,3 +176,8 @@ export function resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath: str
 
 	return args;
 }
+
+/** Predicates whether arg is undefined or null */
+export function isDefined<T>(arg: T | undefined | null): arg is T {
+	return arg != null;
+}
