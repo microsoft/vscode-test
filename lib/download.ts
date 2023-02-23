@@ -37,7 +37,7 @@ async function fetchTargetStableVersion(timeout: number, cachePath: string, plat
 	try {
 		versions = await request.getJSON<string[]>(vscodeStableReleasesAPI, timeout);
 	} catch (e) {
-		const entries = await fs.promises.readdir(cachePath).catch(() => []);
+		const entries = await fs.promises.readdir(cachePath).catch(() => [] as string[]);
 		const [fallbackTo] = entries.map(e => downloadDirNameFormat.exec(e))
 			.filter(isDefined)
 			.filter(e => e.groups!.platform === platform)
