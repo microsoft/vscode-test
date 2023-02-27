@@ -181,3 +181,18 @@ export function resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath: str
 export function isDefined<T>(arg: T | undefined | null): arg is T {
 	return arg != null;
 }
+
+/** Gets a Buffer from a Node.js stream */
+export function streamToBuffer(readable: NodeJS.ReadableStream) {
+	return new Promise<Buffer>((resolve, reject) => {
+		const chunks: Buffer[] = [];
+		readable.on('data', chunk => chunks.push(chunk));
+		readable.on('error', reject);
+		readable.on('end', () => resolve(Buffer.concat(chunks)));
+	});
+}
+/** Gets whether child is a subdirectory of the parent */
+export function isSubdirectory(parent: string, child: string) {
+	const relative = path.relative(parent, child);
+	return !relative.startsWith('..') && !path.isAbsolute(relative);
+}
