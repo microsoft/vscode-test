@@ -302,8 +302,17 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 
 	for (let i = 0; ; i++) {
 		try {
+			// Use a staging directory and rename after unzipping so partially-
+			// downloaded/unzipped files aren't "stuck" being used.
+			const downloadStaging = `${downloadedPath}.tmp`;
+			await fs.promises.rm(downloadStaging, { recursive: true, force: true });
+
 			const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter, timeout });
-			await unzipVSCode(reporter, downloadedPath, extractSync, stream, format);
+			// important! do not put anything async here, since unzipVSCode will need
+			// to start consuming the stream immediately.
+			await unzipVSCode(reporter, downloadStaging, extractSync, stream, format);
+			await fs.promises.rename(downloadStaging, downloadedPath);
+
 			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
 			break;
 		} catch (error) {
