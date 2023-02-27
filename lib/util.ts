@@ -37,13 +37,19 @@ switch (process.platform) {
 			: 'linux-x64';
 }
 
+export function isInsiderVersionIdentifier(version: string): boolean {
+	return version === 'insider' || version.endsWith('-insider'); // insider or 1.2.3-insider version string
+}
+
 export function isStableVersionIdentifier(version: string): boolean {
-	return version === 'stable' || version.includes('.');  // stable or 1.2.3 version string
+	return version === 'stable' || /^[0-9]+\.[0-9]+\.[0-9]$/.test(version);  // stable or 1.2.3 version string
 }
 
 export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPlatform) {
 	if (version === 'insiders') {
 		return `https://update.code.visualstudio.com/latest/${platform}/insider`;
+	} else if (isInsiderVersionIdentifier(version)) {
+		return `https://update.code.visualstudio.com/${version}/${platform}/insider`;
 	} else if (isStableVersionIdentifier(version)) {
 		return `https://update.code.visualstudio.com/${version}/${platform}/stable`;
 	} else { // insiders commit hash
@@ -124,6 +130,11 @@ export interface IUpdateMetadata {
 	supportsFastUpdate: boolean;
 }
 
+export async function getInsidersVersionMetadata(platform: string, version: string) {
+	const remoteUrl = `https://update.code.visualstudio.com/api/versions/${version}/${platform}/insider`;
+	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
+}
+
 export async function getLatestInsidersMetadata(platform: string) {
 	const remoteUrl = `https://update.code.visualstudio.com/api/update/${platform}/insider/latest`;
 	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
@@ -195,4 +206,22 @@ export function streamToBuffer(readable: NodeJS.ReadableStream) {
 export function isSubdirectory(parent: string, child: string) {
 	const relative = path.relative(parent, child);
 	return !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+/**
+ * Wraps a function so that it's called once, and never again, memoizing
+ * the result unless it rejects.
+ */
+export function onceWithoutRejections<T, Args extends unknown[]>(fn: (...args: Args) => Promise<T>) {
+  let value: Promise<T> | undefined;
+	return (...args: Args) => {
+		if (!value) {
+			value = fn(...args).catch(err => {
+				value = undefined;
+				throw err;
+			});
+		}
+
+		return value
+	}
 }

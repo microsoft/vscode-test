@@ -15,11 +15,13 @@
     "http-proxy-agent": "^4.0.1",
     "https-proxy-agent": "^5.0.0",
     "jszip": "^3.10.1",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "semver": "^7.3.8"
   },
   "devDependencies": {
     "@types/node": "^18",
     "@types/rimraf": "^3.0.0",
+    "@types/semver": "^7.3.13",
     "@typescript-eslint/eslint-plugin": "^4.13.0",
     "@typescript-eslint/parser": "^4.13.0",
     "eslint": "^7.17.0",
