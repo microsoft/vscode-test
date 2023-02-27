@@ -88,7 +88,7 @@ describe('fetchTargetInferredVersion', () => {
 			cachePath: join(extensionsDevelopmentPath, '.cache'),
 			platform: 'win32-archive',
 			timeout: 5000,
-			extensionsDevelopmentPath: paths.map(p => join(extensionsDevelopmentPath, p)),
+			extensionsDevelopmentPath: paths.map((p) => join(extensionsDevelopmentPath, p)),
 		});
 
 	test('matches stable if no workspace', async () => {

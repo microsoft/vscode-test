@@ -121,7 +121,7 @@
 ### 1.1.0 | 2019-08-02
 
 - Add `resolveCliPathFromVSCodeExecutablePath` that would resolve `vscodeExecutablePath` to VS Code CLI path, which can be used
-for extension management features such as `--install-extension` and `--uninstall-extension`. [#31](https://github.com/microsoft/vscode-test/issues/31).
+  for extension management features such as `--install-extension` and `--uninstall-extension`. [#31](https://github.com/microsoft/vscode-test/issues/31).
 
 ### 1.0.2 | 2019-07-17
 
@@ -144,13 +144,13 @@ for extension management features such as `--install-extension` and `--uninstall
 ### 1.0.0-next.0 | 2019-06-24
 
 - Updated API:
-	- One single set of options.
-	- `extensionPath` => `extensionDevelopmentPath` to align with VS Code launch flags
-	- `testRunnerPath` => `extensionTestsPath` to align with VS Code launch flags
-	- `testRunnerEnv` => `extensionTestsEnv` to align with VS Code launch flags
-	- `additionalLaunchArgs` => `launchArgs`
-	- `testWorkspace` removed. Pass path to file/folder/workspace as first argument to `launchArgs` instead.
-	- `locale` removed. Pass `--locale` to `launchArgs` instead.
+  - One single set of options.
+  - `extensionPath` => `extensionDevelopmentPath` to align with VS Code launch flags
+  - `testRunnerPath` => `extensionTestsPath` to align with VS Code launch flags
+  - `testRunnerEnv` => `extensionTestsEnv` to align with VS Code launch flags
+  - `additionalLaunchArgs` => `launchArgs`
+  - `testWorkspace` removed. Pass path to file/folder/workspace as first argument to `launchArgs` instead.
+  - `locale` removed. Pass `--locale` to `launchArgs` instead.
 
 ### 0.4.3 | 2019-05-30
 
@@ -163,7 +163,7 @@ for extension management features such as `--install-extension` and `--uninstall
 ### 0.4.1 | 2019-05-02
 
 - Fix Linux crash because `testRunnerEnv` is not merged with `process.env` for spawning the
-testing process. [#14](https://github.com/Microsoft/vscode-test/issues/14c).
+  testing process. [#14](https://github.com/Microsoft/vscode-test/issues/14c).
 
 ### 0.4.0 | 2019-04-18
 

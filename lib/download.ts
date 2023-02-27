@@ -9,7 +9,6 @@ import { tmpdir } from 'os';
 import * as path from 'path';
 import { pipeline, Readable } from 'stream';
 import { promisify } from 'util';
-import * as del from './del';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
 import * as request from './request';
 import * as semver from 'semver';
@@ -101,7 +100,8 @@ export async function fetchTargetInferredVersion(options: IFetchInferredOptions)
 			return found2;
 		}
 
-		console.warn(`No version of VS Code satisfies all extension engine constraints (${extVersions.join(', ')}). Falling back to stable.`);
+		const v = extVersions.join(', ');
+		console.warn(`No version of VS Code satisfies all extension engine constraints (${v}). Falling back to stable.`);
 
 		return stable[0]; // 🤷
 	} catch (e) {
@@ -215,18 +215,33 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 	const isZip = contentType ? contentType === 'application/zip' : url.endsWith('.zip');
 
 	const timeoutCtrl = new request.TimeoutController(timeout);
-	options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: 0, totalBytes });
+	options.reporter?.report({
+		stage: ProgressReportStage.Downloading,
+		url,
+		bytesSoFar: 0,
+		totalBytes,
+	});
 
 	let bytesSoFar = 0;
 	download.on('data', (chunk) => {
 		bytesSoFar += chunk.length;
 		timeoutCtrl.touch();
-		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar, totalBytes });
+		options.reporter?.report({
+			stage: ProgressReportStage.Downloading,
+			url,
+			bytesSoFar,
+			totalBytes,
+		});
 	});
 
 	download.on('end', () => {
 		timeoutCtrl.dispose();
-		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: totalBytes, totalBytes });
+		options.reporter?.report({
+			stage: ProgressReportStage.Downloading,
+			url,
+			bytesSoFar: totalBytes,
+			totalBytes,
+		});
 	});
 
 	timeoutCtrl.signal.addEventListener('abort', () => {
@@ -375,7 +390,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 						newDate: new Date(latestTimestamp),
 						newHash: latestHash,
 					});
-					await del.rmdir(downloadedPath);
+					await fs.promises.rm(downloadedPath, { force: true, recursive: true });
 				} catch (err) {
 					reporter.error(err);
 					throw Error(`Failed to remove outdated Insiders at ${downloadedPath}.`);
@@ -397,7 +412,13 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			const downloadStaging = `${downloadedPath}.tmp`;
 			await fs.promises.rm(downloadStaging, { recursive: true, force: true });
 
-			const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter, timeout });
+			const { stream, format } = await downloadVSCodeArchive({
+				version,
+				platform,
+				cachePath,
+				reporter,
+				timeout,
+			});
 			// important! do not put anything async here, since unzipVSCode will need
 			// to start consuming the stream immediately.
 			await unzipVSCode(reporter, downloadStaging, extractSync, stream, format);

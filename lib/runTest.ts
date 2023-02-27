@@ -133,12 +133,11 @@ export async function runTests(options: TestOptions): Promise<number> {
 		'--skip-welcome',
 		'--skip-release-notes',
 		'--disable-workspace-trust',
-		'--extensionTestsPath=' + options.extensionTestsPath
+		'--extensionTestsPath=' + options.extensionTestsPath,
 	];
 
 	if (Array.isArray(options.extensionDevelopmentPath)) {
-		args.push(...options.extensionDevelopmentPath.map(devPath =>
-			`--extensionDevelopmentPath=${devPath}`));
+		args.push(...options.extensionDevelopmentPath.map((devPath) => `--extensionDevelopmentPath=${devPath}`));
 	} else {
 		args.push(`--extensionDevelopmentPath=${options.extensionDevelopmentPath}`);
 	}
@@ -158,18 +157,18 @@ export async function runTests(options: TestOptions): Promise<number> {
 export function getProfileArguments(args: readonly string[]) {
 	const out: string[] = [];
 	if (!hasArg('extensions-dir', args)) {
-		out.push(`--extensions-dir=${path.join(defaultCachePath, 'extensions')}`)
+		out.push(`--extensions-dir=${path.join(defaultCachePath, 'extensions')}`);
 	}
 
 	if (!hasArg('user-data-dir', args)) {
-		out.push(`--user-data-dir=${path.join(defaultCachePath, 'user-data')}`)
+		out.push(`--user-data-dir=${path.join(defaultCachePath, 'user-data')}`);
 	}
 
 	return out;
 }
 
 function hasArg(argName: string, argList: readonly string[]) {
-	return argList.some(a => a === `--${argName}` || a.startsWith(`--${argName}=`));
+	return argList.some((a) => a === `--${argName}` || a.startsWith(`--${argName}=`));
 }
 
 async function innerRunTests(
@@ -183,8 +182,8 @@ async function innerRunTests(
 		const fullEnv = Object.assign({}, process.env, testRunnerEnv);
 		const cmd = cp.spawn(executable, args, { env: fullEnv });
 
-		cmd.stdout.on('data', d => process.stdout.write(d));
-		cmd.stderr.on('data', d => process.stderr.write(d));
+		cmd.stdout.on('data', (d) => process.stdout.write(d));
+		cmd.stderr.on('data', (d) => process.stderr.write(d));
 
 		cmd.on('error', function (data) {
 			console.log('Test error: ' + data.toString());
