@@ -10,5 +10,11 @@
             "when": "$(basename).ts"
         }
 	},
+	"githubIssues.queries":[
+		{
+			"label": "Recent Issues",
+			"query": "state:open repo:${owner}/${repository} sort:updated-desc"
+		}
+	],
 	"prettier.semi": true
 }
