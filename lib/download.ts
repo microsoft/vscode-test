@@ -8,19 +8,29 @@ import * as fs from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import { pipeline, Readable } from 'stream';
-import { Extract as extract } from 'unzipper';
 import { promisify } from 'util';
 import * as del from './del';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
 import * as request from './request';
 import {
-	downloadDirToExecutablePath, getLatestInsidersMetadata, getVSCodeDownloadUrl, insidersDownloadDirMetadata, insidersDownloadDirToExecutablePath, isDefined, isStableVersionIdentifier, systemDefaultPlatform
+	downloadDirToExecutablePath,
+	getLatestInsidersMetadata,
+	getVSCodeDownloadUrl,
+	insidersDownloadDirMetadata,
+	insidersDownloadDirToExecutablePath,
+	isDefined,
+	isStableVersionIdentifier,
+	isSubdirectory,
+	streamToBuffer,
+	systemDefaultPlatform,
 } from './util';
 
 const extensionRoot = process.cwd();
+const pipelineAsync = promisify(pipeline);
 
 const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releases/stable`;
-const vscodeInsiderCommitsAPI = (platform: string) => `https://update.code.visualstudio.com/api/commits/insider/${platform}`;
+const vscodeInsiderCommitsAPI = (platform: string) =>
+	`https://update.code.visualstudio.com/api/commits/insider/${platform}`;
 
 const downloadDirNameFormat = /^vscode-(?<platform>[a-z]+)-(?<version>[0-9.]+)$/;
 const makeDownloadDirName = (platform: string, version: string) => `vscode-${platform}-${version}`;
@@ -38,10 +48,11 @@ async function fetchTargetStableVersion(timeout: number, cachePath: string, plat
 		versions = await request.getJSON<string[]>(vscodeStableReleasesAPI, timeout);
 	} catch (e) {
 		const entries = await fs.promises.readdir(cachePath).catch(() => [] as string[]);
-		const [fallbackTo] = entries.map(e => downloadDirNameFormat.exec(e))
+		const [fallbackTo] = entries
+			.map((e) => downloadDirNameFormat.exec(e))
 			.filter(isDefined)
-			.filter(e => e.groups!.platform === platform)
-			.map(e => e.groups!.version)
+			.filter((e) => e.groups!.platform === platform)
+			.map((e) => e.groups!.version)
 			.sort((a, b) => Number(b) - Number(a));
 
 		if (fallbackTo) {
@@ -78,7 +89,9 @@ async function isValidVersion(version: string, platform: string, timeout: number
 // eslint-disable-next-line @typescript-eslint/ban-types
 type StringLiteralUnion<T extends string> = T | (string & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
-export type DownloadPlatform = StringLiteralUnion<'darwin' | 'darwin-arm64' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'>;
+export type DownloadPlatform = StringLiteralUnion<
+	'darwin' | 'darwin-arm64' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'
+>;
 
 export interface DownloadOptions {
 	readonly cachePath: string;
@@ -104,7 +117,7 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 	const timeout = options.timeout!;
 	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform);
 	options.reporter?.report({ stage: ProgressReportStage.ResolvingCDNLocation, url: downloadUrl });
-	const res = await request.getStream(downloadUrl, timeout)
+	const res = await request.getStream(downloadUrl, timeout);
 	if (res.statusCode !== 302) {
 		throw 'Failed to get VS Code archive location';
 	}
@@ -124,7 +137,7 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 	options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar: 0, totalBytes });
 
 	let bytesSoFar = 0;
-	download.on('data', chunk => {
+	download.on('data', (chunk) => {
 		bytesSoFar += chunk.length;
 		timeoutCtrl.touch();
 		options.reporter?.report({ stage: ProgressReportStage.Downloading, url, bytesSoFar, totalBytes });
@@ -146,44 +159,50 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 /**
  * Unzip a .zip or .tar.gz VS Code archive stream.
  */
-async function unzipVSCode(reporter: ProgressReporter, extractDir: string, extractSync: boolean, stream: Readable, format: 'zip' | 'tgz') {
+async function unzipVSCode(
+	reporter: ProgressReporter,
+	extractDir: string,
+	extractSync: boolean,
+	stream: Readable,
+	format: 'zip' | 'tgz'
+) {
 	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
 
 	if (format === 'zip') {
-		// note: this used to use Expand-Archive, but this caused a failure
-		// on longer file paths on windows. Instead use unzipper, which does
-		// not have this limitation.
-		//
-		// However it has problems that prevent it working on OSX:
-		// - https://github.com/ZJONSSON/node-unzipper/issues/216 (avoidable)
-		// - https://github.com/ZJONSSON/node-unzipper/issues/115 (not avoidable)
-		if (process.platform === 'win32' && extractSync) {
-			try {
-				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
-				reporter.report({ stage: ProgressReportStage.ExtractingSynchonrously });
-				await spawnDecompressorChild('powershell.exe', [
-					'-NoProfile', '-ExecutionPolicy', 'Bypass', '-NonInteractive', '-NoLogo',
-					'-Command', `Microsoft.PowerShell.Archive\\Expand-Archive -Path "${stagingFile}" -DestinationPath "${extractDir}"`
-				]);
-			} finally {
-				fs.unlink(stagingFile, () => undefined);
-			}
-		} else if (process.platform !== 'darwin' && !extractSync) {
-			await new Promise((resolve, reject) =>
-				stream
-					.on('error', reject)
-					.pipe(extract({ path: extractDir }))
-					.on('close', resolve)
-					.on('error', reject)
-			);
-		} else { // darwin or *nix sync
-			try {
-				await promisify(pipeline)(stream, fs.createWriteStream(stagingFile));
-				reporter.report({ stage: ProgressReportStage.ExtractingSynchonrously });
+		try {
+			reporter.report({ stage: ProgressReportStage.ExtractingSynchonrously });
+
+			// note: this used to use Expand-Archive, but this caused a failure
+			// on longer file paths on windows. And we used to use the streaming
+			// "unzipper", but the module was very outdated and a bit buggy.
+			// Instead, use jszip. It's well-used and actually 8x faster than
+			// Expand-Archive on my machine.
+			if (process.platform === 'win32') {
+				const [buffer, JSZip] = await Promise.all([streamToBuffer(stream), import('jszip')]);
+				const content = await JSZip.loadAsync(buffer);
+				// extract file with jszip
+				for (const filename of Object.keys(content.files)) {
+					const file = content.files[filename];
+					const filepath = path.join(extractDir, filename);
+					if (file.dir) {
+						continue;
+					}
+
+					// vscode update zips are trusted, but check for zip slip anyway.
+					if (!isSubdirectory(extractDir, filepath)) {
+						throw new Error(`Invalid zip file: ${filename}`);
+					}
+
+					await fs.promises.mkdir(path.dirname(filepath), { recursive: true });
+					await pipelineAsync(file.nodeStream(), fs.createWriteStream(filepath));
+				}
+			} else {
+				// darwin or *nix sync
+				await pipelineAsync(stream, fs.createWriteStream(stagingFile));
 				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir]);
-			} finally {
-				fs.unlink(stagingFile, () => undefined);
 			}
+		} finally {
+			fs.unlink(stagingFile, () => undefined);
 		}
 	} else {
 		// tar does not create extractDir by default
@@ -207,8 +226,10 @@ function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, in
 		child.stdout.pipe(process.stdout);
 
 		child.on('error', reject);
-		child.on('exit', code => code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`)));
-	})
+		child.on('exit', (code) =>
+			code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`))
+		);
+	});
 }
 
 export const defaultCachePath = path.resolve(extensionRoot, '.vscode-test');
@@ -275,7 +296,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			return Promise.resolve(downloadDirToExecutablePath(downloadedPath, platform));
 		} else {
 			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
-			return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform))
+			return Promise.resolve(insidersDownloadDirToExecutablePath(downloadedPath, platform));
 		}
 	}
 
@@ -283,18 +304,23 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		try {
 			const { stream, format } = await downloadVSCodeArchive({ version, platform, cachePath, reporter, timeout });
 			await unzipVSCode(reporter, downloadedPath, extractSync, stream, format);
-			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
+			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
 			break;
 		} catch (error) {
 			if (i++ < DOWNLOAD_ATTEMPTS) {
-				reporter.report({ stage: ProgressReportStage.Retrying, attempt: i, error: error as Error, totalAttempts: DOWNLOAD_ATTEMPTS });
+				reporter.report({
+					stage: ProgressReportStage.Retrying,
+					attempt: i,
+					error: error as Error,
+					totalAttempts: DOWNLOAD_ATTEMPTS,
+				});
 			} else {
 				reporter.error(error);
 				throw Error(`Failed to download and unzip VS Code ${version}`);
 			}
 		}
 	}
-	reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath })
+	reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
 
 	if (isStableVersionIdentifier(version)) {
 		return downloadDirToExecutablePath(downloadedPath, platform);
@@ -322,17 +348,17 @@ export async function downloadAndUnzipVSCode(
 	version?: DownloadVersion,
 	platform?: DownloadPlatform,
 	reporter?: ProgressReporter,
-	extractSync?: boolean,
+	extractSync?: boolean
 ): Promise<string>;
 export async function downloadAndUnzipVSCode(
 	versionOrOptions?: DownloadVersion | Partial<DownloadOptions>,
 	platform?: DownloadPlatform,
 	reporter?: ProgressReporter,
-	extractSync?: boolean,
+	extractSync?: boolean
 ): Promise<string> {
 	return await download(
 		typeof versionOrOptions === 'object'
-			? versionOrOptions as Partial<DownloadOptions>
+			? (versionOrOptions as Partial<DownloadOptions>)
 			: { version: versionOrOptions, platform, reporter, extractSync }
 	);
 }
