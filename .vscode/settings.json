@@ -1,16 +1,18 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-    "editor.insertSpaces": true,
+	"editor.insertSpaces": true,
 	"files.eol": "\n",
 	"files.trimTrailingWhitespace": true,
-    "files.exclude": {
-        "**/.git": true,
-        "**/.DS_Store": true,
-        "**/*.js": {
-            "when": "$(basename).ts"
-        }
+	"files.exclude": {
+		"**/.git": true,
+		"**/.DS_Store": true,
+		"**/*.js": {
+			"when": "$(basename).ts"
+		}
 	},
-	"githubIssues.queries":[
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"githubIssues.queries": [
 		{
 			"label": "Recent Issues",
 			"query": "state:open repo:${owner}/${repository} sort:updated-desc"

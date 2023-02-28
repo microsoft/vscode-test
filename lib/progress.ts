@@ -31,13 +31,20 @@ export type ProgressReport =
 	| { stage: ProgressReportStage.FetchingVersion }
 	| { stage: ProgressReportStage.ResolvedVersion; version: string }
 	| { stage: ProgressReportStage.FetchingInsidersMetadata }
-	| { stage: ProgressReportStage.ReplacingOldInsiders; downloadedPath: string; oldHash: string; oldDate: Date; newHash: string; newDate: Date }
+	| {
+			stage: ProgressReportStage.ReplacingOldInsiders;
+			downloadedPath: string;
+			oldHash: string;
+			oldDate: Date;
+			newHash: string;
+			newDate: Date;
+	  }
 	| { stage: ProgressReportStage.FoundMatchingInstall; downloadedPath: string }
 	| { stage: ProgressReportStage.ResolvingCDNLocation; url: string }
-	| { stage: ProgressReportStage.Downloading; url: string; totalBytes: number; bytesSoFar: number; }
-	| { stage: ProgressReportStage.Retrying; error: Error, attempt: number; totalAttempts: number }
-	| { stage: ProgressReportStage.ExtractingSynchonrously; }
-	| { stage: ProgressReportStage.NewInstallComplete, downloadedPath: string; }
+	| { stage: ProgressReportStage.Downloading; url: string; totalBytes: number; bytesSoFar: number }
+	| { stage: ProgressReportStage.Retrying; error: Error; attempt: number; totalAttempts: number }
+	| { stage: ProgressReportStage.ExtractingSynchonrously }
+	| { stage: ProgressReportStage.NewInstallComplete; downloadedPath: string };
 
 export interface ProgressReporter {
 	report(report: ProgressReport): void;
@@ -61,7 +68,7 @@ export class ConsoleReporter implements ProgressReporter {
 
 	private downloadReport?: {
 		timeout: NodeJS.Timeout;
-		report: { stage: ProgressReportStage.Downloading, totalBytes: number; bytesSoFar: number; };
+		report: { stage: ProgressReportStage.Downloading; totalBytes: number; bytesSoFar: number };
 	};
 
 	constructor(private readonly showDownloadProgress: boolean) {}
@@ -71,7 +78,7 @@ export class ConsoleReporter implements ProgressReporter {
 			case ProgressReportStage.ResolvedVersion:
 				this.version = report.version;
 				break;
-				case ProgressReportStage.ReplacingOldInsiders:
+			case ProgressReportStage.ReplacingOldInsiders:
 				console.log(`Removing outdated Insiders at ${report.downloadedPath} and re-downloading.`);
 				console.log(`Old: ${report.oldHash} | ${report.oldDate.toISOString()}`);
 				console.log(`New: ${report.newHash} | ${report.newDate.toISOString()}`);
@@ -80,7 +87,7 @@ export class ConsoleReporter implements ProgressReporter {
 				console.log(`Found existing install in ${report.downloadedPath}. Skipping download`);
 				break;
 			case ProgressReportStage.ResolvingCDNLocation:
-				console.log(`Downloading VS Code ${this.version} from ${report.url}`)
+				console.log(`Downloading VS Code ${this.version} from ${report.url}`);
 				break;
 			case ProgressReportStage.Downloading:
 				if (!this.showDownloadProgress && report.bytesSoFar === 0) {
@@ -93,7 +100,9 @@ export class ConsoleReporter implements ProgressReporter {
 				break;
 			case ProgressReportStage.Retrying:
 				this.flushDownloadReport();
-				console.log(`Error downloading, retrying (attempt ${report.attempt} of ${report.totalAttempts}): ${report.error.message}`);
+				console.log(
+					`Error downloading, retrying (attempt ${report.attempt} of ${report.totalAttempts}): ${report.error.message}`
+				);
 				break;
 			case ProgressReportStage.NewInstallComplete:
 				this.flushDownloadReport();
