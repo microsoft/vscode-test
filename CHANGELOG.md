@@ -1,5 +1,12 @@
 # Changelog
 
+### 2.3.0 | 2022-02-27
+
+- Automatically use the most recent version matching `engines.vscode` in extensions' package.json
+- Allow insiders `version`s to be specified, such as `version: "1.76.0-insider"`
+- Reduce the likelihood of 'broken' installations on interrupted downloads
+- Remove dependency on outdated `unzipper` module
+
 ### 2.2.4 | 2022-02-19
 
 - Use existing downloads if internet is inaccessible
