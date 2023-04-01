@@ -23,30 +23,35 @@ switch (process.platform) {
 		systemDefaultPlatform = process.arch === 'arm64' ? 'darwin-arm64' : 'darwin';
 		break;
 	case 'win32':
-		systemDefaultPlatform = process.arch === 'arm64'
-			? 'win32-arm64-archive'
-			: process.arch === 'ia32'
-			? 'win32-archive'
-			: 'win32-x64-archive';
+		systemDefaultPlatform =
+			process.arch === 'arm64'
+				? 'win32-arm64-archive'
+				: process.arch === 'ia32'
+				? 'win32-archive'
+				: 'win32-x64-archive';
 		break;
 	default:
-		systemDefaultPlatform = process.arch === 'arm64'
-			? 'linux-arm64'
-			: process.arch === 'arm'
-			? 'linux-armhf'
-			: 'linux-x64';
+		systemDefaultPlatform =
+			process.arch === 'arm64' ? 'linux-arm64' : process.arch === 'arm' ? 'linux-armhf' : 'linux-x64';
+}
+
+export function isInsiderVersionIdentifier(version: string): boolean {
+	return version === 'insider' || version.endsWith('-insider'); // insider or 1.2.3-insider version string
 }
 
 export function isStableVersionIdentifier(version: string): boolean {
-	return version === 'stable' || version.includes('.');  // stable or 1.2.3 version string
+	return version === 'stable' || /^[0-9]+\.[0-9]+\.[0-9]$/.test(version); // stable or 1.2.3 version string
 }
 
 export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPlatform) {
 	if (version === 'insiders') {
 		return `https://update.code.visualstudio.com/latest/${platform}/insider`;
+	} else if (isInsiderVersionIdentifier(version)) {
+		return `https://update.code.visualstudio.com/${version}/${platform}/insider`;
 	} else if (isStableVersionIdentifier(version)) {
 		return `https://update.code.visualstudio.com/${version}/${platform}/stable`;
-	} else { // insiders commit hash
+	} else {
+		// insiders commit hash
 		return `https://update.code.visualstudio.com/commit:${version}/${platform}/insider`;
 	}
 }
@@ -109,7 +114,7 @@ export function insidersDownloadDirMetadata(dir: string, platform: DownloadPlatf
 
 	return {
 		version: productJson.commit,
-		date: new Date(productJson.date)
+		date: new Date(productJson.date),
 	};
 }
 
@@ -124,6 +129,11 @@ export interface IUpdateMetadata {
 	supportsFastUpdate: boolean;
 }
 
+export async function getInsidersVersionMetadata(platform: string, version: string) {
+	const remoteUrl = `https://update.code.visualstudio.com/api/versions/${version}/${platform}/insider`;
+	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
+}
+
 export async function getLatestInsidersMetadata(platform: string) {
 	const remoteUrl = `https://update.code.visualstudio.com/api/update/${platform}/insider/latest`;
 	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
@@ -133,7 +143,10 @@ export async function getLatestInsidersMetadata(platform: string) {
  * Resolve the VS Code cli path from executable path returned from `downloadAndUnzipVSCode`.
  * Usually you will want {@link resolveCliArgsFromVSCodeExecutablePath} instead.
  */
-export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: string, platform: DownloadPlatform = systemDefaultPlatform) {
+export function resolveCliPathFromVSCodeExecutablePath(
+	vscodeExecutablePath: string,
+	platform: DownloadPlatform = systemDefaultPlatform
+) {
 	if (windowsPlatforms.has(platform)) {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
 			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');
@@ -168,11 +181,54 @@ export function resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath: str
  *
  * @param vscodeExecutablePath The `vscodeExecutablePath` from `downloadAndUnzipVSCode`.
  */
-export function resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath: string, options?: Pick<TestOptions, 'reuseMachineInstall' | 'platform'>) {
-	const args = [resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, options?.platform ?? systemDefaultPlatform)];
+export function resolveCliArgsFromVSCodeExecutablePath(
+	vscodeExecutablePath: string,
+	options?: Pick<TestOptions, 'reuseMachineInstall' | 'platform'>
+) {
+	const args = [
+		resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, options?.platform ?? systemDefaultPlatform),
+	];
 	if (!options?.reuseMachineInstall) {
 		args.push(...getProfileArguments(args));
 	}
 
 	return args;
+}
+
+/** Predicates whether arg is undefined or null */
+export function isDefined<T>(arg: T | undefined | null): arg is T {
+	return arg != null;
+}
+
+/** Gets a Buffer from a Node.js stream */
+export function streamToBuffer(readable: NodeJS.ReadableStream) {
+	return new Promise<Buffer>((resolve, reject) => {
+		const chunks: Buffer[] = [];
+		readable.on('data', (chunk) => chunks.push(chunk));
+		readable.on('error', reject);
+		readable.on('end', () => resolve(Buffer.concat(chunks)));
+	});
+}
+/** Gets whether child is a subdirectory of the parent */
+export function isSubdirectory(parent: string, child: string) {
+	const relative = path.relative(parent, child);
+	return !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+/**
+ * Wraps a function so that it's called once, and never again, memoizing
+ * the result unless it rejects.
+ */
+export function onceWithoutRejections<T, Args extends unknown[]>(fn: (...args: Args) => Promise<T>) {
+	let value: Promise<T> | undefined;
+	return (...args: Args) => {
+		if (!value) {
+			value = fn(...args).catch((err) => {
+				value = undefined;
+				throw err;
+			});
+		}
+
+		return value;
+	};
 }

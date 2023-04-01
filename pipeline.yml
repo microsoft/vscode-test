@@ -25,7 +25,7 @@ extends:
   parameters:
     npmPackages:
       - name: test-electron
-
+        ghCreateTag: false
         buildSteps:
           - script: yarn --frozen-lockfile
             displayName: Install dependencies
