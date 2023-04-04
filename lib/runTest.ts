@@ -7,6 +7,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, DownloadVersion, DownloadPlatform, defaultCachePath } from './download';
 import { ProgressReporter } from './progress';
+import { killTree } from './util';
 
 export interface TestOptions {
 	/**
@@ -171,6 +172,8 @@ function hasArg(argName: string, argList: readonly string[]) {
 	return argList.some((a) => a === `--${argName}` || a.startsWith(`--${argName}=`));
 }
 
+const SIGINT = 'SIGINT';
+
 async function innerRunTests(
 	executable: string,
 	args: string[],
@@ -178,9 +181,28 @@ async function innerRunTests(
 		[key: string]: string | undefined;
 	}
 ): Promise<number> {
-	return new Promise<number>((resolve, reject) => {
-		const fullEnv = Object.assign({}, process.env, testRunnerEnv);
-		const cmd = cp.spawn(executable, args, { env: fullEnv });
+	const fullEnv = Object.assign({}, process.env, testRunnerEnv);
+	const cmd = cp.spawn(executable, args, { env: fullEnv });
+	let exitRequested = false;
+	const ctrlc1 = () => {
+		process.removeListener(SIGINT, ctrlc1);
+		process.on(SIGINT, ctrlc2);
+		console.log('Closing VS Code gracefully. Press Ctrl+C to force close.');
+		exitRequested = true;
+		cmd.kill(SIGINT); // this should cause the returned promise to resolve
+	};
+
+	const ctrlc2 = () => {
+		console.log('Closing VS Code forcefully.');
+		process.removeListener(SIGINT, ctrlc2);
+		exitRequested = true;
+		killTree(cmd.pid!, true);
+	};
+
+	const prom = new Promise<number>((resolve, reject) => {
+		if (cmd.pid) {
+			process.on(SIGINT, ctrlc1);
+		}
 
 		cmd.stdout.on('data', (d) => process.stdout.write(d));
 		cmd.stderr.on('data', (d) => process.stderr.write(d));
@@ -213,7 +235,21 @@ async function innerRunTests(
 		}
 
 		cmd.on('close', onProcessClosed);
-
 		cmd.on('exit', onProcessClosed);
 	});
+
+	let code: number;
+	try {
+		code = await prom;
+	} finally {
+		process.removeListener(SIGINT, ctrlc1);
+		process.removeListener(SIGINT, ctrlc2);
+	}
+
+	// exit immediately if we handled a SIGINT and no one else did
+	if (exitRequested && process.listenerCount(SIGINT) === 0) {
+		process.exit(1);
+	}
+
+	return code;
 }

@@ -8,8 +8,7 @@
 		"skipLibCheck": true
 	},
 	"include": [
-    "src",
-    "test"
+    "src"
 	],
   "exclude": ["node_modules", ".vscode-test"]
 }

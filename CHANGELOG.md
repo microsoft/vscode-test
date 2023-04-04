@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.3.1 | 2022-04-04
+
+- Gracefully kill VS Code if SIGINT is received
+
 ### 2.3.0 | 2022-02-27
 
 - Automatically use the most recent version matching `engines.vscode` in extensions' package.json

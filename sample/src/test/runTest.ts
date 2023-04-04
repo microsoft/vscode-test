@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as cp from 'child_process';
 
-import { runTests, downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath } from '../../lib/index';
+import { runTests, downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath } from '../../..';
 
 async function go() {
 	try {
@@ -17,7 +17,7 @@ async function go() {
 		});
 
 		const extensionTestsPath2 = path.resolve(__dirname, './suite2');
-		const testWorkspace = path.resolve(__dirname, '../../../test-fixtures/fixture1');
+		const testWorkspace = path.resolve(__dirname, '../../src/test-fixtures/fixture1');
 
 		/**
 		 * Running another test suite on a specific workspace
