@@ -3,15 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ChildProcess, spawn } from 'child_process';
+import { readFileSync } from 'fs';
+import * as createHttpProxyAgent from 'http-proxy-agent';
+import * as https from 'https';
+import * as createHttpsProxyAgent from 'https-proxy-agent';
 import * as path from 'path';
 import { URL } from 'url';
-import * as https from 'https';
-import * as request from './request';
 import { DownloadPlatform } from './download';
-import * as createHttpsProxyAgent from 'https-proxy-agent';
-import * as createHttpProxyAgent from 'http-proxy-agent';
-import { readFileSync } from 'fs';
-import { getProfileArguments, TestOptions } from './runTest';
+import * as request from './request';
+import { TestOptions, getProfileArguments } from './runTest';
 
 export let systemDefaultPlatform: DownloadPlatform;
 
@@ -27,8 +28,8 @@ switch (process.platform) {
 			process.arch === 'arm64'
 				? 'win32-arm64-archive'
 				: process.arch === 'ia32'
-				? 'win32-archive'
-				: 'win32-x64-archive';
+					? 'win32-archive'
+					: 'win32-x64-archive';
 		break;
 	default:
 		systemDefaultPlatform =
@@ -231,4 +232,32 @@ export function onceWithoutRejections<T, Args extends unknown[]>(fn: (...args: A
 
 		return value;
 	};
+}
+
+export function killTree(processId: number, force: boolean) {
+	let cp: ChildProcess;
+
+	if (process.platform === 'win32') {
+		const windir = process.env['WINDIR'] || 'C:\\Windows';
+
+		// when killing a process in Windows its child processes are *not* killed but become root processes.
+		// Therefore we use TASKKILL.EXE
+		cp = spawn(path.join(windir, 'System32', 'taskkill.exe'), [
+			...force ? ['/F'] : [],
+			'/T',
+			'/PID',
+			processId.toString(),
+		], { stdio: 'inherit' });
+	} else {
+		// on linux and OS X we kill all direct and indirect child processes as well
+		cp = spawn('sh', [
+			path.resolve(__dirname, '../killTree.sh'),
+			processId.toString(),
+			force ? '9' : '15',
+		], { stdio: 'inherit' });
+	}
+
+	return new Promise<void>((resolve, reject) => {
+		cp.on('error', reject).on('exit', resolve);
+	});
 }
