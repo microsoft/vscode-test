@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.3.2 | 2022-05-11
+
+- Fix download method not working for the vscode cli.
+
 ### 2.3.1 | 2022-04-04
 
 - Gracefully kill VS Code if SIGINT is received

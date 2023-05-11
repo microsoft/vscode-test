@@ -4,7 +4,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "prepublish": "tsc -p ./",
+    "prepack": "tsc -p ./",
     "fmt": "prettier --write \"lib/**/*.ts\" \"*.md\"",
     "test": "eslint lib --ext ts && vitest && tsc --noEmit",
     "prepare": "husky install"

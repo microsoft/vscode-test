@@ -258,8 +258,8 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 async function unzipVSCode(
 	reporter: ProgressReporter,
 	extractDir: string,
-	extractSync: boolean,
 	stream: Readable,
+	platform: DownloadPlatform,
 	format: 'zip' | 'tgz'
 ) {
 	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
@@ -306,7 +306,9 @@ async function unzipVSCode(
 			fs.mkdirSync(extractDir);
 		}
 
-		await spawnDecompressorChild('tar', ['-xzf', '-', '--strip-components=1', '-C', extractDir], stream);
+		// The CLI is a singular binary that doesn't have a wrapper component to remove
+		const s = platform.includes('cli-') ? 0 : 1;
+		await spawnDecompressorChild('tar', ['-xzf', '-', `--strip-components=${s}`, '-C', extractDir], stream);
 	}
 }
 
@@ -340,7 +342,6 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		platform = systemDefaultPlatform,
 		cachePath = defaultCachePath,
 		reporter = new ConsoleReporter(process.stdout.isTTY),
-		extractSync = false,
 		timeout = 15_000,
 	} = options;
 
@@ -421,7 +422,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			});
 			// important! do not put anything async here, since unzipVSCode will need
 			// to start consuming the stream immediately.
-			await unzipVSCode(reporter, downloadStaging, extractSync, stream, format);
+			await unzipVSCode(reporter, downloadStaging, stream, platform, format);
 			await fs.promises.rename(downloadStaging, downloadedPath);
 
 			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
