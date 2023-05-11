@@ -1,10 +1,10 @@
 {
   "name": "@vscode/test-electron",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "prepublish": "tsc -p ./",
+    "prepack": "tsc -p ./",
     "fmt": "prettier --write \"lib/**/*.ts\" \"*.md\"",
     "test": "eslint lib --ext ts && vitest && tsc --noEmit",
     "prepare": "husky install"
