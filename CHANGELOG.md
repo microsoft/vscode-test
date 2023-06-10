@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.3.3 | 2022-06-10
+
+- Disable GPU sandbox by default, fixing failures in some CI's.
+
 ### 2.3.2 | 2022-05-11
 
 - Fix download method not working for the vscode cli.
