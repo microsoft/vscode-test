@@ -1,10 +1,10 @@
 {
   "name": "@vscode/test-electron",
-  "version": "2.3.1",
+  "version": "2.3.3",
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "prepublish": "tsc -p ./",
+    "prepack": "tsc -p ./",
     "fmt": "prettier --write \"lib/**/*.ts\" \"*.md\"",
     "test": "eslint lib --ext ts && vitest && tsc --noEmit",
     "prepare": "husky install"
@@ -30,7 +30,7 @@
     "http-proxy-agent": "^4.0.1",
     "https-proxy-agent": "^5.0.0",
     "jszip": "^3.10.1",
-    "semver": "^7.3.8"
+    "semver": "^7.5.2"
   },
   "devDependencies": {
     "@types/node": "^18",

@@ -73,6 +73,8 @@ export interface TestOptions {
 	 * When running the extension test, the Extension Development Host will call this function
 	 * that runs the test suite. This function should throws an error if any test fails.
 	 *
+	 * The first argument is the path to the file specified in `extensionTestsPath`.
+	 *
 	 */
 	extensionTestsPath: string;
 
@@ -129,6 +131,8 @@ export async function runTests(options: TestOptions): Promise<number> {
 	let args = [
 		// https://github.com/microsoft/vscode/issues/84238
 		'--no-sandbox',
+		// https://github.com/microsoft/vscode-test/issues/221
+		'--disable-gpu-sandbox',
 		// https://github.com/microsoft/vscode-test/issues/120
 		'--disable-updates',
 		'--skip-welcome',
