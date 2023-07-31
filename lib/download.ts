@@ -33,8 +33,6 @@ const pipelineAsync = promisify(pipeline);
 
 const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releases/stable`;
 const vscodeInsiderReleasesAPI = `https://update.code.visualstudio.com/api/releases/insider`;
-const vscodeInsiderCommitsAPI = (platform: string) =>
-	`https://update.code.visualstudio.com/api/commits/insider/${platform}`;
 
 const downloadDirNameFormat = /^vscode-(?<platform>[a-z]+)-(?<version>[0-9.]+)$/;
 const makeDownloadDirName = (platform: string, version: string) => `vscode-${platform}-${version}`;
@@ -155,10 +153,11 @@ async function isValidVersion(version: string, platform: string, timeout: number
 		}
 	}
 
-	const insiderCommits: string[] = await request.getJSON(vscodeInsiderCommitsAPI(platform), timeout);
-	if (insiderCommits.includes(version)) {
+	if (/^[0-9a-f]{40}$/.test(version)) {
 		return true;
 	}
+
+	return false;
 }
 
 /**
