@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.3.4 | 2022-07-31
+
+- Fix "insiders" string not matching correctly
+
 ### 2.3.3 | 2022-06-10
 
 - Disable GPU sandbox by default, fixing failures in some CI's.
