@@ -37,7 +37,7 @@ switch (process.platform) {
 }
 
 export function isInsiderVersionIdentifier(version: string): boolean {
-	return version === 'insider' || version.endsWith('-insider'); // insider or 1.2.3-insider version string
+	return version === 'insiders' || version.endsWith('-insider'); // insider or 1.2.3-insider version string
 }
 
 export function isStableVersionIdentifier(version: string): boolean {
