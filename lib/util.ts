@@ -28,8 +28,8 @@ switch (process.platform) {
 			process.arch === 'arm64'
 				? 'win32-arm64-archive'
 				: process.arch === 'ia32'
-					? 'win32-archive'
-					: 'win32-x64-archive';
+				? 'win32-archive'
+				: 'win32-x64-archive';
 		break;
 	default:
 		systemDefaultPlatform =
@@ -242,19 +242,16 @@ export function killTree(processId: number, force: boolean) {
 
 		// when killing a process in Windows its child processes are *not* killed but become root processes.
 		// Therefore we use TASKKILL.EXE
-		cp = spawn(path.join(windir, 'System32', 'taskkill.exe'), [
-			...force ? ['/F'] : [],
-			'/T',
-			'/PID',
-			processId.toString(),
-		], { stdio: 'inherit' });
+		cp = spawn(
+			path.join(windir, 'System32', 'taskkill.exe'),
+			[...(force ? ['/F'] : []), '/T', '/PID', processId.toString()],
+			{ stdio: 'inherit' }
+		);
 	} else {
 		// on linux and OS X we kill all direct and indirect child processes as well
-		cp = spawn('sh', [
-			path.resolve(__dirname, '../killTree.sh'),
-			processId.toString(),
-			force ? '9' : '15',
-		], { stdio: 'inherit' });
+		cp = spawn('sh', [path.resolve(__dirname, '../killTree.sh'), processId.toString(), force ? '9' : '15'], {
+			stdio: 'inherit',
+		});
 	}
 
 	return new Promise<void>((resolve, reject) => {
