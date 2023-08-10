@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { resolve } from 'path';
-import { parseArgs } from '@pkgjs/parseargs';
+import { parseArgs } from 'util';
 import { runTests } from './runTest';
 
 const options = {

@@ -26,7 +26,6 @@
     "node": ">=16"
   },
   "dependencies": {
-    "@pkgjs/parseargs": "^0.10.0",
     "http-proxy-agent": "^4.0.1",
     "https-proxy-agent": "^5.0.0",
     "jszip": "^3.10.1",
@@ -34,7 +33,6 @@
   },
   "devDependencies": {
     "@types/node": "^18",
-    "@types/pkgjs__parseargs": "^0.10.0",
     "@types/rimraf": "^3.0.0",
     "@types/semver": "^7.3.13",
     "@typescript-eslint/eslint-plugin": "^4.13.0",

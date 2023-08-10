@@ -65,11 +65,6 @@
     "@nodelib/fs.scandir" "2.1.4"
     fastq "^1.6.0"
 
-"@pkgjs/parseargs@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.10.0.tgz#02605e33f8bc4d76efae9b660edc67902f9a0396"
-  integrity sha512-gcLFrTC3mgIWeDk+eJySEz9unk8XNKi0i2lyppi36qOrW54wBEtOVdGle71ssm5E+vauNwyGKQuWJ2psgTYRVQ==
-
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.npmjs.org/@tootallnate/once/-/once-1.1.2.tgz"
@@ -115,11 +110,6 @@
   version "18.11.10"
   resolved "https://registry.npmjs.org/@types/node/-/node-18.11.10.tgz"
   integrity sha512-juG3RWMBOqcOuXC643OAdSA525V44cVgGV6dUDuiFtss+8Fk5x1hI93Rsld43VeJVIeqlP9I7Fn9/qaVqoEAuQ==
-
-"@types/pkgjs__parseargs@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@types/pkgjs__parseargs/-/pkgjs__parseargs-0.10.0.tgz#730ffc04dc07359814dc53ede0114aed2f09ae82"
-  integrity sha512-r+RVVyOIM7MKzUcqySfA19WanRBqMwhcIc30b88SirlJSni31JAxrZq/5u2QCOVp/QACJQefXHTPJGYQH5mqjA==
 
 "@types/rimraf@^3.0.0":
   version "3.0.0"
