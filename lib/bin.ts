@@ -14,7 +14,7 @@ const options = {
 	'extension-development-path': { type: 'string', multiple: true },
 	'launch-args': { type: 'string', multiple: true },
 	'extract-sync': { type: 'boolean' },
-	'help': { type: 'boolean' },
+	help: { type: 'boolean' },
 } as const;
 
 const help = `Usage: code-test [options][extension-tests-path...]
@@ -40,12 +40,12 @@ async function main(): Promise<number> {
 		return 1;
 	}
 
-	if(parsed.values.help) {
+	if (parsed.values.help) {
 		console.log(help);
 		return 0;
 	}
 
-	if(parsed.positionals.length !== 1) {
+	if (parsed.positionals.length !== 1) {
 		console.log(help);
 		return 1;
 	}
@@ -59,13 +59,14 @@ async function main(): Promise<number> {
 		extensionTestsPath: resolve(process.cwd(), parsed.positionals[0]),
 		launchArgs: parsed.values['launch-args'],
 		extractSync: parsed.values['extract-sync'],
-	})
+	});
 }
 
 main()
 	.catch((error) => {
 		console.error(error);
 		return 1;
-	}).then((exitCode) => {
+	})
+	.then((exitCode) => {
 		process.exitCode = exitCode;
 	});
