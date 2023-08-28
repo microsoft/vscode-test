@@ -33,6 +33,8 @@ Options
                                 the current platform.
 	--reuse-machine-install       Whether VS Code should be launched using default settings and
                                 extensions installed on this machine.
+	--extension-development-path  Absolute path to the extension root. Must include a package.json
+																Extension Manifest.
 	--launch-args                 A list of launch arguments passed to VS Code executable,
 	--extract-sync                Whether the downloaded zip should be synchronously extracted.
 	--version											Output the version information and exit.
