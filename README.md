@@ -129,7 +129,7 @@ go();
 
 > A new experimental command-line test runner is available. Its API _may_ change as we get feedback on it. Please try it out!
 
-After installing the package, the runner is available as the `test-electron` CLI. Running it will look for a `.vscode-test.(js/json/mjs)` file relative to the current working directory. You can see the configuration [here](https://github.com/microsoft/vscode-test/blob/main/lib/cli-runner/config.ts). This may be as simple as:
+After installing the package, the runner is available as the `vscode-test` CLI. Running it will look for a `.vscode-test.(js/json/mjs)` file relative to the current working directory. You can see the configuration [here](https://github.com/microsoft/vscode-test/blob/main/lib/cli-runner/config.ts). This may be as simple as:
 
 ```js
 // .vscode-test.js
