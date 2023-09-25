@@ -46,7 +46,7 @@ interface IFetchStableOptions {
 }
 
 interface IFetchInferredOptions extends IFetchStableOptions {
-	extensionsDevelopmentPath?: string | string[];
+	extensionsDevelopmentPath?: string | readonly string[];
 }
 
 export const fetchStableVersions = onceWithoutRejections((timeout: number) =>
@@ -175,7 +175,7 @@ export interface DownloadOptions {
 	readonly cachePath: string;
 	readonly version: DownloadVersion;
 	readonly platform: DownloadPlatform;
-	readonly extensionDevelopmentPath?: string | string[];
+	readonly extensionDevelopmentPath?: string | readonly string[];
 	readonly reporter?: ProgressReporter;
 	readonly extractSync?: boolean;
 	readonly timeout?: number;
@@ -274,7 +274,7 @@ async function unzipVSCode(
 			// Expand-Archive on my machine.
 			if (process.platform === 'win32') {
 				const [buffer, JSZip] = await Promise.all([streamToBuffer(stream), import('jszip')]);
-				const content = await JSZip.loadAsync(buffer);
+				const content = await JSZip.default.loadAsync(buffer);
 				// extract file with jszip
 				for (const filename of Object.keys(content.files)) {
 					const file = content.files[filename];

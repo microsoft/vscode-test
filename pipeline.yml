@@ -27,7 +27,7 @@ extends:
       - name: test-electron
         ghCreateTag: false
         buildSteps:
-          - script: yarn --frozen-lockfile
+          - script: npm ci
             displayName: Install dependencies
 
         testPlatforms:
@@ -36,11 +36,12 @@ extends:
               - 16.x
 
         testSteps:
-          - script: yarn --frozen-lockfile
+          - script: npm ci
             displayName: Install dependencies
 
-          - script: yarn --cwd=sample --frozen-lockfile
+          - script: npm ci
             displayName: Install dependencies (fs-provider)
+            workingDirectory: sample
 
           - bash: |
               /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -48,7 +49,8 @@ extends:
             displayName: Start xvfb
             condition: eq(variables['Agent.OS'], 'Linux')
 
-          - script: yarn --cwd=sample test
+          - script: npm test
+            workingDirectory: sample
             displayName: Test package
             env:
               DISPLAY: ':99.0'

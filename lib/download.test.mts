@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import { spawnSync } from 'child_process';
 import { existsSync, promises as fs } from 'fs';
 import { tmpdir } from 'os';
@@ -8,9 +13,9 @@ import {
 	fetchInsiderVersions,
 	fetchStableVersions,
 	fetchTargetInferredVersion,
-} from './download';
-import { SilentReporter } from './progress';
-import { resolveCliPathFromVSCodeExecutablePath, systemDefaultPlatform } from './util';
+} from './download.js';
+import { SilentReporter } from './progress.js';
+import { resolveCliPathFromVSCodeExecutablePath, systemDefaultPlatform } from './util.js';
 
 const platforms = [
 	'darwin',
@@ -67,7 +72,7 @@ describe('sane downloads', () => {
 describe('fetchTargetInferredVersion', () => {
 	let stable: string[];
 	let insiders: string[];
-	let extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
+	const extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
 
 	beforeAll(async () => {
 		[stable, insiders] = await Promise.all([fetchStableVersions(5000), fetchInsiderVersions(5000)]);
@@ -77,7 +82,7 @@ describe('fetchTargetInferredVersion', () => {
 		await fs.rm(extensionsDevelopmentPath, { recursive: true, force: true });
 	});
 
-	const writeJSON = async (path: string, contents: object) => {
+	const writeJSON = async (path: string, contents: unknown) => {
 		const target = join(extensionsDevelopmentPath, path);
 		await fs.mkdir(dirname(target), { recursive: true });
 		await fs.writeFile(target, JSON.stringify(contents));

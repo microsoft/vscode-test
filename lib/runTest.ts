@@ -59,7 +59,7 @@ export interface TestOptions {
 	 * Absolute path to the extension root. Passed to `--extensionDevelopmentPath`.
 	 * Must include a `package.json` Extension Manifest.
 	 */
-	extensionDevelopmentPath: string | string[];
+	extensionDevelopmentPath: string | readonly string[];
 
 	/**
 	 * Absolute path to the extension tests runner. Passed to `--extensionTestsPath`.

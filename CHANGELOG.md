@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.4.0 | 2022-09-25
+
+- Add experimental command-line test runner
+
 ### 2.3.4 | 2022-07-31
 
 - Fix "insiders" string not matching correctly

@@ -125,6 +125,63 @@ async function go() {
 go();
 ```
 
+### Command-Line Runner
+
+> A new experimental command-line test runner is available. Its API _may_ change as we get feedback on it. Please try it out!
+
+After installing the package, the runner is available as the `test-electron` CLI. Running it will look for a `.vscode-test.(js/json/mjs)` file relative to the current working directory. You can see the configuration [here](https://github.com/microsoft/vscode-test/blob/main/lib/cli-runner/config.ts). This may be as simple as:
+
+```js
+// .vscode-test.js
+module.exports = { files: 'out/test/**/*.test.js' };
+```
+
+Or include more options. For example:
+
+```js
+// .vscode-test.js
+
+module.exports = [
+	{
+		// Required: Glob of files to load (can be an array and include absolute paths).
+		files: 'out/test/**/*.test.js',
+		// Optional: Version to use, same as the API above, defaults to stable
+		version: 'insiders',
+		// Optional: Root path of your extension, same as the API above, defaults
+		// to the directory this config file is in
+		extensionDevelopmentPath: __dirname,
+		// Optional: sample workspace to open
+		workspaceFolder: `${__dirname}/sampleWorkspace`,
+		// Optional: additional mocha options to use:
+		mocha: {
+			preload: `./out/test-utils.js`,
+			timeout: 20000,
+		},
+	},
+	// you can specify additional test configurations if necessary
+];
+```
+
+Tests included with this command line are run in Mocha. You can run the tests simply by running `vscode-test` on the command line. You can view more options with `vscode-test --help`; this command line is very similar to Mocha. For example, to watch and run only tests named "addition", you can run:
+
+```
+vscode-test --watch out/**/*.js --grep "addition"
+```
+
+#### Debugging
+
+Add or update an `extensionHost` launch-type config with the path to your test configuration:
+
+```diff
+{
+	"type": "extensionHost",
+	"request": "launch",
+	"name": "My extension tests",
++	"testConfiguration": "${workspaceFolder}/.vscode-test.js",
+	"args": ["--extensionDevelopmentPath=${workspaceFolder}"]
+},
+```
+
 ## Development
 
 - `yarn install`
