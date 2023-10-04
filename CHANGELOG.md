@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.3.5 | 2022-10-04
+
+- Fix windows sometimes failing on EPERM in download
+
 ### 2.3.4 | 2022-07-31
 
 - Fix "insiders" string not matching correctly

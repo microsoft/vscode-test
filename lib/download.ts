@@ -27,6 +27,7 @@ import {
 	streamToBuffer,
 	systemDefaultPlatform,
 } from './util';
+import * as timers from 'timers/promises';
 
 const extensionRoot = process.cwd();
 const pipelineAsync = promisify(pipeline);
@@ -422,7 +423,20 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			// important! do not put anything async here, since unzipVSCode will need
 			// to start consuming the stream immediately.
 			await unzipVSCode(reporter, downloadStaging, stream, platform, format);
-			await fs.promises.rename(downloadStaging, downloadedPath);
+
+			// Windows file handles can get released asynchronously, give it a few retries:
+			for (let attempts = 20; attempts >= 0; attempts--) {
+				try {
+					await fs.promises.rename(downloadStaging, downloadedPath);
+					break;
+				} catch (e) {
+					if (attempts === 0) {
+						throw e;
+					} else {
+						await timers.setTimeout(200);
+					}
+				}
+			}
 
 			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
 			break;
