@@ -64,10 +64,15 @@ export interface TestOptions {
 	/**
 	 * Absolute path to the extension tests runner. Passed to `--extensionTestsPath`.
 	 * Can be either a file path or a directory path that contains an `index.js`.
-	 * Must export a `run` function of the following signature:
+	 * Must export a `run` function of one of the following signatures:
 	 *
 	 * ```ts
-	 * function run(): Promise<void>;
+         * #Runs the test and leaves the vscode window open
+	 * function run(): Promise<void>; 
+	 *
+         * #Supplies the current test root to the run function. When testing is complete, call the cb function alone 
+	 * (e.g. cb()) or supply errors/failures to inform the test runner, which will stop the vscode test instance.
+  	 * function run(testsRoot: string, cb: (error?: any, failures?: number) => void): void 
 	 * ```
 	 *
 	 * When running the extension test, the Extension Development Host will call this function
