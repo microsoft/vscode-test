@@ -35,7 +35,6 @@ export interface TestOptions {
 	 * current platform.
 	 *
 	 * Possible values are:
-	 * 	- `win32-archive`
 	 * 	- `win32-x64-archive`
 	 * 	- `win32-arm64-archive		`
 	 * 	- `darwin`

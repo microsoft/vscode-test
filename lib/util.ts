@@ -16,7 +16,7 @@ import { TestOptions, getProfileArguments } from './runTest';
 
 export let systemDefaultPlatform: DownloadPlatform;
 
-const windowsPlatforms = new Set<DownloadPlatform>(['win32-archive', 'win32-x64-archive', 'win32-arm64-archive']);
+const windowsPlatforms = new Set<DownloadPlatform>(['win32-x64-archive', 'win32-arm64-archive']);
 const darwinPlatforms = new Set<DownloadPlatform>(['darwin-arm64', 'darwin']);
 
 switch (process.platform) {
@@ -24,12 +24,7 @@ switch (process.platform) {
 		systemDefaultPlatform = process.arch === 'arm64' ? 'darwin-arm64' : 'darwin';
 		break;
 	case 'win32':
-		systemDefaultPlatform =
-			process.arch === 'arm64'
-				? 'win32-arm64-archive'
-				: process.arch === 'ia32'
-				? 'win32-archive'
-				: 'win32-x64-archive';
+		systemDefaultPlatform = process.arch === 'arm64' ? 'win32-arm64-archive' : 'win32-x64-archive';
 		break;
 	default:
 		systemDefaultPlatform =
@@ -148,6 +143,9 @@ export function resolveCliPathFromVSCodeExecutablePath(
 	vscodeExecutablePath: string,
 	platform: DownloadPlatform = systemDefaultPlatform
 ) {
+	if (platform === 'win32-archive') {
+		throw new Error('Windows 32-bit is no longer supported');
+	}
 	if (windowsPlatforms.has(platform)) {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
 			return path.resolve(vscodeExecutablePath, '../bin/code-insiders.cmd');

@@ -168,7 +168,7 @@ async function isValidVersion(version: string, platform: string, timeout: number
 type StringLiteralUnion<T extends string> = T | (string & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
 export type DownloadPlatform = StringLiteralUnion<
-	'darwin' | 'darwin-arm64' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'
+	'darwin' | 'darwin-arm64' | 'win32-x64-archive' | 'win32-arm64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'
 >;
 
 export interface DownloadOptions {
@@ -345,6 +345,10 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		reporter = new ConsoleReporter(process.stdout.isTTY),
 		timeout = 15_000,
 	} = options;
+
+	if (platform === 'win32-archive') {
+		throw new Error('Windows 32-bit is no longer supported');
+	}
 
 	if (version === 'stable') {
 		version = await fetchTargetStableVersion({ timeout, cachePath, platform });
