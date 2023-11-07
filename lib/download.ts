@@ -168,7 +168,7 @@ async function isValidVersion(version: string, platform: string, timeout: number
 type StringLiteralUnion<T extends string> = T | (string & {});
 export type DownloadVersion = StringLiteralUnion<'insiders' | 'stable'>;
 export type DownloadPlatform = StringLiteralUnion<
-	'darwin' | 'darwin-arm64' | 'win32-archive' | 'win32-x64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'
+	'darwin' | 'darwin-arm64' | 'win32-x64-archive' | 'win32-arm64-archive' | 'linux-x64' | 'linux-arm64' | 'linux-armhf'
 >;
 
 export interface DownloadOptions {
@@ -364,6 +364,10 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			platform,
 			extensionsDevelopmentPath: options.extensionDevelopmentPath,
 		});
+	}
+
+	if (platform === 'win32-archive' && semver.satisfies(version, '>= 1.85.0', { includePrerelease: true })) {
+		throw new Error('Windows 32-bit is no longer supported from v1.85 onwards');
 	}
 
 	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version });

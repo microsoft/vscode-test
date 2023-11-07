@@ -15,8 +15,8 @@ import { resolveCliPathFromVSCodeExecutablePath, systemDefaultPlatform } from '.
 const platforms = [
 	'darwin',
 	'darwin-arm64',
-	'win32-archive',
 	'win32-x64-archive',
+	'win32-arm64-archive',
 	'linux-x64',
 	'linux-arm64',
 	'linux-armhf',
@@ -86,7 +86,7 @@ describe('fetchTargetInferredVersion', () => {
 	const doFetch = (paths = ['./']) =>
 		fetchTargetInferredVersion({
 			cachePath: join(extensionsDevelopmentPath, '.cache'),
-			platform: 'win32-archive',
+			platform: 'win32-x64-archive',
 			timeout: 5000,
 			extensionsDevelopmentPath: paths.map((p) => join(extensionsDevelopmentPath, p)),
 		});
