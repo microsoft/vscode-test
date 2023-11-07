@@ -346,10 +346,6 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		timeout = 15_000,
 	} = options;
 
-	if (platform === 'win32-archive') {
-		throw new Error('Windows 32-bit is no longer supported');
-	}
-
 	if (version === 'stable') {
 		version = await fetchTargetStableVersion({ timeout, cachePath, platform });
 	} else if (version) {
@@ -368,6 +364,10 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			platform,
 			extensionsDevelopmentPath: options.extensionDevelopmentPath,
 		});
+	}
+
+	if (platform === 'win32-archive' && semver.satisfies(version, '>= 1.85.0', { includePrerelease: true })) {
+		throw new Error('Windows 32-bit is no longer supported from v1.85 onwards');
 	}
 
 	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version });
