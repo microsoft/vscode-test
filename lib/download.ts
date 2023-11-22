@@ -7,11 +7,11 @@ import * as cp from 'child_process';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
-import { pipeline, Readable } from 'stream';
+import * as semver from 'semver';
+import { pipeline } from 'stream';
 import { promisify } from 'util';
 import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
 import * as request from './request';
-import * as semver from 'semver';
 import {
 	downloadDirToExecutablePath,
 	getInsidersVersionMetadata,
@@ -26,6 +26,7 @@ import {
 	onceWithoutRejections,
 	streamToBuffer,
 	systemDefaultPlatform,
+	validateStream,
 } from './util';
 
 const extensionRoot = process.cwd();
@@ -181,6 +182,13 @@ export interface DownloadOptions {
 	readonly timeout?: number;
 }
 
+interface IDownload {
+	stream: NodeJS.ReadableStream;
+	format: 'zip' | 'tgz';
+	sha256?: string;
+	length: number;
+}
+
 /**
  * Download a copy of VS Code archive to `.vscode-test`.
  *
@@ -188,7 +196,7 @@ export interface DownloadOptions {
  * `'stable'` for downloading latest stable release.
  * `'insiders'` for downloading latest Insiders.
  */
-async function downloadVSCodeArchive(options: DownloadOptions) {
+async function downloadVSCodeArchive(options: DownloadOptions): Promise<IDownload> {
 	if (!fs.existsSync(options.cachePath)) {
 		fs.mkdirSync(options.cachePath);
 	}
@@ -206,6 +214,7 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 		throw 'Failed to get VS Code archive location';
 	}
 
+	const contentSHA256 = res.headers['x-sha256'] as string | undefined;
 	res.destroy();
 
 	const download = await request.getStream(url, timeout);
@@ -248,7 +257,12 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 		download.destroy();
 	});
 
-	return { stream: download, format: isZip ? 'zip' : 'tgz' } as const;
+	return {
+		stream: download,
+		format: isZip ? 'zip' : 'tgz',
+		sha256: contentSHA256,
+		length: totalBytes,
+	};
 }
 
 /**
@@ -257,11 +271,11 @@ async function downloadVSCodeArchive(options: DownloadOptions) {
 async function unzipVSCode(
 	reporter: ProgressReporter,
 	extractDir: string,
-	stream: Readable,
 	platform: DownloadPlatform,
-	format: 'zip' | 'tgz'
+	{ format, stream, length, sha256 }: IDownload
 ) {
 	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
+	const checksum = validateStream(stream, length, sha256);
 
 	if (format === 'zip') {
 		try {
@@ -274,6 +288,8 @@ async function unzipVSCode(
 			// Expand-Archive on my machine.
 			if (process.platform === 'win32') {
 				const [buffer, JSZip] = await Promise.all([streamToBuffer(stream), import('jszip')]);
+				await checksum;
+
 				const content = await JSZip.loadAsync(buffer);
 				// extract file with jszip
 				for (const filename of Object.keys(content.files)) {
@@ -294,6 +310,7 @@ async function unzipVSCode(
 			} else {
 				// darwin or *nix sync
 				await pipelineAsync(stream, fs.createWriteStream(stagingFile));
+				await checksum;
 				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir]);
 			}
 		} finally {
@@ -308,10 +325,11 @@ async function unzipVSCode(
 		// The CLI is a singular binary that doesn't have a wrapper component to remove
 		const s = platform.includes('cli-') ? 0 : 1;
 		await spawnDecompressorChild('tar', ['-xzf', '-', `--strip-components=${s}`, '-C', extractDir], stream);
+		await checksum;
 	}
 }
 
-function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, input?: Readable) {
+function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, input?: NodeJS.ReadableStream) {
 	return new Promise<void>((resolve, reject) => {
 		const child = cp.spawn(command, args, { stdio: 'pipe' });
 		if (input) {
@@ -415,7 +433,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		try {
 			await fs.promises.rm(downloadedPath, { recursive: true, force: true });
 
-			const { stream, format } = await downloadVSCodeArchive({
+			const download = await downloadVSCodeArchive({
 				version,
 				platform,
 				cachePath,
@@ -424,7 +442,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			});
 			// important! do not put anything async here, since unzipVSCode will need
 			// to start consuming the stream immediately.
-			await unzipVSCode(reporter, downloadedPath, stream, platform, format);
+			await unzipVSCode(reporter, downloadedPath, platform, download);
 
 			await fs.promises.writeFile(path.join(downloadedPath, COMPLETE_FILE_NAME), '');
 			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });

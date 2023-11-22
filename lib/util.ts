@@ -13,6 +13,7 @@ import { URL } from 'url';
 import { DownloadPlatform } from './download';
 import * as request from './request';
 import { TestOptions, getProfileArguments } from './runTest';
+import { createHash } from 'crypto';
 
 export let systemDefaultPlatform: DownloadPlatform;
 
@@ -197,6 +198,36 @@ export function resolveCliArgsFromVSCodeExecutablePath(
 /** Predicates whether arg is undefined or null */
 export function isDefined<T>(arg: T | undefined | null): arg is T {
 	return arg != null;
+}
+
+/**
+ * Validates the stream data matches the given length and checksum, if any.
+ *
+ * Note: md5 is not ideal, but it's what we get from the CDN, and for the
+ * purposes of self-reported content verification is sufficient.
+ */
+export function validateStream(readable: NodeJS.ReadableStream, length: number, sha256?: string) {
+	let actualLen = 0;
+	const checksum = sha256 ? createHash('sha256') : undefined;
+	return new Promise<void>((resolve, reject) => {
+		readable.on('data', (chunk) => {
+			checksum?.update(chunk);
+			actualLen += chunk.length;
+		});
+		readable.on('error', reject);
+		readable.on('end', () => {
+			if (actualLen !== length) {
+				return reject(new Error(`Downloaded stream length ${actualLen} does not match expected length ${length}`));
+			}
+
+			const digest = checksum?.digest('hex');
+			if (digest && digest !== sha256) {
+				return reject(new Error(`Downloaded file checksum ${digest} does not match expected checksum ${sha256}`));
+			}
+
+			resolve();
+		});
+	});
 }
 
 /** Gets a Buffer from a Node.js stream */
