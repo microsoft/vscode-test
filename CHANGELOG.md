@@ -1,5 +1,10 @@
 # Changelog
 
+### 2.3.7 | 2022-11-23
+
+- Remove detection for unsupported win32 builds
+- Add length and hash validation for downloaded builds
+
 ### 2.3.6 | 2022-10-24
 
 - Fix windows sometimes failing on EPERM in download (again)
