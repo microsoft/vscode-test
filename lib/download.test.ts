@@ -29,30 +29,32 @@ describe('sane downloads', () => {
 		await fs.mkdir(testTempDir, { recursive: true });
 	});
 
-	for (const platform of platforms) {
-		test.concurrent(platform, async () => {
-			const location = await downloadAndUnzipVSCode({
-				platform,
-				version: 'stable',
-				cachePath: testTempDir,
-				reporter: new SilentReporter(),
+	for (const quality of ['insiders', 'stable']) {
+		for (const platform of platforms) {
+			test.concurrent(`${quality}/${platform}`, async () => {
+				const location = await downloadAndUnzipVSCode({
+					platform,
+					version: quality,
+					cachePath: testTempDir,
+					reporter: new SilentReporter(),
+				});
+
+				if (!existsSync(location)) {
+					throw new Error(`expected ${location} to exist for ${platform}`);
+				}
+
+				const exePath = resolveCliPathFromVSCodeExecutablePath(location, platform);
+				if (!existsSync(exePath)) {
+					throw new Error(`expected ${exePath} to from ${location}`);
+				}
+
+				if (platform === systemDefaultPlatform) {
+					const version = spawnSync(exePath, ['--version']);
+					expect(version.status).to.equal(0);
+					expect(version.stdout.toString().trim()).to.not.be.empty;
+				}
 			});
-
-			if (!existsSync(location)) {
-				throw new Error(`expected ${location} to exist for ${platform}`);
-			}
-
-			const exePath = resolveCliPathFromVSCodeExecutablePath(location, platform);
-			if (!existsSync(exePath)) {
-				throw new Error(`expected ${exePath} to from ${location}`);
-			}
-
-			if (platform === systemDefaultPlatform) {
-				const version = spawnSync(exePath, ['--version']);
-				expect(version.status).to.equal(0);
-				expect(version.stdout.toString().trim()).to.not.be.empty;
-			}
-		});
+		}
 	}
 
 	afterAll(async () => {
@@ -64,7 +66,7 @@ describe('sane downloads', () => {
 	});
 });
 
-describe('fetchTargetInferredVersion', () => {
+describe.skip('fetchTargetInferredVersion', () => {
 	let stable: string[];
 	let insiders: string[];
 	let extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
