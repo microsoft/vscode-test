@@ -189,6 +189,20 @@ interface IDownload {
 	length: number;
 }
 
+function getFilename(contentDisposition: string) {
+	const parts = contentDisposition.split(';').map((s) => s.trim());
+
+	for (const part of parts) {
+		const match = /^filename="?([^"]*)"?$/i.exec(part);
+
+		if (match) {
+			return match[1];
+		}
+	}
+
+	return undefined;
+}
+
 /**
  * Download a copy of VS Code archive to `.vscode-test`.
  *
@@ -219,8 +233,9 @@ async function downloadVSCodeArchive(options: DownloadOptions): Promise<IDownloa
 
 	const download = await request.getStream(url, timeout);
 	const totalBytes = Number(download.headers['content-length']);
-	const contentType = download.headers['content-type'];
-	const isZip = contentType ? contentType === 'application/zip' : url.endsWith('.zip');
+	const contentDisposition = download.headers['content-disposition'];
+	const fileName = contentDisposition ? getFilename(contentDisposition) : undefined;
+	const isZip = fileName?.endsWith('zip') ?? url.endsWith('.zip');
 
 	const timeoutCtrl = new request.TimeoutController(timeout);
 	options.reporter?.report({
