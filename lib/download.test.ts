@@ -66,7 +66,7 @@ describe('sane downloads', () => {
 	});
 });
 
-describe.skip('fetchTargetInferredVersion', () => {
+describe('fetchTargetInferredVersion', () => {
 	let stable: string[];
 	let insiders: string[];
 	let extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
