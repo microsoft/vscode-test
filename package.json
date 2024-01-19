@@ -1,6 +1,6 @@
 {
   "name": "@vscode/test-electron",
-  "version": "2.3.8",
+  "version": "2.3.9",
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
