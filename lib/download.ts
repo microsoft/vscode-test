@@ -305,6 +305,13 @@ async function unzipVSCode(
 				const [buffer, JSZip] = await Promise.all([streamToBuffer(stream), import('jszip')]);
 				await checksum;
 
+				// Turn off Electron's special handling of .asar files, otherwise
+				// extraction will fail when we try to extract node_modules.asar
+				// under Electron's Node (i.e. in the test CLI invoked by an extension)
+				// https://github.com/electron/packager/issues/875
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(process as any).noAsar = true;
+
 				const content = await JSZip.loadAsync(buffer);
 				// extract file with jszip
 				for (const filename of Object.keys(content.files)) {
