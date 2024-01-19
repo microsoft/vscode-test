@@ -1,50 +1,58 @@
 # Changelog
 
-### 2.3.7 | 2022-11-23
+### 2.3.9 | 2024-01-19
+
+- Fix archive extraction on Windows failing when run under Electron
+
+### 2.3.8 | 2023-11-24
+
+- Fix archive extraction on macOS and Linux sometimes failing
+
+### 2.3.7 | 2023-11-23
 
 - Remove detection for unsupported win32 builds
 - Add length and hash validation for downloaded builds
 
-### 2.3.6 | 2022-10-24
+### 2.3.6 | 2023-10-24
 
 - Fix windows sometimes failing on EPERM in download (again)
 
-### 2.3.5 | 2022-10-04
+### 2.3.5 | 2023-10-04
 
 - Fix windows sometimes failing on EPERM in download
 
-### 2.3.4 | 2022-07-31
+### 2.3.4 | 2023-07-31
 
 - Fix "insiders" string not matching correctly
 
-### 2.3.3 | 2022-06-10
+### 2.3.3 | 2023-06-10
 
 - Disable GPU sandbox by default, fixing failures in some CI's.
 
-### 2.3.2 | 2022-05-11
+### 2.3.2 | 2023-05-11
 
 - Fix download method not working for the vscode cli.
 
-### 2.3.1 | 2022-04-04
+### 2.3.1 | 2023-04-04
 
 - Gracefully kill VS Code if SIGINT is received
 
-### 2.3.0 | 2022-02-27
+### 2.3.0 | 2023-02-27
 
 - Automatically use the most recent version matching `engines.vscode` in extensions' package.json
 - Allow insiders `version`s to be specified, such as `version: "1.76.0-insider"`
 - Reduce the likelihood of 'broken' installations on interrupted downloads
 - Remove dependency on outdated `unzipper` module
 
-### 2.2.4 | 2022-02-19
+### 2.2.4 | 2023-02-19
 
 - Use existing downloads if internet is inaccessible
 
-### 2.2.3 | 2022-01-30
+### 2.2.3 | 2023-01-30
 
 - Fix tests sometimes hanging on windows
 
-### 2.2.2 | 2022-01-09
+### 2.2.2 | 2023-01-09
 
 - Add default for platform in `resolveCliPathFromVSCodeExecutablePath` to match docs
 
