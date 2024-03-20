@@ -28,11 +28,10 @@
 		"test": "cd .. && tsc && cd sample && tsc && node ./out/test/runTest.js"
 	},
 	"devDependencies": {
-		"@types/glob": "^7.1.3",
 		"@types/mocha": "^8.2.0",
 		"@types/node": "^18",
 		"@types/vscode": "^1.52.0",
-		"glob": "^7.1.6",
+		"glob": "^10.3.10",
 		"mocha": "^8.2.1",
 		"typescript": "^4.1.3"
 	},
