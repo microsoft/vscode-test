@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as cp from 'child_process';
 
-import { runTests, downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath } from '../../..';
+import { runTests, downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath, runVSCodeCommand } from '../../..';
 
 async function go() {
 	const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
@@ -28,10 +28,10 @@ async function go() {
 	});
 
 	/**
-	 * Use 1.36.1 release for testing
+	 * Use 1.61.0 release for testing
 	 */
 	await runTests({
-		version: '1.36.1',
+		version: '1.61.0',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
@@ -58,14 +58,14 @@ async function go() {
 	});
 
 	/**
-	 * Noop, since 1.36.1 already downloaded to .vscode-test/vscode-1.36.1
+	 * Noop, since 1.61.0 already downloaded to .vscode-test/vscode-1.61.0
 	 */
-	await downloadAndUnzipVSCode('1.36.1');
+	await downloadAndUnzipVSCode('1.61.0');
 
 	/**
 	 * Manually download VS Code 1.35.0 release for testing.
 	 */
-	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.35.0');
+	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.60.0');
 	await runTests({
 		vscodeExecutablePath,
 		extensionDevelopmentPath,
@@ -76,11 +76,7 @@ async function go() {
 	/**
 	 * Install Python extension
 	 */
-	const [cli, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
-	cp.spawnSync(cli, [...args, '--install-extension', 'ms-python.python'], {
-		encoding: 'utf-8',
-		stdio: 'inherit',
-	});
+	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.60.0' });
 
 	/**
 	 * - Add additional launch flags for VS Code

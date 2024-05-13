@@ -49,7 +49,8 @@ describe('sane downloads', () => {
 				}
 
 				if (platform === systemDefaultPlatform) {
-					const version = spawnSync(exePath, ['--version']);
+					const shell = process.platform === 'win32';
+					const version = spawnSync(shell ? `"${exePath}"` : exePath, ['--version'], { shell });
 					expect(version.status).to.equal(0);
 					expect(version.stdout.toString().trim()).to.not.be.empty;
 				}
