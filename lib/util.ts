@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, SpawnOptions, spawn } from 'child_process';
+import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import * as createHttpProxyAgent from 'http-proxy-agent';
 import * as https from 'https';
 import * as createHttpsProxyAgent from 'https-proxy-agent';
 import * as path from 'path';
 import { URL } from 'url';
-import { DownloadPlatform } from './download';
+import { DownloadOptions, DownloadPlatform, downloadAndUnzipVSCode } from './download';
 import * as request from './request';
 import { TestOptions, getProfileArguments } from './runTest';
-import { createHash } from 'crypto';
 
 export let systemDefaultPlatform: DownloadPlatform;
 
@@ -176,6 +176,7 @@ export function resolveCliPathFromVSCodeExecutablePath(
  * cp.spawnSync(cli, [...args, '--install-extension', '<EXTENSION-ID-OR-PATH-TO-VSIX>'], {
  *   encoding: 'utf-8',
  *   stdio: 'inherit'
+ *   shell: process.platform === 'win32',
  * });
  * ```
  *
@@ -193,6 +194,54 @@ export function resolveCliArgsFromVSCodeExecutablePath(
 	}
 
 	return args;
+}
+
+export type RunVSCodeCommandOptions = Partial<DownloadOptions> & { spawn?: SpawnOptions };
+
+export class VSCodeCommandError extends Error {
+	constructor(
+		args: string[],
+		public readonly exitCode: number | null,
+		public readonly stderr: string,
+		public stdout: string
+	) {
+		super(`'code ${args.join(' ')}' failed with exit code ${exitCode}:\n\n${stderr}\n\n${stdout}`);
+	}
+}
+
+/**
+ * Runs a VS Code command, and returns its output
+ * @throws a {@link VSCodeCommandError} if the command fails
+ */
+export async function runVSCodeCommand(args: string[], options: RunVSCodeCommandOptions = {}) {
+	const vscodeExecutablePath = await downloadAndUnzipVSCode(options);
+	const [cli, ...baseArgs] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
+
+	const shell = process.platform === 'win32';
+
+	return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+		let stdout = '';
+		let stderr = '';
+
+		const child = spawn(shell ? `"${cli}"` : cli, [...baseArgs, ...args], {
+			stdio: 'pipe',
+			shell,
+			windowsHide: true,
+			...options.spawn,
+		});
+
+		child.stdout?.setEncoding('utf-8').on('data', (data) => (stdout += data));
+		child.stderr?.setEncoding('utf-8').on('data', (data) => (stderr += data));
+
+		child.on('error', reject);
+		child.on('exit', (code) => {
+			if (code !== 0) {
+				reject(new VSCodeCommandError(args, code, stderr, stdout));
+			} else {
+				resolve({ stdout, stderr });
+			}
+		});
+	});
 }
 
 /** Predicates whether arg is undefined or null */

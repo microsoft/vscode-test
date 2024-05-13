@@ -2,7 +2,7 @@
 
 ![Test Status Badge](https://github.com/microsoft/vscode-test/workflows/Tests/badge.svg)
 
-This module helps you test VS Code extensions.
+This module helps you test VS Code extensions. Note that new extensions may want to use the [VS Code Test CLI](https://github.com/microsoft/vscode-test-cli/blob/main/README.md), which leverages this module, for a richer editing and execution experience.
 
 Supported:
 
@@ -13,10 +13,10 @@ Supported:
 
 ## Usage
 
-See [./sample](./sample) for a runnable sample, with [Azure DevOps Pipelines](https://github.com/microsoft/vscode-test/blob/master/sample/azure-pipelines.yml) and [Travis CI](https://github.com/microsoft/vscode-test/blob/master/.travis.yml) configuration.
+See [./sample](./sample) for a runnable sample, with [Azure DevOps Pipelines](https://github.com/microsoft/vscode-test/blob/main/sample/azure-pipelines.yml) and [Github ACtions](https://github.com/microsoft/vscode-test/blob/main/sample/.travis.yml) configuration.
 
 ```ts
-import { runTests } from '@vscode/test-electron';
+import { runTests, runVSCodeCommand, downloadAndUnzipVSCode } from '@vscode/test-electron';
 
 async function go() {
 	try {
@@ -82,11 +82,7 @@ async function go() {
 		/**
 		 * Install Python extension
 		 */
-		const [cli, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
-		cp.spawnSync(cli, [...args, '--install-extension', 'ms-python.python'], {
-			encoding: 'utf-8',
-			stdio: 'inherit',
-		});
+		await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.35.0' });
 
 		/**
 		 * - Add additional launch flags for VS Code

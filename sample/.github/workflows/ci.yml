@@ -1,0 +1,35 @@
+name: Run VSCode Extension Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Compile
+        run: yarn compile
+
+      - name: Run tests
+        run: xvfb-run -a yarn test
+        if: runner.os == 'Linux'
+
+      - name: Run tests
+        run: yarn test
+        if: runner.os != 'Linux'

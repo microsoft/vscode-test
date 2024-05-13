@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.3.10 | 2024-01-19
+
+- Add `runVSCodeCommand` method and workaround for Node CVE-2024-27980
+
 ### 2.3.9 | 2024-01-19
 
 - Fix archive extraction on Windows failing when run under Electron
