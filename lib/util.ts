@@ -6,9 +6,9 @@
 import { ChildProcess, SpawnOptions, spawn } from 'child_process';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
-import * as createHttpProxyAgent from 'http-proxy-agent';
+import { HttpProxyAgent } from 'http-proxy-agent';
 import * as https from 'https';
-import * as createHttpsProxyAgent from 'https-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as path from 'path';
 import { URL } from 'url';
 import { DownloadOptions, DownloadPlatform, defaultCachePath, downloadAndUnzipVSCode } from './download';
@@ -76,15 +76,15 @@ export function getVSCodeDownloadUrl(version: Version, platform: string) {
 	}
 }
 
-let PROXY_AGENT: createHttpProxyAgent.HttpProxyAgent | undefined = undefined;
-let HTTPS_PROXY_AGENT: createHttpsProxyAgent.HttpsProxyAgent | undefined = undefined;
+let PROXY_AGENT: HttpProxyAgent<string> | undefined = undefined;
+let HTTPS_PROXY_AGENT: HttpsProxyAgent<string> | undefined = undefined;
 
 if (process.env.npm_config_proxy) {
-	PROXY_AGENT = createHttpProxyAgent(process.env.npm_config_proxy);
-	HTTPS_PROXY_AGENT = createHttpsProxyAgent(process.env.npm_config_proxy);
+	PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
 }
 if (process.env.npm_config_https_proxy) {
-	HTTPS_PROXY_AGENT = createHttpsProxyAgent(process.env.npm_config_https_proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
 }
 
 export function urlToOptions(url: string): https.RequestOptions {

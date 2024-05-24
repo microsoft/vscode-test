@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as semver from 'semver';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
-import { ConsoleReporter, ProgressReporter, ProgressReportStage } from './progress';
+import { makeConsoleReporter, ProgressReporter, ProgressReportStage } from './progress.js';
 import * as request from './request';
 import {
 	downloadDirToExecutablePath,
@@ -359,7 +359,7 @@ async function unzipVSCode(
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				(process as any).noAsar = true;
 
-				const content = await JSZip.loadAsync(buffer);
+				const content = await JSZip.default.loadAsync(buffer);
 				// extract file with jszip
 				for (const filename of Object.keys(content.files)) {
 					const file = content.files[filename];
@@ -429,7 +429,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	const {
 		platform = systemDefaultPlatform,
 		cachePath = defaultCachePath,
-		reporter = new ConsoleReporter(process.stdout.isTTY),
+		reporter = await makeConsoleReporter(),
 		timeout = 15_000,
 	} = options;
 
@@ -459,7 +459,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		throw new Error('Windows 32-bit is no longer supported from v1.85 onwards');
 	}
 
-	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version: version.id });
+	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version: version.toString() });
 
 	const downloadedPath = path.resolve(cachePath, makeDownloadDirName(platform, version));
 	if (fs.existsSync(path.join(downloadedPath, COMPLETE_FILE_NAME))) {

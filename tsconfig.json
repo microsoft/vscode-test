@@ -1,20 +1,19 @@
 {
 	"compilerOptions": {
-		"target": "ES2019",
-		"module": "commonjs",
-		"lib": ["ES2019"],
+		"target": "ES2021",
+		"module": "Node16",
+		"lib": ["ES2021"],
 		"outDir": "out",
+		"moduleResolution": "Node16",
 		"declaration": true,
 		"strict": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "alwaysStrict": true,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"noUnusedLocals": true,
+		"alwaysStrict": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": [
-		"lib"
-	],
+	"include": ["lib"],
 	"exclude": ["node_modules"]
 }
