@@ -73,7 +73,7 @@ describe('fetchTargetInferredVersion', () => {
 	let extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
 
 	beforeAll(async () => {
-		[stable, insiders] = await Promise.all([fetchStableVersions(5000), fetchInsiderVersions(5000)]);
+		[stable, insiders] = await Promise.all([fetchStableVersions(true, 5000), fetchInsiderVersions(true, 5000)]);
 	});
 
 	afterEach(async () => {

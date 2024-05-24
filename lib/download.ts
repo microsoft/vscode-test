@@ -20,13 +20,12 @@ import {
 	insidersDownloadDirMetadata,
 	insidersDownloadDirToExecutablePath,
 	isDefined,
-	isInsiderVersionIdentifier,
-	isStableVersionIdentifier,
 	isSubdirectory,
 	onceWithoutRejections,
 	streamToBuffer,
 	systemDefaultPlatform,
 	validateStream,
+	Version,
 } from './util';
 
 const extensionRoot = process.cwd();
@@ -36,7 +35,7 @@ const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releas
 const vscodeInsiderReleasesAPI = `https://update.code.visualstudio.com/api/releases/insider`;
 
 const downloadDirNameFormat = /^vscode-(?<platform>[a-z]+)-(?<version>[0-9.]+)$/;
-const makeDownloadDirName = (platform: string, version: string) => `vscode-${platform}-${version}`;
+const makeDownloadDirName = (platform: string, version: Version) => `vscode-${platform}-${version.id}`;
 
 const DOWNLOAD_ATTEMPTS = 3;
 
@@ -50,11 +49,11 @@ interface IFetchInferredOptions extends IFetchStableOptions {
 	extensionsDevelopmentPath?: string | string[];
 }
 
-export const fetchStableVersions = onceWithoutRejections((timeout: number) =>
-	request.getJSON<string[]>(vscodeStableReleasesAPI, timeout)
+export const fetchStableVersions = onceWithoutRejections((released: boolean, timeout: number) =>
+	request.getJSON<string[]>(`${vscodeStableReleasesAPI}?released=${released}`, timeout)
 );
-export const fetchInsiderVersions = onceWithoutRejections((timeout: number) =>
-	request.getJSON<string[]>(vscodeInsiderReleasesAPI, timeout)
+export const fetchInsiderVersions = onceWithoutRejections((released: boolean, timeout: number) =>
+	request.getJSON<string[]>(`${vscodeInsiderReleasesAPI}?released=${released}`, timeout)
 );
 
 /**
@@ -62,16 +61,16 @@ export const fetchInsiderVersions = onceWithoutRejections((timeout: number) =>
  * version from the update sverice, but falls back to local installs if
  * not available (e.g. if the machine is offline).
  */
-async function fetchTargetStableVersion({ timeout, cachePath, platform }: IFetchStableOptions): Promise<string> {
+async function fetchTargetStableVersion({ timeout, cachePath, platform }: IFetchStableOptions): Promise<Version> {
 	try {
-		const versions = await fetchStableVersions(timeout);
-		return versions[0];
+		const versions = await fetchStableVersions(true, timeout);
+		return new Version(versions[0]);
 	} catch (e) {
 		return fallbackToLocalEntries(cachePath, platform, e as Error);
 	}
 }
 
-export async function fetchTargetInferredVersion(options: IFetchInferredOptions) {
+export async function fetchTargetInferredVersion(options: IFetchInferredOptions): Promise<Version> {
 	if (!options.extensionsDevelopmentPath) {
 		return fetchTargetStableVersion(options);
 	}
@@ -87,22 +86,22 @@ export async function fetchTargetInferredVersion(options: IFetchInferredOptions)
 	const matches = (v: string) => !extVersions.some((range) => !semver.satisfies(v, range, { includePrerelease: true }));
 
 	try {
-		const stable = await fetchStableVersions(options.timeout);
+		const stable = await fetchStableVersions(true, options.timeout);
 		const found1 = stable.find(matches);
 		if (found1) {
-			return found1;
+			return new Version(found1);
 		}
 
-		const insiders = await fetchInsiderVersions(options.timeout);
+		const insiders = await fetchInsiderVersions(true, options.timeout);
 		const found2 = insiders.find(matches);
 		if (found2) {
-			return found2;
+			return new Version(found2);
 		}
 
 		const v = extVersions.join(', ');
 		console.warn(`No version of VS Code satisfies all extension engine constraints (${v}). Falling back to stable.`);
 
-		return stable[0]; // 🤷
+		return new Version(stable[0]); // 🤷
 	} catch (e) {
 		return fallbackToLocalEntries(options.cachePath, options.platform, e as Error);
 	}
@@ -129,33 +128,29 @@ async function fallbackToLocalEntries(cachePath: string, platform: string, fromE
 
 	if (fallbackTo) {
 		console.warn(`Error retrieving VS Code versions, using already-installed version ${fallbackTo}`, fromError);
-		return fallbackTo;
+		return new Version(fallbackTo);
 	}
 
 	throw fromError;
 }
 
-async function isValidVersion(version: string, platform: string, timeout: number) {
-	if (version === 'insiders' || version === 'stable') {
+async function isValidVersion(version: Version, timeout: number) {
+	if (version.id === 'insiders' || version.id === 'stable' || version.isCommit) {
 		return true;
 	}
 
-	if (isStableVersionIdentifier(version)) {
-		const stableVersionNumbers = await fetchStableVersions(timeout);
-		if (stableVersionNumbers.includes(version)) {
+	if (version.isStable) {
+		const stableVersionNumbers = await fetchStableVersions(version.isReleased, timeout);
+		if (stableVersionNumbers.includes(version.id)) {
 			return true;
 		}
 	}
 
-	if (isInsiderVersionIdentifier(version)) {
-		const insiderVersionNumbers = await fetchInsiderVersions(timeout);
-		if (insiderVersionNumbers.includes(version)) {
+	if (version.isInsiders) {
+		const insiderVersionNumbers = await fetchInsiderVersions(version.isReleased, timeout);
+		if (insiderVersionNumbers.includes(version.id)) {
 			return true;
 		}
-	}
-
-	if (/^[0-9a-f]{40}$/.test(version)) {
-		return true;
 	}
 
 	return false;
@@ -267,7 +262,8 @@ async function downloadVSCodeArchive(options: DownloadOptions): Promise<IDownloa
 	}
 
 	const timeout = options.timeout!;
-	const downloadUrl = getVSCodeDownloadUrl(options.version, options.platform);
+	const version = Version.parse(options.version);
+	const downloadUrl = getVSCodeDownloadUrl(version, options.platform);
 
 	options.reporter?.report({ stage: ProgressReportStage.ResolvingCDNLocation, url: downloadUrl });
 	const res = await request.getStream(downloadUrl, timeout);
@@ -429,7 +425,7 @@ const COMPLETE_FILE_NAME = 'is-complete';
  * @returns Promise of `vscodeExecutablePath`.
  */
 export async function download(options: Partial<DownloadOptions> = {}): Promise<string> {
-	let version = options?.version;
+	const inputVersion = options?.version ? Version.parse(options.version) : undefined;
 	const {
 		platform = systemDefaultPlatform,
 		cachePath = defaultCachePath,
@@ -437,17 +433,19 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		timeout = 15_000,
 	} = options;
 
-	if (version === 'stable') {
+	let version: Version;
+	if (inputVersion?.id === 'stable') {
 		version = await fetchTargetStableVersion({ timeout, cachePath, platform });
-	} else if (version) {
+	} else if (inputVersion) {
 		/**
 		 * Only validate version against server when no local download that matches version exists
 		 */
-		if (!fs.existsSync(path.resolve(cachePath, `vscode-${platform}-${version}`))) {
-			if (!(await isValidVersion(version, platform, timeout))) {
-				throw Error(`Invalid version ${version}`);
+		if (!fs.existsSync(path.resolve(cachePath, makeDownloadDirName(platform, inputVersion)))) {
+			if (!(await isValidVersion(inputVersion, timeout))) {
+				throw Error(`Invalid version ${inputVersion.id}`);
 			}
 		}
+		version = inputVersion;
 	} else {
 		version = await fetchTargetInferredVersion({
 			timeout,
@@ -457,22 +455,22 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 		});
 	}
 
-	if (platform === 'win32-archive' && semver.satisfies(version, '>= 1.85.0', { includePrerelease: true })) {
+	if (platform === 'win32-archive' && semver.satisfies(version.id, '>= 1.85.0', { includePrerelease: true })) {
 		throw new Error('Windows 32-bit is no longer supported from v1.85 onwards');
 	}
 
-	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version });
+	reporter.report({ stage: ProgressReportStage.ResolvedVersion, version: version.id });
 
 	const downloadedPath = path.resolve(cachePath, makeDownloadDirName(platform, version));
 	if (fs.existsSync(path.join(downloadedPath, COMPLETE_FILE_NAME))) {
-		if (isInsiderVersionIdentifier(version)) {
+		if (version.isInsiders) {
 			reporter.report({ stage: ProgressReportStage.FetchingInsidersMetadata });
 			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(downloadedPath, platform);
 
 			const { version: latestHash, timestamp: latestTimestamp } =
-				version === 'insiders'
-					? await getLatestInsidersMetadata(systemDefaultPlatform)
-					: await getInsidersVersionMetadata(systemDefaultPlatform, version);
+				version.id === 'insiders' // not qualified with a date
+					? await getLatestInsidersMetadata(systemDefaultPlatform, version.isReleased)
+					: await getInsidersVersionMetadata(systemDefaultPlatform, version.id, version.isReleased);
 
 			if (currentHash === latestHash) {
 				reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
@@ -493,7 +491,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 					throw Error(`Failed to remove outdated Insiders at ${downloadedPath}.`);
 				}
 			}
-		} else if (isStableVersionIdentifier(version)) {
+		} else if (version.isStable) {
 			reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });
 			return Promise.resolve(downloadDirToExecutablePath(downloadedPath, platform));
 		} else {
@@ -507,7 +505,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			await fs.promises.rm(downloadedPath, { recursive: true, force: true });
 
 			const download = await downloadVSCodeArchive({
-				version,
+				version: version.toString(),
 				platform,
 				cachePath,
 				reporter,
@@ -536,7 +534,7 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	}
 	reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
 
-	if (isStableVersionIdentifier(version)) {
+	if (version.isStable) {
 		return downloadDirToExecutablePath(downloadedPath, platform);
 	} else {
 		return insidersDownloadDirToExecutablePath(downloadedPath, platform);

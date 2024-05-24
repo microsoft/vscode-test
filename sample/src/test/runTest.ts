@@ -48,6 +48,16 @@ async function go() {
 	});
 
 	/**
+	 * Use unreleased Insiders (here be dragons!)
+	 */
+	await runTests({
+		version: 'insiders-unreleased',
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		launchArgs: [testWorkspace],
+	});
+
+	/**
 	 * Use a specific Insiders commit for testing
 	 */
 	await runTests({

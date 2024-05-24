@@ -32,24 +32,47 @@ switch (process.platform) {
 			process.arch === 'arm64' ? 'linux-arm64' : process.arch === 'arm' ? 'linux-armhf' : 'linux-x64';
 }
 
-export function isInsiderVersionIdentifier(version: string): boolean {
-	return version === 'insiders' || version.endsWith('-insider'); // insider or 1.2.3-insider version string
+const UNRELEASED_SUFFIX = '-unreleased';
+
+export class Version {
+	public static parse(version: string): Version {
+		const unreleased = version.endsWith(UNRELEASED_SUFFIX);
+		if (unreleased) {
+			version = version.slice(0, -UNRELEASED_SUFFIX.length);
+		}
+
+		return new Version(version, !unreleased);
+	}
+
+	constructor(public readonly id: string, public readonly isReleased = true) {}
+
+	public get isCommit() {
+		return /^[0-9a-f]{40}$/.test(this.id);
+	}
+
+	public get isInsiders() {
+		return this.id === 'insiders' || this.id.endsWith('-insider');
+	}
+
+	public get isStable() {
+		return this.id === 'stable' || /^[0-9]+\.[0-9]+\.[0-9]$/.test(this.id);
+	}
+
+	public toString() {
+		return this.id + (this.isReleased ? '' : UNRELEASED_SUFFIX);
+	}
 }
 
-export function isStableVersionIdentifier(version: string): boolean {
-	return version === 'stable' || /^[0-9]+\.[0-9]+\.[0-9]$/.test(version); // stable or 1.2.3 version string
-}
-
-export function getVSCodeDownloadUrl(version: string, platform = systemDefaultPlatform) {
-	if (version === 'insiders') {
-		return `https://update.code.visualstudio.com/latest/${platform}/insider`;
-	} else if (isInsiderVersionIdentifier(version)) {
-		return `https://update.code.visualstudio.com/${version}/${platform}/insider`;
-	} else if (isStableVersionIdentifier(version)) {
-		return `https://update.code.visualstudio.com/${version}/${platform}/stable`;
+export function getVSCodeDownloadUrl(version: Version, platform: string) {
+	if (version.id === 'insiders') {
+		return `https://update.code.visualstudio.com/latest/${platform}/insider?released=${version.isReleased}`;
+	} else if (version.isInsiders) {
+		return `https://update.code.visualstudio.com/${version.id}/${platform}/insider?released=${version.isReleased}`;
+	} else if (version.isStable) {
+		return `https://update.code.visualstudio.com/${version.id}/${platform}/stable?released=${version.isReleased}`;
 	} else {
 		// insiders commit hash
-		return `https://update.code.visualstudio.com/commit:${version}/${platform}/insider`;
+		return `https://update.code.visualstudio.com/commit:${version.id}/${platform}/insider`;
 	}
 }
 
@@ -126,13 +149,13 @@ export interface IUpdateMetadata {
 	supportsFastUpdate: boolean;
 }
 
-export async function getInsidersVersionMetadata(platform: string, version: string) {
-	const remoteUrl = `https://update.code.visualstudio.com/api/versions/${version}/${platform}/insider`;
+export async function getInsidersVersionMetadata(platform: string, version: string, released: boolean) {
+	const remoteUrl = `https://update.code.visualstudio.com/api/versions/${version}/${platform}/insider?released=${released}`;
 	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
 }
 
-export async function getLatestInsidersMetadata(platform: string) {
-	const remoteUrl = `https://update.code.visualstudio.com/api/update/${platform}/insider/latest`;
+export async function getLatestInsidersMetadata(platform: string, released: boolean) {
+	const remoteUrl = `https://update.code.visualstudio.com/api/update/${platform}/insider/latest?released=${released}`;
 	return await request.getJSON<IUpdateMetadata>(remoteUrl, 30_000);
 }
 
