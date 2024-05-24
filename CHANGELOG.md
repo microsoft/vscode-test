@@ -1,6 +1,10 @@
 # Changelog
 
-### 2.3.10 | 2024-01-19
+### 2.4.0 | 2024-05-24
+
+- Allow installing unreleased builds using an `-unreleased` suffix, such as `insiders-unreleased`.
+
+### 2.3.10 | 2024-05-13
 
 - Add `runVSCodeCommand` method and workaround for Node CVE-2024-27980
 
