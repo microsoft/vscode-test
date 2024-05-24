@@ -12,4 +12,4 @@ export {
 	VSCodeCommandError,
 	RunVSCodeCommandOptions,
 } from './util';
-export * from './progress';
+export * from './progress.js';

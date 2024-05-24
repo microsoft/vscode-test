@@ -3,6 +3,8 @@
 ### 2.4.0 | 2024-05-24
 
 - Allow installing unreleased builds using an `-unreleased` suffix, such as `insiders-unreleased`.
+- Allow passing different data directories in `runVSCodeCommand`, using it for extension development.
+- Improve the appearance progress reporting.
 
 ### 2.3.10 | 2024-05-13
 

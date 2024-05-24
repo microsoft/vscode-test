@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import { spawnSync } from 'child_process';
 import { existsSync, promises as fs } from 'fs';
 import { tmpdir } from 'os';
@@ -8,9 +13,9 @@ import {
 	fetchInsiderVersions,
 	fetchStableVersions,
 	fetchTargetInferredVersion,
-} from './download';
-import { SilentReporter } from './progress';
-import { resolveCliPathFromVSCodeExecutablePath, systemDefaultPlatform } from './util';
+} from './download.js';
+import { SilentReporter } from './progress.js';
+import { resolveCliPathFromVSCodeExecutablePath, systemDefaultPlatform } from './util.js';
 
 const platforms = [
 	'darwin',
@@ -70,7 +75,7 @@ describe('sane downloads', () => {
 describe('fetchTargetInferredVersion', () => {
 	let stable: string[];
 	let insiders: string[];
-	let extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
+	const extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
 
 	beforeAll(async () => {
 		[stable, insiders] = await Promise.all([fetchStableVersions(true, 5000), fetchInsiderVersions(true, 5000)]);
@@ -80,7 +85,7 @@ describe('fetchTargetInferredVersion', () => {
 		await fs.rm(extensionsDevelopmentPath, { recursive: true, force: true });
 	});
 
-	const writeJSON = async (path: string, contents: object) => {
+	const writeJSON = async (path: string, contents: unknown) => {
 		const target = join(extensionsDevelopmentPath, path);
 		await fs.mkdir(dirname(target), { recursive: true });
 		await fs.writeFile(target, JSON.stringify(contents));
@@ -96,49 +101,49 @@ describe('fetchTargetInferredVersion', () => {
 
 	test('matches stable if no workspace', async () => {
 		const version = await doFetch();
-		expect(version).to.equal(stable[0]);
+		expect(version.id).to.equal(stable[0]);
 	});
 
 	test('matches stable by default', async () => {
 		await writeJSON('package.json', {});
 		const version = await doFetch();
-		expect(version).to.equal(stable[0]);
+		expect(version.id).to.equal(stable[0]);
 	});
 
 	test('matches if stable is defined', async () => {
 		await writeJSON('package.json', { engines: { vscode: '^1.50.0' } });
 		const version = await doFetch();
-		expect(version).to.equal(stable[0]);
+		expect(version.id).to.equal(stable[0]);
 	});
 
 	test('matches best', async () => {
 		await writeJSON('package.json', { engines: { vscode: '<=1.60.5' } });
 		const version = await doFetch();
-		expect(version).to.equal('1.60.2');
+		expect(version.id).to.equal('1.60.2');
 	});
 
 	test('matches multiple workspaces', async () => {
 		await writeJSON('a/package.json', { engines: { vscode: '<=1.60.5' } });
 		await writeJSON('b/package.json', { engines: { vscode: '<=1.55.5' } });
 		const version = await doFetch(['a', 'b']);
-		expect(version).to.equal('1.55.2');
+		expect(version.id).to.equal('1.55.2');
 	});
 
 	test('matches insiders to better stable if there is one', async () => {
 		await writeJSON('package.json', { engines: { vscode: '^1.60.0-insider' } });
 		const version = await doFetch();
-		expect(version).to.equal(stable[0]);
+		expect(version.id).to.equal(stable[0]);
 	});
 
 	test('matches current insiders', async () => {
 		await writeJSON('package.json', { engines: { vscode: `^${insiders[0]}` } });
 		const version = await doFetch();
-		expect(version).to.equal(insiders[0]);
+		expect(version.id).to.equal(insiders[0]);
 	});
 
 	test('matches insiders to exact', async () => {
 		await writeJSON('package.json', { engines: { vscode: '1.60.0-insider' } });
 		const version = await doFetch();
-		expect(version).to.equal('1.60.0-insider');
+		expect(version.id).to.equal('1.60.0-insider');
 	});
 });

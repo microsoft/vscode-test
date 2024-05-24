@@ -6,14 +6,14 @@
 import { ChildProcess, SpawnOptions, spawn } from 'child_process';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
-import * as createHttpProxyAgent from 'http-proxy-agent';
+import { HttpProxyAgent } from 'http-proxy-agent';
 import * as https from 'https';
-import * as createHttpsProxyAgent from 'https-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as path from 'path';
 import { URL } from 'url';
-import { DownloadOptions, DownloadPlatform, downloadAndUnzipVSCode } from './download';
+import { DownloadOptions, DownloadPlatform, defaultCachePath, downloadAndUnzipVSCode } from './download';
 import * as request from './request';
-import { TestOptions, getProfileArguments } from './runTest';
+import { TestOptions } from './runTest';
 
 export let systemDefaultPlatform: DownloadPlatform;
 
@@ -76,15 +76,15 @@ export function getVSCodeDownloadUrl(version: Version, platform: string) {
 	}
 }
 
-let PROXY_AGENT: createHttpProxyAgent.HttpProxyAgent | undefined = undefined;
-let HTTPS_PROXY_AGENT: createHttpsProxyAgent.HttpsProxyAgent | undefined = undefined;
+let PROXY_AGENT: HttpProxyAgent<string> | undefined = undefined;
+let HTTPS_PROXY_AGENT: HttpsProxyAgent<string> | undefined = undefined;
 
 if (process.env.npm_config_proxy) {
-	PROXY_AGENT = createHttpProxyAgent(process.env.npm_config_proxy);
-	HTTPS_PROXY_AGENT = createHttpsProxyAgent(process.env.npm_config_proxy);
+	PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
 }
 if (process.env.npm_config_https_proxy) {
-	HTTPS_PROXY_AGENT = createHttpsProxyAgent(process.env.npm_config_https_proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
 }
 
 export function urlToOptions(url: string): https.RequestOptions {
@@ -219,7 +219,39 @@ export function resolveCliArgsFromVSCodeExecutablePath(
 	return args;
 }
 
-export type RunVSCodeCommandOptions = Partial<DownloadOptions> & { spawn?: SpawnOptions };
+export interface RunVSCodeCommandOptions extends Partial<DownloadOptions> {
+	/**
+	 * Additional options to pass to `child_process.spawn`
+	 */
+	spawn?: SpawnOptions;
+
+	/**
+	 * Whether VS Code should be launched using default settings and extensions
+	 * installed on this machine. If `false`, then separate directories will be
+	 * used inside the `.vscode-test` folder within the project.
+	 *
+	 * Defaults to `false`.
+	 */
+	reuseMachineInstall?: boolean;
+}
+
+/** Adds the extensions and user data dir to the arguments for the VS Code CLI */
+export function getProfileArguments(args: readonly string[]) {
+	const out: string[] = [];
+	if (!hasArg('extensions-dir', args)) {
+		out.push(`--extensions-dir=${path.join(defaultCachePath, 'extensions')}`);
+	}
+
+	if (!hasArg('user-data-dir', args)) {
+		out.push(`--user-data-dir=${path.join(defaultCachePath, 'user-data')}`);
+	}
+
+	return out;
+}
+
+export function hasArg(argName: string, argList: readonly string[]) {
+	return argList.some((a) => a === `--${argName}` || a.startsWith(`--${argName}=`));
+}
 
 export class VSCodeCommandError extends Error {
 	constructor(
@@ -233,20 +265,30 @@ export class VSCodeCommandError extends Error {
 }
 
 /**
- * Runs a VS Code command, and returns its output
+ * Runs a VS Code command, and returns its output.
+ *
  * @throws a {@link VSCodeCommandError} if the command fails
  */
-export async function runVSCodeCommand(args: string[], options: RunVSCodeCommandOptions = {}) {
-	const vscodeExecutablePath = await downloadAndUnzipVSCode(options);
-	const [cli, ...baseArgs] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
+export async function runVSCodeCommand(_args: readonly string[], options: RunVSCodeCommandOptions = {}) {
+	const args = _args.slice();
 
-	const shell = process.platform === 'win32';
+	let executable = await downloadAndUnzipVSCode(options);
+	let shell = false;
+	if (!options.reuseMachineInstall) {
+		args.push(...getProfileArguments(args));
+	}
+
+	// Unless the user is manually running tests or extension development, then resolve to the CLI script
+	if (!hasArg('extensionTestsPath', args) && !hasArg('extensionDevelopmentPath', args)) {
+		executable = resolveCliPathFromVSCodeExecutablePath(executable, options?.platform ?? systemDefaultPlatform);
+		shell = process.platform === 'win32'; // CVE-2024-27980
+	}
 
 	return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
 		let stdout = '';
 		let stderr = '';
 
-		const child = spawn(shell ? `"${cli}"` : cli, [...baseArgs, ...args], {
+		const child = spawn(shell ? `"${executable}"` : executable, args, {
 			stdio: 'pipe',
 			shell,
 			windowsHide: true,

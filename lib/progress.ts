@@ -63,77 +63,73 @@ export class SilentReporter implements ProgressReporter {
 }
 
 /** Default progress reporter that logs VS Code download progress to console */
-export class ConsoleReporter implements ProgressReporter {
-	private version?: string;
+export const makeConsoleReporter = async (): Promise<ProgressReporter> => {
+	// needs to be async targeting Node 16 because ora is an es module that cannot be required
+	const { default: ora } = await import('ora');
+	let version: undefined | string;
 
-	private downloadReport?: {
-		timeout: NodeJS.Timeout;
-		report: { stage: ProgressReportStage.Downloading; totalBytes: number; bytesSoFar: number };
+	let spinner: undefined | ReturnType<typeof ora> = ora('Resolving version...').start();
+	function toMB(bytes: number) {
+		return (bytes / 1024 / 1024).toFixed(2);
+	}
+
+	return {
+		error(err: unknown): void {
+			if (spinner) {
+				spinner?.fail(`Error: ${err}`);
+				spinner = undefined;
+			} else {
+				console.error(err);
+			}
+		},
+
+		report(report: ProgressReport): void {
+			switch (report.stage) {
+				case ProgressReportStage.ResolvedVersion:
+					version = report.version;
+					spinner?.succeed(`Validated version: ${version}`);
+					spinner = undefined;
+					break;
+				case ProgressReportStage.ReplacingOldInsiders:
+					spinner?.succeed();
+					spinner = ora(
+						`Updating Insiders ${report.oldHash} (${report.oldDate.toISOString()}) -> ${report.newHash}`
+					).start();
+					break;
+				case ProgressReportStage.FoundMatchingInstall:
+					spinner?.succeed();
+					spinner = undefined;
+					ora(`Found existing install in ${report.downloadedPath}`).succeed();
+					break;
+				case ProgressReportStage.ResolvingCDNLocation:
+					spinner?.succeed();
+					spinner = ora(`Found at ${report.url}`).start();
+					break;
+				case ProgressReportStage.Downloading:
+					if (report.bytesSoFar === 0) {
+						spinner?.succeed();
+						spinner = ora(`Downloading (${toMB(report.totalBytes)} MB)`).start();
+					} else if (spinner) {
+						if (report.bytesSoFar === report.totalBytes) {
+							spinner.text = 'Extracting...';
+						} else {
+							const percent = Math.max(0, Math.min(1, report.bytesSoFar / report.totalBytes));
+							const size = `${toMB(report.bytesSoFar)}/${toMB(report.totalBytes)}MB`;
+							spinner.text = `Downloading VS Code: ${size} (${(percent * 100).toFixed()}%)`;
+						}
+					}
+					break;
+				case ProgressReportStage.Retrying:
+					spinner?.fail(
+						`Error downloading, retrying (attempt ${report.attempt} of ${report.totalAttempts}): ${report.error.message}`
+					);
+					spinner = undefined;
+					break;
+				case ProgressReportStage.NewInstallComplete:
+					spinner?.succeed(`Downloaded VS Code into ${report.downloadedPath}`);
+					spinner = undefined;
+					break;
+			}
+		},
 	};
-
-	constructor(private readonly showDownloadProgress: boolean) {}
-
-	public report(report: ProgressReport): void {
-		switch (report.stage) {
-			case ProgressReportStage.ResolvedVersion:
-				this.version = report.version;
-				break;
-			case ProgressReportStage.ReplacingOldInsiders:
-				console.log(`Removing outdated Insiders at ${report.downloadedPath} and re-downloading.`);
-				console.log(`Old: ${report.oldHash} | ${report.oldDate.toISOString()}`);
-				console.log(`New: ${report.newHash} | ${report.newDate.toISOString()}`);
-				break;
-			case ProgressReportStage.FoundMatchingInstall:
-				console.log(`Found existing install in ${report.downloadedPath}. Skipping download`);
-				break;
-			case ProgressReportStage.ResolvingCDNLocation:
-				console.log(`Downloading VS Code ${this.version} from ${report.url}`);
-				break;
-			case ProgressReportStage.Downloading:
-				if (!this.showDownloadProgress && report.bytesSoFar === 0) {
-					console.log(`Downloading VS Code (${report.totalBytes}B)`);
-				} else if (!this.downloadReport) {
-					this.downloadReport = { timeout: setTimeout(() => this.reportDownload(), 100), report };
-				} else {
-					this.downloadReport.report = report;
-				}
-				break;
-			case ProgressReportStage.Retrying:
-				this.flushDownloadReport();
-				console.log(
-					`Error downloading, retrying (attempt ${report.attempt} of ${report.totalAttempts}): ${report.error.message}`
-				);
-				break;
-			case ProgressReportStage.NewInstallComplete:
-				this.flushDownloadReport();
-				console.log(`Downloaded VS Code into ${report.downloadedPath}`);
-				break;
-		}
-	}
-
-	public error(err: unknown) {
-		console.error(err);
-	}
-
-	private flushDownloadReport() {
-		if (this.showDownloadProgress) {
-			this.reportDownload();
-			console.log('');
-		}
-	}
-
-	private reportDownload() {
-		if (!this.downloadReport) {
-			return;
-		}
-
-		const { totalBytes, bytesSoFar } = this.downloadReport.report;
-		this.downloadReport = undefined;
-
-		const percent = Math.max(0, Math.min(1, bytesSoFar / totalBytes));
-		const progressBarSize = 30;
-		const barTicks = Math.floor(percent * progressBarSize);
-		const progressBar = '='.repeat(barTicks) + '-'.repeat(progressBarSize - barTicks);
-		process.stdout.write(`\x1b[G\x1b[0KDownloading VS Code [${progressBar}] ${(percent * 100).toFixed()}%`);
-	}
-}
+};
