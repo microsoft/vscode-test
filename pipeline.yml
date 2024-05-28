@@ -4,7 +4,6 @@ trigger:
   branches:
     include:
       - main
-pr: none
 
 resources:
   repositories:
@@ -30,11 +29,6 @@ extends:
           - script: yarn --frozen-lockfile
             displayName: Install dependencies
 
-        testPlatforms:
-          - name: Linux
-            nodeVersions:
-              - 16.x
-
         testSteps:
           - script: yarn --frozen-lockfile
             displayName: Install dependencies
@@ -47,6 +41,11 @@ extends:
               echo ">>> Started xvfb"
             displayName: Start xvfb
             condition: eq(variables['Agent.OS'], 'Linux')
+
+          - task: NodeTool@0
+            displayName: Switch to Node 16
+            inputs:
+              versionSpec: 16.x
 
           - script: yarn --cwd=sample test
             displayName: Test package

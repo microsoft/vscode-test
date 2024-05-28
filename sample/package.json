@@ -33,7 +33,7 @@
 		"@types/vscode": "^1.52.0",
 		"glob": "^10.3.10",
 		"mocha": "^8.2.1",
-		"typescript": "^4.1.3"
+		"typescript": "^5.4.5"
 	},
 	"dependencies": {}
 }
