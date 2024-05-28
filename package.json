@@ -1,6 +1,6 @@
 {
   "name": "@vscode/test-electron",
-  "version": "2.3.10",
+  "version": "2.4.0",
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
@@ -26,7 +26,7 @@
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.4",
     "jszip": "^3.10.1",
-    "ora": "^8.0.1",
+    "ora": "^7.0.1",
     "semver": "^7.6.2"
   },
   "devDependencies": {
