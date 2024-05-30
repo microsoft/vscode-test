@@ -1,5 +1,9 @@
 # Changelog
 
+### TBA
+
+- Throw a typed `TestRunFailedError` on failure instead of a string.
+
 ### 2.4.0 | 2024-05-24
 
 - Allow installing unreleased builds using an `-unreleased` suffix, such as `insiders-unreleased`.

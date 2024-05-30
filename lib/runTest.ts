@@ -161,13 +161,10 @@ async function innerRunTests(
 			cmd.stdout.destroy();
 			cmd.stderr.destroy();
 
-			if (code === null) {
-				reject(signal);
-			} else if (code !== 0) {
-				reject('Failed');
+			if (code !== 0) {
+				reject(new TestRunFailedError(code ?? undefined, signal ?? undefined));
 			} else {
-				console.log('Done\n');
-				resolve(code ?? -1);
+				resolve(0);
 			}
 		}
 
@@ -189,4 +186,10 @@ async function innerRunTests(
 	}
 
 	return code;
+}
+
+export class TestRunFailedError extends Error {
+	constructor(public readonly code: number | undefined, public readonly signal: string | undefined) {
+		super(signal ? `Test run terminated with signal ${signal}` : `Test run failed with code ${code}`);
+	}
 }

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { download, downloadAndUnzipVSCode, DownloadOptions } from './download';
-export { runTests, TestOptions } from './runTest';
+export { runTests, TestOptions, TestRunFailedError } from './runTest';
 export {
 	resolveCliPathFromVSCodeExecutablePath,
 	resolveCliArgsFromVSCodeExecutablePath,
