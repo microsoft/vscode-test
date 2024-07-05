@@ -1,6 +1,6 @@
 # Changelog
 
-### TBA
+### 2.4.1 | 2024-07-05
 
 - Throw a typed `TestRunFailedError` on failure instead of a string.
 
