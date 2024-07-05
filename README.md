@@ -123,10 +123,10 @@ go();
 
 ## Development
 
-- `yarn install`
+- `npm install`
 - Make necessary changes in [`lib`](./lib)
-- `yarn compile` (or `yarn watch`)
-- In [`sample`](./sample), run `yarn install`, `yarn compile` and `yarn test` to make sure integration test can run successfully
+- `npm run compile` (or `npm run watch`)
+- In [`sample`](./sample), run `npm install`, `npm run compile` and `npm test` to make sure integration test can run successfully
 
 ## License
 

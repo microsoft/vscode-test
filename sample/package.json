@@ -22,7 +22,7 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "yarn run compile",
+		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"test": "cd .. && tsc && cd sample && tsc && node ./out/test/runTest.js"
@@ -31,7 +31,7 @@
 		"@types/mocha": "^8.2.0",
 		"@types/node": "^18",
 		"@types/vscode": "^1.52.0",
-		"glob": "^10.3.10",
+		"glob": "^9.0.0",
 		"mocha": "^8.2.1",
 		"typescript": "^5.4.5"
 	},
