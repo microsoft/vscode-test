@@ -49,6 +49,16 @@ interface IFetchInferredOptions extends IFetchStableOptions {
 	extensionsDevelopmentPath?: string | string[];
 }
 
+// Turn off Electron's special handling of .asar files, otherwise
+// extraction will fail when we try to extract node_modules.asar
+// under Electron's Node (i.e. in the test CLI invoked by an extension)
+// https://github.com/electron/packager/issues/875
+//
+// Also, trying to delete a directory with an asar in it will fail.
+//
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(process as any).noAsar = true;
+
 export const fetchStableVersions = onceWithoutRejections((released: boolean, timeout: number) =>
 	request.getJSON<string[]>(`${vscodeStableReleasesAPI}?released=${released}`, timeout)
 );
@@ -351,13 +361,6 @@ async function unzipVSCode(
 			if (process.platform === 'win32') {
 				const [buffer, JSZip] = await Promise.all([streamToBuffer(stream), import('jszip')]);
 				await checksum;
-
-				// Turn off Electron's special handling of .asar files, otherwise
-				// extraction will fail when we try to extract node_modules.asar
-				// under Electron's Node (i.e. in the test CLI invoked by an extension)
-				// https://github.com/electron/packager/issues/875
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				(process as any).noAsar = true;
 
 				const content = await JSZip.default.loadAsync(buffer);
 				// extract file with jszip
