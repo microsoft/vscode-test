@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Fix deleting old Insiders in electron not working
+
 ### 2.4.1 | 2024-07-05
 
 - Throw a typed `TestRunFailedError` on failure instead of a string.
