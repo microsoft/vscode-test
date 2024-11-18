@@ -1,17 +1,20 @@
 // Place your settings in this file to overwrite default and user settings.
 {
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
 	"editor.insertSpaces": true,
 	"files.eol": "\n",
-	"files.trimTrailingWhitespace": true,
 	"files.exclude": {
-		"**/.git": true,
-		"**/.DS_Store": true,
 		"**/*.js": {
 			"when": "$(basename).ts"
-		}
+		},
+		"**/.DS_Store": true,
+		"**/.git": true
 	},
-	"editor.formatOnSave": true,
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"files.trimTrailingWhitespace": true,
+	"git.branchProtection": [
+		"main"
+	],
 	"githubIssues.queries": [
 		{
 			"label": "Recent Issues",
