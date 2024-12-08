@@ -34,7 +34,7 @@ const pipelineAsync = promisify(pipeline);
 const vscodeStableReleasesAPI = `https://update.code.visualstudio.com/api/releases/stable`;
 const vscodeInsiderReleasesAPI = `https://update.code.visualstudio.com/api/releases/insider`;
 
-const downloadDirNameFormat = /^vscode-(?<platform>[a-z]+)-(?<version>[0-9.]+)$/;
+const downloadDirNameFormat = /^vscode-(?<platform>[a-z0-9-]+)-(?<version>[0-9.]+)$/;
 const makeDownloadDirName = (platform: string, version: Version) => `vscode-${platform}-${version.id}`;
 
 const DOWNLOAD_ATTEMPTS = 3;
@@ -60,10 +60,10 @@ interface IFetchInferredOptions extends IFetchStableOptions {
 (process as any).noAsar = true;
 
 export const fetchStableVersions = onceWithoutRejections((released: boolean, timeout: number) =>
-	request.getJSON<string[]>(`${vscodeStableReleasesAPI}?released=${released}`, timeout)
+	request.getJSON<string[]>(`${vscodeStableReleasesAPI}?released=${released}`, timeout),
 );
 export const fetchInsiderVersions = onceWithoutRejections((released: boolean, timeout: number) =>
-	request.getJSON<string[]>(`${vscodeInsiderReleasesAPI}?released=${released}`, timeout)
+	request.getJSON<string[]>(`${vscodeInsiderReleasesAPI}?released=${released}`, timeout),
 );
 
 /**
@@ -134,7 +134,7 @@ async function fallbackToLocalEntries(cachePath: string, platform: string, fromE
 		.filter(isDefined)
 		.filter((e) => e.groups!.platform === platform)
 		.map((e) => e.groups!.version)
-		.sort((a, b) => Number(b) - Number(a));
+		.sort((a, b) => semver.compare(b, a));
 
 	if (fallbackTo) {
 		console.warn(`Error retrieving VS Code versions, using already-installed version ${fallbackTo}`, fromError);
@@ -344,7 +344,7 @@ async function unzipVSCode(
 	reporter: ProgressReporter,
 	extractDir: string,
 	platform: DownloadPlatform,
-	{ format, stream, length, sha256 }: IDownload
+	{ format, stream, length, sha256 }: IDownload,
 ) {
 	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
 	const checksum = validateStream(stream, length, sha256);
@@ -414,7 +414,7 @@ function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, in
 
 		child.on('error', reject);
 		child.on('exit', (code) =>
-			code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`))
+			code === 0 ? resolve() : reject(new Error(`Failed to unzip archive, exited with ${code}`)),
 		);
 	});
 }
@@ -563,17 +563,17 @@ export async function downloadAndUnzipVSCode(
 	version?: DownloadVersion,
 	platform?: DownloadPlatform,
 	reporter?: ProgressReporter,
-	extractSync?: boolean
+	extractSync?: boolean,
 ): Promise<string>;
 export async function downloadAndUnzipVSCode(
 	versionOrOptions?: DownloadVersion | Partial<DownloadOptions>,
 	platform?: DownloadPlatform,
 	reporter?: ProgressReporter,
-	extractSync?: boolean
+	extractSync?: boolean,
 ): Promise<string> {
 	return await download(
 		typeof versionOrOptions === 'object'
 			? (versionOrOptions as Partial<DownloadOptions>)
-			: { version: versionOrOptions, platform, reporter, extractSync }
+			: { version: versionOrOptions, platform, reporter, extractSync },
 	);
 }
