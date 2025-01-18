@@ -13,7 +13,7 @@ Supported:
 
 ## Usage
 
-See [./sample](./sample) for a runnable sample, with [Azure DevOps Pipelines](https://github.com/microsoft/vscode-test/blob/main/sample/azure-pipelines.yml) and [Github ACtions](https://github.com/microsoft/vscode-test/blob/main/sample/.travis.yml) configuration.
+See [./sample](./sample) for a runnable sample, with [Azure DevOps Pipelines](https://github.com/microsoft/vscode-test/blob/main/sample/azure-pipelines.yml) and [Github Actions](https://github.com/microsoft/vscode-test/blob/main/sample/.github/workflows/ci.yml) configuration.
 
 ```ts
 import { runTests, runVSCodeCommand, downloadAndUnzipVSCode } from '@vscode/test-electron';
