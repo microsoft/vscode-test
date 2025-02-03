@@ -1,7 +1,6 @@
 import * as path from 'path';
-import * as cp from 'child_process';
 
-import { runTests, downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath, runVSCodeCommand } from '../../..';
+import { runTests, downloadAndUnzipVSCode, runVSCodeCommand } from '../../..';
 
 async function go() {
 	const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
@@ -58,10 +57,10 @@ async function go() {
 	});
 
 	/**
-	 * Use a specific Insiders commit for testing
+	 * Use a specific Insiders (1.85.0) for testing
 	 */
 	await runTests({
-		version: '9d3fbb3d9a50055be0a8c6d721625d02c9de492d',
+		version: 'af28b32d7e553898b2a91af498b1fb666fdebe0c',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
@@ -73,7 +72,7 @@ async function go() {
 	await downloadAndUnzipVSCode('1.61.0');
 
 	/**
-	 * Manually download VS Code 1.35.0 release for testing.
+	 * Manually download VS Code 1.60.0 release for testing.
 	 */
 	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.60.0');
 	await runTests({
