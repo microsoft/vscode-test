@@ -383,6 +383,10 @@ async function unzipVSCode(
 				// darwin or *nix sync
 				await pipelineAsync(stream, fs.createWriteStream(stagingFile));
 				await checksum;
+
+				// unzip does not create intermediate directories when using -d
+				await fs.promises.mkdir(extractDir, { recursive: true });
+
 				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir]);
 			}
 		} finally {
