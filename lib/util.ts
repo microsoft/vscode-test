@@ -79,12 +79,14 @@ export function getVSCodeDownloadUrl(version: Version, platform: string) {
 let PROXY_AGENT: HttpProxyAgent<string> | undefined = undefined;
 let HTTPS_PROXY_AGENT: HttpsProxyAgent<string> | undefined = undefined;
 
-if (process.env.npm_config_proxy) {
-	PROXY_AGENT = new HttpProxyAgent(process.env.npm_config_proxy);
-	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_proxy);
+if (process.env.npm_config_proxy || process.env.http_proxy) {
+	const proxy = process.env.npm_config_proxy || process.env.http_proxy
+	PROXY_AGENT = new HttpProxyAgent(proxy);
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(proxy);
 }
-if (process.env.npm_config_https_proxy) {
-	HTTPS_PROXY_AGENT = new HttpsProxyAgent(process.env.npm_config_https_proxy);
+if (process.env.npm_config_https_proxy || process.env.https_proxy) {
+	const proxy = process.env.npm_config_https_proxy || process.env.https_proxy;
+	HTTPS_PROXY_AGENT = new HttpsProxyAgent(proxy);
 }
 
 export function urlToOptions(url: string): https.RequestOptions {
