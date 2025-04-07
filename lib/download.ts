@@ -20,6 +20,7 @@ import {
 	insidersDownloadDirMetadata,
 	insidersDownloadDirToExecutablePath,
 	isDefined,
+	isPlatformCLI,
 	isSubdirectory,
 	onceWithoutRejections,
 	streamToBuffer,
@@ -348,6 +349,7 @@ async function unzipVSCode(
 ) {
 	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
 	const checksum = validateStream(stream, length, sha256);
+	const stripComponents = isPlatformCLI(platform) ? 0 : 1;
 
 	if (format === 'zip') {
 		try {
@@ -366,10 +368,13 @@ async function unzipVSCode(
 				// extract file with jszip
 				for (const filename of Object.keys(content.files)) {
 					const file = content.files[filename];
-					const filepath = path.join(extractDir, filename);
 					if (file.dir) {
 						continue;
 					}
+
+					const filepath = stripComponents
+						? path.join(extractDir, filename.split(/[/\\]/g).slice(stripComponents).join(path.sep))
+						: path.join(extractDir, filename);
 
 					// vscode update zips are trusted, but check for zip slip anyway.
 					if (!isSubdirectory(extractDir, filepath)) {
@@ -388,6 +393,17 @@ async function unzipVSCode(
 				await fs.promises.mkdir(extractDir, { recursive: true });
 
 				await spawnDecompressorChild('unzip', ['-q', stagingFile, '-d', extractDir]);
+
+				// unzip has no --strip-components equivalent
+				if (stripComponents) {
+					const files = await fs.promises.readdir(extractDir);
+					for (const file of files) {
+						const dirPath = path.join(extractDir, file);
+						const children = await fs.promises.readdir(dirPath);
+						await Promise.all(children.map((c) => fs.promises.rename(path.join(dirPath, c), path.join(extractDir, c))));
+						await fs.promises.rmdir(dirPath);
+					}
+				}
 			}
 		} finally {
 			fs.unlink(stagingFile, () => undefined);
@@ -399,8 +415,11 @@ async function unzipVSCode(
 		}
 
 		// The CLI is a singular binary that doesn't have a wrapper component to remove
-		const s = platform.includes('cli-') ? 0 : 1;
-		await spawnDecompressorChild('tar', ['-xzf', '-', `--strip-components=${s}`, '-C', extractDir], stream);
+		await spawnDecompressorChild(
+			'tar',
+			['-xzf', '-', `--strip-components=${stripComponents}`, '-C', extractDir],
+			stream,
+		);
 		await checksum;
 	}
 }
@@ -472,7 +491,11 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	if (fs.existsSync(path.join(downloadedPath, COMPLETE_FILE_NAME))) {
 		if (version.isInsiders) {
 			reporter.report({ stage: ProgressReportStage.FetchingInsidersMetadata });
-			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(downloadedPath, platform);
+			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(
+				downloadedPath,
+				platform,
+				reporter,
+			);
 
 			const { version: latestHash, timestamp: latestTimestamp } =
 				version.id === 'insiders' // not qualified with a date

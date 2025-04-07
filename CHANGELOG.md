@@ -1,6 +1,10 @@
 # Changelog
 
-### Unreleased
+### 2.5.1 | 2024-04-07
+
+- Allow downloading server versions
+
+### 2.5.0 | 2024-02-04
 
 - Fix deleting old Insiders in electron not working
 
