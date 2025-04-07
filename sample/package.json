@@ -22,7 +22,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "cd .. && tsc && cd sample && tsc && node ./out/test/runTest.js"
