@@ -47,7 +47,7 @@ extends:
             inputs:
               versionSpec: 16.x
 
-          - script: cd test && npm run test
+          - script: cd sample && npm run test
             displayName: Test package
             env:
               DISPLAY: ':99.0'
