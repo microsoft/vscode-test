@@ -11,7 +11,7 @@ Continuously tested with latest changes:
 When making changes to `vscode-test` library, you should compile and run the tests in this sample project locally to make sure the tests can still run successfully.
 
 ```bash
-yarn install
-yarn compile
-yarn test
+npm install
+npm run compile
+npm test
 ```
