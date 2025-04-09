@@ -9,5 +9,7 @@ export default defineConfig({
 	test: {
 		include: ['lib/**/*.test.{ts,mts}'],
 		testTimeout: 120_000,
+		hookTimeout: 30_000,
+		retry: 3,
 	},
 });

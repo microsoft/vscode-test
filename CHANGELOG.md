@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.5.2 | 2024-04-09
+
+- Fix install issue on various platforms
+
 ### 2.5.1 | 2024-04-07
 
 - Allow downloading server versions

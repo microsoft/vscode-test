@@ -21,6 +21,7 @@ import {
 	insidersDownloadDirToExecutablePath,
 	isDefined,
 	isPlatformCLI,
+	isPlatformServer,
 	isSubdirectory,
 	onceWithoutRejections,
 	streamToBuffer,
@@ -349,9 +350,9 @@ async function unzipVSCode(
 ) {
 	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
 	const checksum = validateStream(stream, length, sha256);
-	const stripComponents = isPlatformCLI(platform) ? 0 : 1;
 
 	if (format === 'zip') {
+		const stripComponents = isPlatformServer(platform) ? 1 : 0;
 		try {
 			reporter.report({ stage: ProgressReportStage.ExtractingSynchonrously });
 
@@ -409,6 +410,8 @@ async function unzipVSCode(
 			fs.unlink(stagingFile, () => undefined);
 		}
 	} else {
+		const stripComponents = isPlatformCLI(platform) ? 0 : 1;
+
 		// tar does not create extractDir by default
 		if (!fs.existsSync(extractDir)) {
 			fs.mkdirSync(extractDir);

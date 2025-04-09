@@ -15,7 +15,12 @@ import {
 	fetchTargetInferredVersion,
 } from './download.js';
 import { SilentReporter } from './progress.js';
-import { resolveCliPathFromVSCodeExecutablePath, systemDefaultPlatform } from './util.js';
+import {
+	isPlatformDarwin,
+	isPlatformLinux,
+	isPlatformWindows,
+	resolveCliPathFromVSCodeExecutablePath
+} from './util.js';
 
 const platforms = [
 	'darwin',
@@ -25,6 +30,14 @@ const platforms = [
 	'linux-x64',
 	'linux-arm64',
 	'linux-armhf',
+
+	'cli-linux-x64',
+	'cli-win32-x64',
+	'cli-darwin-x64',
+
+	'server-win32-x64',
+	'server-darwin',
+	'server-linux-x64',
 ];
 
 describe('sane downloads', () => {
@@ -33,6 +46,13 @@ describe('sane downloads', () => {
 	beforeAll(async () => {
 		await fs.mkdir(testTempDir, { recursive: true });
 	});
+
+	const isRunnableOnThisPlatform =
+		process.platform === 'win32'
+			? isPlatformWindows
+			: process.platform === 'darwin'
+				? isPlatformDarwin
+				: isPlatformLinux;
 
 	for (const quality of ['insiders', 'stable']) {
 		for (const platform of platforms) {
@@ -53,7 +73,7 @@ describe('sane downloads', () => {
 					throw new Error(`expected ${exePath} to from ${location}`);
 				}
 
-				if (platform === systemDefaultPlatform) {
+				if (platform.includes(process.arch) && isRunnableOnThisPlatform(platform)) {
 					const shell = process.platform === 'win32';
 					const version = spawnSync(shell ? `"${exePath}"` : exePath, ['--version'], { shell });
 					expect(version.status).to.equal(0);
