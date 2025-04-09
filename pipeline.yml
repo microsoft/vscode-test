@@ -29,9 +29,23 @@ extends:
           - script: npm ci
             displayName: Install dependencies
 
+        testPlatforms:
+          - name: Linux
+            nodeVersions:
+              - 20.x
+          - name: MacOS
+            nodeVersions:
+              - 20.x
+          - name: Windows
+            nodeVersions:
+              - 20.x
+
         testSteps:
           - script: npm ci
             displayName: Install dependencies
+
+          - script: npm test
+            displayName: Run own tests
 
           - script: cd sample && npm ci
             displayName: Install dependencies (fs-provider)

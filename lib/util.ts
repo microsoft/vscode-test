@@ -20,6 +20,7 @@ export let systemDefaultPlatform: DownloadPlatform;
 
 export const isPlatformWindows = (platform: string) => platform.includes('win32');
 export const isPlatformDarwin = (platform: string) => platform.includes('darwin');
+export const isPlatformLinux = (platform: string) => platform.includes('linux');
 export const isPlatformServer = (platform: string) => platform.includes('server');
 export const isPlatformCLI = (platform: string) => platform.includes('cli-');
 
@@ -108,28 +109,38 @@ export function urlToOptions(url: string): https.RequestOptions {
 }
 
 export function downloadDirToExecutablePath(dir: string, platform: DownloadPlatform) {
-	if (isPlatformWindows(platform)) {
-		return isPlatformServer(platform) ? path.resolve(dir, 'bin', 'code-server.cmd') : path.resolve(dir, 'Code.exe');
-	} else if (isPlatformServer(platform)) {
-		return path.resolve(dir, 'bin', 'code-server');
-	} else if (isPlatformDarwin(platform)) {
-		return path.resolve(dir, 'Visual Studio Code.app/Contents/MacOS/Electron');
+	if (isPlatformServer(platform)) {
+		return isPlatformWindows(platform)
+			? path.resolve(dir, 'bin', 'code-server.cmd')
+			: path.resolve(dir, 'bin', 'code-server');
+	} else if (isPlatformCLI(platform)) {
+		return isPlatformWindows(platform) ? path.resolve(dir, 'code.exe') : path.resolve(dir, 'code');
 	} else {
-		return path.resolve(dir, 'code');
+		if (isPlatformWindows(platform)) {
+			return path.resolve(dir, 'Code.exe');
+		} else if (isPlatformDarwin(platform)) {
+			return path.resolve(dir, 'Visual Studio Code.app/Contents/MacOS/Electron');
+		} else {
+			return path.resolve(dir, 'code');
+		}
 	}
 }
 
 export function insidersDownloadDirToExecutablePath(dir: string, platform: DownloadPlatform) {
-	if (isPlatformWindows(platform)) {
-		return isPlatformServer(platform)
+	if (isPlatformServer(platform)) {
+		return isPlatformWindows(platform)
 			? path.resolve(dir, 'bin', 'code-server-insiders.cmd')
-			: path.resolve(dir, 'Code - Insiders.exe');
-	} else if (isPlatformServer(platform)) {
-		return path.resolve(dir, 'bin', 'code-server-insiders');
-	} else if (isPlatformDarwin(platform)) {
-		return path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron');
+			: path.resolve(dir, 'bin', 'code-server-insiders');
+	} else if (isPlatformCLI(platform)) {
+		return isPlatformWindows(platform) ? path.resolve(dir, 'code-insiders.exe') : path.resolve(dir, 'code-insiders');
 	} else {
-		return path.resolve(dir, 'code-insiders');
+		if (isPlatformWindows(platform)) {
+			return path.resolve(dir, 'Code - Insiders.exe');
+		} else if (isPlatformDarwin(platform)) {
+			return path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron');
+		} else {
+			return path.resolve(dir, 'code-insiders');
+		}
 	}
 }
 
@@ -192,6 +203,10 @@ export function resolveCliPathFromVSCodeExecutablePath(
 ) {
 	if (platform === 'win32-archive') {
 		throw new Error('Windows 32-bit is no longer supported');
+	}
+	if (isPlatformServer(platform) || isPlatformCLI(platform)) {
+		// no separate CLI
+		return vscodeExecutablePath;
 	}
 	if (isPlatformWindows(platform)) {
 		if (vscodeExecutablePath.endsWith('Code - Insiders.exe')) {
