@@ -1,3 +1,6 @@
+.editorconfig
+.eslintrc.js
+.github
 .vscode
 .npmignore
 lib/
