@@ -14,12 +14,12 @@ import {
 	fetchStableVersions,
 	fetchTargetInferredVersion,
 } from './download.js';
-import { ProgressReportStage, SilentReporter } from './progress.js';
+import { SilentReporter } from './progress.js';
 import {
 	isPlatformDarwin,
 	isPlatformLinux,
 	isPlatformWindows,
-	resolveCliPathFromVSCodeExecutablePath
+	resolveCliPathFromVSCodeExecutablePath,
 } from './util.js';
 
 const platforms = [
@@ -165,39 +165,5 @@ describe('fetchTargetInferredVersion', () => {
 		await writeJSON('package.json', { engines: { vscode: '1.60.0-insider' } });
 		const version = await doFetch();
 		expect(version.id).to.equal('1.60.0-insider');
-	});
-});
-
-describe('insiders hash logging', () => {
-	const testTempDir = join(tmpdir(), 'vscode-test-hash-logging');
-
-	beforeAll(async () => {
-		await fs.mkdir(testTempDir, { recursive: true });
-	});
-
-	afterAll(async () => {
-		try {
-			await fs.rm(testTempDir, { recursive: true, force: true });
-		} catch {
-			// ignored
-		}
-	});
-
-	test('logs commit hash for insiders download', async () => {
-		// This test needs network access to VS Code servers, so we'll skip it in CI
-		// but the functionality can be tested manually
-		test.skip('downloads would require network access');
-	});
-
-	test('progress report includes hash field for insiders', () => {
-		// Test that our progress report type properly includes the hash field
-		const mockReport = {
-			stage: ProgressReportStage.NewInstallComplete,
-			downloadedPath: '/mock/path',
-			insidersCommitHash: '1234567890abcdef1234567890abcdef12345678'
-		};
-		
-		expect(mockReport.insidersCommitHash).toBeDefined();
-		expect(mockReport.insidersCommitHash).toMatch(/^[0-9a-f]{40}$/);
 	});
 });

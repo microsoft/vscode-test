@@ -114,7 +114,7 @@ async function innerRunTests(
 	args: string[],
 	testRunnerEnv?: {
 		[key: string]: string | undefined;
-	}
+	},
 ): Promise<number> {
 	const fullEnv = Object.assign({}, process.env, testRunnerEnv);
 	const shell = process.platform === 'win32';
@@ -189,7 +189,10 @@ async function innerRunTests(
 }
 
 export class TestRunFailedError extends Error {
-	constructor(public readonly code: number | undefined, public readonly signal: string | undefined) {
+	constructor(
+		public readonly code: number | undefined,
+		public readonly signal: string | undefined,
+	) {
 		super(signal ? `Test run terminated with signal ${signal}` : `Test run failed with code ${code}`);
 	}
 }

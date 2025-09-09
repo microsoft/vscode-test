@@ -44,7 +44,7 @@ export type ProgressReport =
 	| { stage: ProgressReportStage.Downloading; url: string; totalBytes: number; bytesSoFar: number }
 	| { stage: ProgressReportStage.Retrying; error: Error; attempt: number; totalAttempts: number }
 	| { stage: ProgressReportStage.ExtractingSynchonrously }
-	| { stage: ProgressReportStage.NewInstallComplete; downloadedPath: string; insidersCommitHash?: string };
+	| { stage: ProgressReportStage.NewInstallComplete; downloadedPath: string; commitHash?: string };
 
 export interface ProgressReporter {
 	report(report: ProgressReport): void;
@@ -126,9 +126,7 @@ export const makeConsoleReporter = async (): Promise<ProgressReporter> => {
 					spinner = undefined;
 					break;
 				case ProgressReportStage.NewInstallComplete: {
-					const message = report.insidersCommitHash
-						? `Downloaded VS Code Insiders (${report.insidersCommitHash}) into ${report.downloadedPath}`
-						: `Downloaded VS Code into ${report.downloadedPath}`;
+					const message = `Downloaded VS Code (${report.commitHash || 'unknown commit'}) into ${report.downloadedPath}`;
 					spinner?.succeed(message);
 					spinner = undefined;
 					break;

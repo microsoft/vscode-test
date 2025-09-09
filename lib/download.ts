@@ -243,6 +243,7 @@ export interface DownloadOptions {
 interface IDownload {
 	stream: NodeJS.ReadableStream;
 	format: 'zip' | 'tgz';
+	commit?: string;
 	sha256?: string;
 	length: number;
 }
@@ -336,6 +337,7 @@ async function downloadVSCodeArchive(options: DownloadOptions): Promise<IDownloa
 		format: isZip ? 'zip' : 'tgz',
 		sha256: contentSHA256,
 		length: totalBytes,
+		commit: res.headers['x-source-commit'] as string | undefined,
 	};
 }
 
@@ -550,22 +552,10 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 
 			await fs.promises.writeFile(path.join(downloadedPath, COMPLETE_FILE_NAME), '');
 
-			// For insiders builds, get the actual commit hash from the downloaded installation
-			let insidersCommitHash: string | undefined;
-			if (version.isInsiders) {
-				try {
-					const metadata = insidersDownloadDirMetadata(downloadedPath, platform, reporter);
-					insidersCommitHash = metadata.version;
-				} catch (err) {
-					// If we can't read the hash, continue without it
-					reporter.error(`Unable to read insiders commit hash: ${err}`);
-				}
-			}
-
 			reporter.report({
 				stage: ProgressReportStage.NewInstallComplete,
 				downloadedPath,
-				insidersCommitHash,
+				commitHash: download.commit,
 			});
 			break;
 		} catch (error) {
