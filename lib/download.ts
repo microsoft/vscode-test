@@ -549,7 +549,24 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			await unzipVSCode(reporter, downloadedPath, platform, download);
 
 			await fs.promises.writeFile(path.join(downloadedPath, COMPLETE_FILE_NAME), '');
-			reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
+
+			// For insiders builds, get the actual commit hash from the downloaded installation
+			let insidersCommitHash: string | undefined;
+			if (version.isInsiders) {
+				try {
+					const metadata = insidersDownloadDirMetadata(downloadedPath, platform, reporter);
+					insidersCommitHash = metadata.version;
+				} catch (err) {
+					// If we can't read the hash, continue without it
+					reporter.error(`Unable to read insiders commit hash: ${err}`);
+				}
+			}
+
+			reporter.report({
+				stage: ProgressReportStage.NewInstallComplete,
+				downloadedPath,
+				insidersCommitHash,
+			});
 			break;
 		} catch (error) {
 			if (i++ < DOWNLOAD_ATTEMPTS) {
@@ -565,8 +582,6 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 			}
 		}
 	}
-	reporter.report({ stage: ProgressReportStage.NewInstallComplete, downloadedPath });
-
 	if (version.isStable) {
 		return downloadDirToExecutablePath(downloadedPath, platform);
 	} else {

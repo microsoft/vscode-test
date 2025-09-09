@@ -44,7 +44,7 @@ export type ProgressReport =
 	| { stage: ProgressReportStage.Downloading; url: string; totalBytes: number; bytesSoFar: number }
 	| { stage: ProgressReportStage.Retrying; error: Error; attempt: number; totalAttempts: number }
 	| { stage: ProgressReportStage.ExtractingSynchonrously }
-	| { stage: ProgressReportStage.NewInstallComplete; downloadedPath: string };
+	| { stage: ProgressReportStage.NewInstallComplete; downloadedPath: string; insidersCommitHash?: string };
 
 export interface ProgressReporter {
 	report(report: ProgressReport): void;
@@ -93,7 +93,7 @@ export const makeConsoleReporter = async (): Promise<ProgressReporter> => {
 				case ProgressReportStage.ReplacingOldInsiders:
 					spinner?.succeed();
 					spinner = ora(
-						`Updating Insiders ${report.oldHash} (${report.oldDate.toISOString()}) -> ${report.newHash}`
+						`Updating Insiders ${report.oldHash} (${report.oldDate.toISOString()}) -> ${report.newHash}`,
 					).start();
 					break;
 				case ProgressReportStage.FoundMatchingInstall:
@@ -121,14 +121,18 @@ export const makeConsoleReporter = async (): Promise<ProgressReporter> => {
 					break;
 				case ProgressReportStage.Retrying:
 					spinner?.fail(
-						`Error downloading, retrying (attempt ${report.attempt} of ${report.totalAttempts}): ${report.error.message}`
+						`Error downloading, retrying (attempt ${report.attempt} of ${report.totalAttempts}): ${report.error.message}`,
 					);
 					spinner = undefined;
 					break;
-				case ProgressReportStage.NewInstallComplete:
-					spinner?.succeed(`Downloaded VS Code into ${report.downloadedPath}`);
+				case ProgressReportStage.NewInstallComplete: {
+					const message = report.insidersCommitHash
+						? `Downloaded VS Code Insiders (${report.insidersCommitHash}) into ${report.downloadedPath}`
+						: `Downloaded VS Code into ${report.downloadedPath}`;
+					spinner?.succeed(message);
 					spinner = undefined;
 					break;
+				}
 			}
 		},
 	};
