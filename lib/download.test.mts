@@ -19,7 +19,7 @@ import {
 	isPlatformDarwin,
 	isPlatformLinux,
 	isPlatformWindows,
-	resolveCliPathFromVSCodeExecutablePath
+	resolveCliPathFromVSCodeExecutablePath,
 } from './util.js';
 
 const platforms = [
