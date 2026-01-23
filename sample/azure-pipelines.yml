@@ -18,7 +18,7 @@ pool:
 steps:
   - task: NodeTool@0
     inputs:
-      versionSpec: '8.x'
+      versionSpec: '22.x'
     displayName: 'Install Node.js'
 
   - bash: |
