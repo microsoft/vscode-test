@@ -1,4 +1,6 @@
 import * as path from 'path';
+import * as assert from 'assert';
+import { Writable } from 'stream';
 
 import { runTests, downloadAndUnzipVSCode, runVSCodeCommand } from '../../..';
 
@@ -103,6 +105,34 @@ async function go() {
 		// Custom environment variables for extension test script
 		extensionTestsEnv: { foo: 'bar' },
 	});
+
+	/**
+	 * Verify we can capture the output streams.
+	 */
+	const { stream: stdout, output: capturedStdout } = createMockStream();
+	const { stream: stderr, output: capturedStderr } = createMockStream();
+	await runTests({
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		stdout,
+		stderr,
+	});
+	assert.ok(capturedStdout.join('').includes('Extension Test Suite 1'));
+	assert.ok(capturedStderr.join('').includes('property `engines.vscode` is mandatory'));
 }
 
 go();
+
+/**
+ * Create a mock writable stream to capture output to.
+ */
+const createMockStream = () => {
+    const output: string[] = [];
+    const stream = new Writable({
+        write(chunk, _, callback) {
+            output.push(chunk.toString());
+            callback();
+        },
+    });
+    return { stream, output };
+};

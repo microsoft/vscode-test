@@ -56,6 +56,20 @@ export interface TestOptions extends Partial<DownloadOptions> {
 	};
 
 	/**
+	 * Writable stream where stdout from the child process will be forwarded.
+	 *
+	 * If not specified, `process.stdout` will be used.
+	 */
+	stdout?: NodeJS.WritableStream;
+
+	/**
+	 * Writable stream where stderr from the child process will be forwarded.
+	 *
+	 * If not specified, `process.stderr` will be used.
+	 */
+	stderr?: NodeJS.WritableStream;
+
+	/**
 	 * A list of launch arguments passed to VS Code executable, in addition to `--extensionDevelopmentPath`
 	 * and `--extensionTestsPath` which are provided by `extensionDevelopmentPath` and `extensionTestsPath`
 	 * options.
@@ -105,13 +119,21 @@ export async function runTests(options: TestOptions): Promise<number> {
 		args.push(...getProfileArguments(args));
 	}
 
-	return innerRunTests(options.vscodeExecutablePath, args, options.extensionTestsEnv);
+	return innerRunTests(
+		options.vscodeExecutablePath,
+		args,
+		options.stdout ?? process.stdout,
+		options.stderr ?? process.stderr,
+		options.extensionTestsEnv,
+	);
 }
 const SIGINT = 'SIGINT';
 
 async function innerRunTests(
 	executable: string,
 	args: string[],
+	stdout: NodeJS.WritableStream,
+	stderr: NodeJS.WritableStream,
 	testRunnerEnv?: {
 		[key: string]: string | undefined;
 	},
@@ -141,8 +163,8 @@ async function innerRunTests(
 			process.on(SIGINT, ctrlc1);
 		}
 
-		cmd.stdout.on('data', (d) => process.stdout.write(d));
-		cmd.stderr.on('data', (d) => process.stderr.write(d));
+		cmd.stdout.on('data', (d) => stdout.write(d));
+		cmd.stderr.on('data', (d) => stderr.write(d));
 
 		cmd.on('error', function (data) {
 			console.log('Test error: ' + data.toString());
