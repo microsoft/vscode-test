@@ -139,8 +139,7 @@ async function innerRunTests(
 	},
 ): Promise<number> {
 	const fullEnv = Object.assign({}, process.env, testRunnerEnv);
-	const shell = process.platform === 'win32';
-	const cmd = cp.spawn(shell ? `"${executable}"` : executable, args, { env: fullEnv, shell });
+	const cmd = cp.spawn(executable, args, { env: fullEnv });
 
 	let exitRequested = false;
 	const ctrlc1 = () => {
