@@ -57,9 +57,9 @@ extends:
             condition: eq(variables['Agent.OS'], 'Linux')
 
           - task: NodeTool@0
-            displayName: Switch to Node 16
+            displayName: Switch to Node 22
             inputs:
-              versionSpec: 16.x
+              versionSpec: 22.x
 
           - script: cd sample && npm run test
             displayName: Test package
