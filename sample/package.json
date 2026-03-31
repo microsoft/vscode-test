@@ -4,7 +4,8 @@
   "description": "",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.32.0"
+    "vscode": "^1.32.0",
+    "node": ">=22"
   },
   "categories": [
     "Other"
@@ -29,8 +30,9 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.0",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/vscode": "^1.52.0",
+    "glob": "^12.0.0",
     "mocha": "^10.0.0",
     "typescript": "^5.4.5"
   },

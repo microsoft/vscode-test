@@ -1,19 +1,6 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import * as Mocha from 'mocha';
-
-function findTestFiles(dir: string): string[] {
-	const results: string[] = [];
-	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-		const fullPath = path.join(dir, entry.name);
-		if (entry.isDirectory()) {
-			results.push(...findTestFiles(fullPath));
-		} else if (entry.name.endsWith('.test.js')) {
-			results.push(fullPath);
-		}
-	}
-	return results;
-}
+import { glob } from 'glob';
 
 export function run(testsRoot: string, cb: (error: unknown, failures?: number) => void): void {
 	// Create the mocha test
@@ -21,17 +8,21 @@ export function run(testsRoot: string, cb: (error: unknown, failures?: number) =
 		ui: 'tdd',
 	});
 
-	try {
-		const files = findTestFiles(testsRoot);
+	glob('**/**.test.js', { cwd: testsRoot })
+		.then((files) => {
+			// Add files to the test suite
+			files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
 
-		// Add files to the test suite
-		files.forEach((f) => mocha.addFile(f));
-
-		// Run the mocha test
-		mocha.run((failures) => {
-			cb(null, failures);
+			try {
+				// Run the mocha test
+				mocha.run((failures) => {
+					cb(null, failures);
+				});
+			} catch (err) {
+				cb(err);
+			}
+		})
+		.catch((err) => {
+			return cb(err);
 		});
-	} catch (err) {
-		cb(err);
-	}
 }
