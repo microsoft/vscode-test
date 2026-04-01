@@ -1,8 +1,11 @@
 import * as path from 'path';
 import * as assert from 'assert';
 import { Writable } from 'stream';
+import { fileURLToPath } from 'url';
 
-import { runTests, downloadAndUnzipVSCode, runVSCodeCommand } from '../../..';
+import { runTests, downloadAndUnzipVSCode, runVSCodeCommand } from '../../../out/index.js';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 async function go() {
 	const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
@@ -127,12 +130,12 @@ go();
  * Create a mock writable stream to capture output to.
  */
 const createMockStream = () => {
-    const output: string[] = [];
-    const stream = new Writable({
-        write(chunk, _, callback) {
-            output.push(chunk.toString());
-            callback();
-        },
-    });
-    return { stream, output };
+	const output: string[] = [];
+	const stream = new Writable({
+		write(chunk, _, callback) {
+			output.push(chunk.toString());
+			callback();
+		},
+	});
+	return { stream, output };
 };
