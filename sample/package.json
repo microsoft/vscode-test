@@ -4,8 +4,7 @@
   "description": "",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.32.0",
-    "node": ">=22"
+    "vscode": "^1.32.0"
   },
   "categories": [
     "Other"
@@ -26,11 +25,11 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "cd .. && tsc && cd sample && tsc && node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.0",
-    "@types/node": "^22",
+    "@types/node": "^20",
     "@types/vscode": "^1.52.0",
     "glob": "^12.0.0",
     "mocha": "^10.0.0",
