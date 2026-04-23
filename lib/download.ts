@@ -496,16 +496,18 @@ export async function download(options: Partial<DownloadOptions> = {}): Promise<
 	if (fs.existsSync(path.join(downloadedPath, COMPLETE_FILE_NAME))) {
 		if (version.isInsiders) {
 			reporter.report({ stage: ProgressReportStage.FetchingInsidersMetadata });
-			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(
-				downloadedPath,
-				platform,
-				reporter,
-			);
 
 			const { version: latestHash, timestamp: latestTimestamp } =
 				version.id === 'insiders' // not qualified with a date
 					? await getLatestInsidersMetadata(systemDefaultPlatform, version.isReleased)
 					: await getInsidersVersionMetadata(systemDefaultPlatform, version.id, version.isReleased);
+
+			const { version: currentHash, date: currentDate } = insidersDownloadDirMetadata(
+				downloadedPath,
+				platform,
+				reporter,
+				latestHash,
+			);
 
 			if (currentHash === latestHash) {
 				reporter.report({ stage: ProgressReportStage.FoundMatchingInstall, downloadedPath });

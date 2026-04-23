@@ -144,12 +144,14 @@ export function insidersDownloadDirToExecutablePath(dir: string, platform: Downl
 	}
 }
 
-export function insidersDownloadDirMetadata(dir: string, platform: DownloadPlatform, reporter: ProgressReporter) {
+export function insidersDownloadDirMetadata(dir: string, platform: DownloadPlatform, reporter: ProgressReporter, latestHash: string) {
 	let productJsonPath;
 	if (isPlatformServer(platform)) {
 		productJsonPath = path.resolve(dir, 'product.json');
 	} else if (isPlatformWindows(platform)) {
-		productJsonPath = path.resolve(dir, 'resources/app/product.json');
+		// https://github.com/microsoft/vscode/issues/293013
+		// https://github.com/microsoft/vscode/issues/279329#issuecomment-3580527758
+		productJsonPath = path.resolve(dir, `${latestHash.slice(0,10)}/resources/app/product.json`);
 	} else if (isPlatformDarwin(platform)) {
 		productJsonPath = path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/Resources/app/product.json');
 	} else {
