@@ -23,7 +23,6 @@ import {
 	resolveCliPathFromVSCodeExecutablePath,
 } from './util.js';
 
-
 const updateServerHost = 'update.code.visualstudio.com';
 
 async function canResolveUpdateServer(): Promise<boolean> {
