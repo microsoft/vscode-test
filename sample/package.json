@@ -30,11 +30,14 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.0",
-    "@types/node": "^20",
-    "@types/vscode": "^1.52.0",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.110.0",
     "glob": "^12.0.0",
     "mocha": "^10.0.0",
     "typescript": "^5.4.5"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "overrides": {
+    "serialize-javascript": "^7.0.5"
+  }
 }

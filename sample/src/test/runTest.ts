@@ -32,10 +32,10 @@ async function go() {
 	});
 
 	/**
-	 * Use 1.61.0 release for testing
+	 * Use 1.111.0 release for testing
 	 */
 	await runTests({
-		version: '1.61.0',
+		version: '1.111.0',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
@@ -62,24 +62,24 @@ async function go() {
 	});
 
 	/**
-	 * Use a specific Insiders (1.85.0) for testing
+	 * Use a specific Insiders (1.119.0-insider) for testing
 	 */
 	await runTests({
-		version: 'af28b32d7e553898b2a91af498b1fb666fdebe0c',
+		version: '717aa443fdb80afacf21f6050ba976f890b8ea55',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
 	});
 
 	/**
-	 * Noop, since 1.61.0 already downloaded to .vscode-test/vscode-1.61.0
+	 * Noop, since 1.111.0 already downloaded to .vscode-test/vscode-1.111.0
 	 */
-	await downloadAndUnzipVSCode('1.61.0');
+	await downloadAndUnzipVSCode('1.111.0');
 
 	/**
-	 * Manually download VS Code 1.60.0 release for testing.
+	 * Manually download VS Code 1.110.1 release for testing.
 	 */
-	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.60.0');
+	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.110.1');
 	await runTests({
 		vscodeExecutablePath,
 		extensionDevelopmentPath,
@@ -90,7 +90,7 @@ async function go() {
 	/**
 	 * Install Python extension
 	 */
-	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.60.0' });
+	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.110.1' });
 
 	/**
 	 * - Add additional launch flags for VS Code
