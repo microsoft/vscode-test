@@ -49,10 +49,10 @@ async function go() {
 	});
 
 	/**
-	 * Use 1.61.0 release for testing
+	 * Use latest stable release for testing
 	 */
 	await runTests({
-		version: '1.61.0',
+		version: 'stable',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
@@ -89,14 +89,14 @@ async function go() {
 	});
 
 	/**
-	 * Noop, since 1.61.0 already downloaded to .vscode-test/vscode-1.61.0
+	 * Noop, since latest stable was already downloaded by previous tests
 	 */
-	await downloadAndUnzipVSCode('1.61.0');
+	await downloadAndUnzipVSCode('stable');
 
 	/**
-	 * Manually download VS Code 1.60.0 release for testing.
+	 * Manually download the latest stable VS Code release for testing.
 	 */
-	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.60.0');
+	const vscodeExecutablePath = await downloadAndUnzipVSCode('stable');
 	await runTests({
 		vscodeExecutablePath,
 		extensionDevelopmentPath,
@@ -107,7 +107,7 @@ async function go() {
 	/**
 	 * Install Python extension
 	 */
-	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.60.0' });
+	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: 'stable' });
 
 	/**
 	 * - Add additional launch flags for VS Code
