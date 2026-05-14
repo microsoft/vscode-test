@@ -89,7 +89,7 @@ async function go() {
 	});
 
 	/**
-	 * Noop, since latest stable was already downloaded by previous tests
+	 * Reuses the latest stable download from previous tests when still cached.
 	 */
 	await downloadAndUnzipVSCode('stable');
 
