@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { spawnSync } from 'child_process';
+import { lookup } from 'dns/promises';
 import { existsSync, promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
@@ -21,6 +22,20 @@ import {
 	isPlatformWindows,
 	resolveCliPathFromVSCodeExecutablePath,
 } from './util.js';
+
+
+const updateServerHost = 'update.code.visualstudio.com';
+
+async function canResolveUpdateServer(): Promise<boolean> {
+	try {
+		await lookup(updateServerHost);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+const describeIfOnline = (await canResolveUpdateServer()) ? describe : describe.skip;
 
 const platforms = [
 	'darwin',
@@ -40,7 +55,7 @@ const platforms = [
 	'server-linux-x64',
 ];
 
-describe('sane downloads', () => {
+describeIfOnline('sane downloads', () => {
 	const testTempDir = join(tmpdir(), 'vscode-test-download');
 
 	beforeAll(async () => {
@@ -92,7 +107,7 @@ describe('sane downloads', () => {
 	});
 });
 
-describe('fetchTargetInferredVersion', () => {
+describeIfOnline('fetchTargetInferredVersion', () => {
 	let stable: string[];
 	let insiders: string[];
 	const extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');

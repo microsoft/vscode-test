@@ -1,13 +1,30 @@
 import * as path from 'path';
 import * as assert from 'assert';
 import { Writable } from 'stream';
+import { lookup } from 'dns/promises';
 import { fileURLToPath } from 'url';
 
 import { runTests, downloadAndUnzipVSCode, runVSCodeCommand } from '../../../out/index.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
+const updateServerHost = 'update.code.visualstudio.com';
+
+async function canResolveUpdateServer(): Promise<boolean> {
+	try {
+		await lookup(updateServerHost);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 async function go() {
+	if (!(await canResolveUpdateServer())) {
+		console.warn(`Skipping sample integration tests: cannot resolve ${updateServerHost}`);
+		return;
+	}
+
 	const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
 	const extensionTestsPath = path.resolve(__dirname, './suite');
 
