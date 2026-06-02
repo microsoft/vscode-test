@@ -206,7 +206,7 @@ function findWindowsProductJsonPath(dir: string, latestHash: string) {
 	// currently-installed metadata (e.g. to report the old version being replaced).
 	try {
 		for (const entry of readdirSync(dir)) {
-			if (/^[0-9a-f]{10}$/i.test(entry)) {
+			if (/^[0-9a-f]{10}$/.test(entry)) {
 				const candidate = path.resolve(dir, entry, relativeProductJsonPath);
 				if (existsSync(candidate)) {
 					return candidate;
