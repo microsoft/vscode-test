@@ -5,7 +5,7 @@
 
 import { ChildProcess, SpawnOptions, spawn } from 'child_process';
 import { createHash } from 'crypto';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import * as https from 'https';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -144,14 +144,24 @@ export function insidersDownloadDirToExecutablePath(dir: string, platform: Downl
 	}
 }
 
-export function insidersDownloadDirMetadata(dir: string, platform: DownloadPlatform, reporter: ProgressReporter, latestHash: string) {
+export function insidersDownloadDirMetadata(
+	dir: string,
+	platform: DownloadPlatform,
+	reporter: ProgressReporter,
+	latestHash: string,
+) {
 	let productJsonPath;
 	if (isPlatformServer(platform)) {
 		productJsonPath = path.resolve(dir, 'product.json');
 	} else if (isPlatformWindows(platform)) {
 		// https://github.com/microsoft/vscode/issues/293013
 		// https://github.com/microsoft/vscode/issues/279329#issuecomment-3580527758
-		productJsonPath = path.resolve(dir, `${latestHash.slice(0,10)}/resources/app/product.json`);
+		// Recent Windows archives nest the application under a versioned folder
+		// named after the first 10 characters of the commit hash, e.g.
+		// `<dir>/39d5031f21/resources/app/product.json`. The installed build's
+		// commit may differ from the server's latest, so we cannot assume the
+		// folder is named after `latestHash`; locate the product.json instead.
+		productJsonPath = findWindowsProductJsonPath(dir, latestHash);
 	} else if (isPlatformDarwin(platform)) {
 		productJsonPath = path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/Resources/app/product.json');
 	} else {
@@ -172,6 +182,43 @@ export function insidersDownloadDirMetadata(dir: string, platform: DownloadPlatf
 			date: new Date(0),
 		};
 	}
+}
+
+/**
+ * Resolves the path to `product.json` inside a downloaded Windows VS Code
+ * archive, accounting for the versioned-resources folder introduced in
+ * https://github.com/microsoft/vscode/issues/249239.
+ */
+function findWindowsProductJsonPath(dir: string, latestHash: string) {
+	const relativeProductJsonPath = path.join('resources', 'app', 'product.json');
+
+	// Preferred: the versioned folder named after the latest commit hash. When
+	// the installed build is up to date this is an exact match.
+	if (latestHash) {
+		const hinted = path.resolve(dir, latestHash.slice(0, 10), relativeProductJsonPath);
+		if (existsSync(hinted)) {
+			return hinted;
+		}
+	}
+
+	// Otherwise the install may be outdated and the folder named after a
+	// different commit; scan for the versioned folder so we can still read the
+	// currently-installed metadata (e.g. to report the old version being replaced).
+	try {
+		for (const entry of readdirSync(dir)) {
+			if (/^[0-9a-f]{10}$/.test(entry)) {
+				const candidate = path.resolve(dir, entry, relativeProductJsonPath);
+				if (existsSync(candidate)) {
+					return candidate;
+				}
+			}
+		}
+	} catch {
+		// ignore, fall through to the legacy layout
+	}
+
+	// Legacy flat layout, where the app lives directly under the archive root.
+	return path.resolve(dir, relativeProductJsonPath);
 }
 
 export interface IUpdateMetadata {
