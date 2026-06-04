@@ -50,6 +50,7 @@ describe('sane downloads', () => {
 					version: quality,
 					cachePath: testTempDir,
 					reporter: new SilentReporter(),
+					timeout: 60_000,
 				});
 
 				if (!existsSync(location)) {

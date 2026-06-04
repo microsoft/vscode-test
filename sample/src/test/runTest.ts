@@ -124,7 +124,10 @@ async function go() {
 	assert.ok(capturedStderr.join('').includes('property `engines.vscode` is mandatory'));
 }
 
-go();
+go().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});
 
 /**
  * Create a mock writable stream to capture output to.
