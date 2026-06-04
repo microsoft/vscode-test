@@ -15,12 +15,7 @@ import {
 	fetchTargetInferredVersion,
 } from './download.js';
 import { SilentReporter } from './progress.js';
-import {
-	isPlatformDarwin,
-	isPlatformLinux,
-	isPlatformWindows,
-	resolveCliPathFromVSCodeExecutablePath,
-} from './util.js';
+import { isRunnableOnHost, resolveCliPathFromVSCodeExecutablePath } from './util.js';
 
 const platforms = [
 	'darwin',
@@ -47,13 +42,6 @@ describe('sane downloads', () => {
 		await fs.mkdir(testTempDir, { recursive: true });
 	});
 
-	const isRunnableOnThisPlatform =
-		process.platform === 'win32'
-			? isPlatformWindows
-			: process.platform === 'darwin'
-				? isPlatformDarwin
-				: isPlatformLinux;
-
 	for (const quality of ['insiders', 'stable']) {
 		for (const platform of platforms) {
 			test.concurrent(`${quality}/${platform}`, async () => {
@@ -73,7 +61,7 @@ describe('sane downloads', () => {
 					throw new Error(`expected ${exePath} to from ${location}`);
 				}
 
-				if (platform.includes(process.arch) && isRunnableOnThisPlatform(platform)) {
+				if (isRunnableOnHost(platform)) {
 					const shell = process.platform === 'win32';
 					const version = spawnSync(shell ? `"${exePath}"` : exePath, ['--version'], { shell });
 					expect(version.status).to.equal(0);
@@ -85,7 +73,7 @@ describe('sane downloads', () => {
 
 	afterAll(async () => {
 		try {
-			await fs.rmdir(testTempDir, { recursive: true });
+			await fs.rm(testTempDir, { recursive: true, force: true });
 		} catch {
 			// ignored
 		}
