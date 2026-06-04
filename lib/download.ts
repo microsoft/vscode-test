@@ -352,6 +352,9 @@ async function unzipVSCode(
 ) {
 	const stagingFile = path.join(tmpdir(), `vscode-test-${Date.now()}.zip`);
 	const checksum = validateStream(stream, length, sha256);
+	// `checksum` rejects if the download stream errors, but it's only awaited on the
+	// success paths below — observe it here so a failure can't crash the process.
+	checksum.catch(() => {});
 
 	if (format === 'zip') {
 		const stripComponents = isPlatformServer(platform) ? 1 : 0;
