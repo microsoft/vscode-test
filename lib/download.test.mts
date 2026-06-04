@@ -87,7 +87,7 @@ describe('fetchTargetInferredVersion', () => {
 	const extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
 
 	beforeAll(async () => {
-		[stable, insiders] = await Promise.all([fetchStableVersions(true, 5000), fetchInsiderVersions(true, 5000)]);
+		[stable, insiders] = await Promise.all([fetchStableVersions(true, 15_000), fetchInsiderVersions(true, 15_000)]);
 	});
 
 	afterEach(async () => {
@@ -104,7 +104,7 @@ describe('fetchTargetInferredVersion', () => {
 		fetchTargetInferredVersion({
 			cachePath: join(extensionsDevelopmentPath, '.cache'),
 			platform: 'win32-x64-archive',
-			timeout: 5000,
+			timeout: 15_000,
 			extensionsDevelopmentPath: paths.map((p) => join(extensionsDevelopmentPath, p)),
 		});
 
