@@ -20,7 +20,7 @@
   },
   "main": "./out/index.js",
   "engines": {
-    "node": ">=16"
+    "node": ">=22"
   },
   "dependencies": {
     "http-proxy-agent": "^7.0.2",
