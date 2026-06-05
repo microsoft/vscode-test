@@ -18,11 +18,31 @@ import { ProgressReporter } from './progress';
 
 export let systemDefaultPlatform: DownloadPlatform;
 
-export const isPlatformWindows = (platform: string) => platform.includes('win32');
-export const isPlatformDarwin = (platform: string) => platform.includes('darwin');
-export const isPlatformLinux = (platform: string) => platform.includes('linux');
+const isPlatformWindows = (platform: string) => platform.includes('win32');
+const isPlatformDarwin = (platform: string) => platform.includes('darwin');
+const isPlatformLinux = (platform: string) => platform.includes('linux');
 export const isPlatformServer = (platform: string) => platform.includes('server');
 export const isPlatformCLI = (platform: string) => platform.includes('cli-');
+
+// Extract the architecture component from a download platform string. The
+// legacy `darwin` / `server-darwin` names have no arch suffix and refer to x64.
+const getPlatformArch = (platform: string): NodeJS.Architecture | undefined => {
+	if (platform.includes('arm64')) return 'arm64';
+	if (platform.includes('armhf')) return 'arm';
+	if (platform.includes('x64')) return 'x64';
+	if (isPlatformDarwin(platform)) return 'x64';
+	return undefined;
+};
+
+export const isRunnableOnHost = (platform: string): boolean => {
+	const osMatches =
+		process.platform === 'win32'
+			? isPlatformWindows(platform)
+			: process.platform === 'darwin'
+				? isPlatformDarwin(platform)
+				: isPlatformLinux(platform);
+	return osMatches && getPlatformArch(platform) === process.arch;
+};
 
 switch (process.platform) {
 	case 'darwin':

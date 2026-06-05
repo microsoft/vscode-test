@@ -62,7 +62,7 @@ export class TimeoutController {
 	private handle: NodeJS.Timeout;
 	private readonly ctrl = new AbortController();
 
-	public get signal() {
+	public get signal(): AbortSignal {
 		return this.ctrl.signal;
 	}
 

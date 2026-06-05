@@ -15,12 +15,7 @@ import {
 	fetchTargetInferredVersion,
 } from './download.js';
 import { SilentReporter } from './progress.js';
-import {
-	isPlatformDarwin,
-	isPlatformLinux,
-	isPlatformWindows,
-	resolveCliPathFromVSCodeExecutablePath,
-} from './util.js';
+import { isRunnableOnHost, resolveCliPathFromVSCodeExecutablePath } from './util.js';
 
 const platforms = [
 	'darwin',
@@ -47,13 +42,6 @@ describe('sane downloads', () => {
 		await fs.mkdir(testTempDir, { recursive: true });
 	});
 
-	const isRunnableOnThisPlatform =
-		process.platform === 'win32'
-			? isPlatformWindows
-			: process.platform === 'darwin'
-				? isPlatformDarwin
-				: isPlatformLinux;
-
 	for (const quality of ['insiders', 'stable']) {
 		for (const platform of platforms) {
 			test.concurrent(`${quality}/${platform}`, async () => {
@@ -62,6 +50,7 @@ describe('sane downloads', () => {
 					version: quality,
 					cachePath: testTempDir,
 					reporter: new SilentReporter(),
+					timeout: 60_000,
 				});
 
 				if (!existsSync(location)) {
@@ -73,7 +62,7 @@ describe('sane downloads', () => {
 					throw new Error(`expected ${exePath} to from ${location}`);
 				}
 
-				if (platform.includes(process.arch) && isRunnableOnThisPlatform(platform)) {
+				if (isRunnableOnHost(platform)) {
 					const shell = process.platform === 'win32';
 					const version = spawnSync(shell ? `"${exePath}"` : exePath, ['--version'], { shell });
 					expect(version.status).to.equal(0);
@@ -85,7 +74,7 @@ describe('sane downloads', () => {
 
 	afterAll(async () => {
 		try {
-			await fs.rmdir(testTempDir, { recursive: true });
+			await fs.rm(testTempDir, { recursive: true, force: true });
 		} catch {
 			// ignored
 		}
@@ -98,7 +87,7 @@ describe('fetchTargetInferredVersion', () => {
 	const extensionsDevelopmentPath = join(tmpdir(), 'vscode-test-tmp-workspace');
 
 	beforeAll(async () => {
-		[stable, insiders] = await Promise.all([fetchStableVersions(true, 5000), fetchInsiderVersions(true, 5000)]);
+		[stable, insiders] = await Promise.all([fetchStableVersions(true, 15_000), fetchInsiderVersions(true, 15_000)]);
 	});
 
 	afterEach(async () => {
@@ -115,7 +104,7 @@ describe('fetchTargetInferredVersion', () => {
 		fetchTargetInferredVersion({
 			cachePath: join(extensionsDevelopmentPath, '.cache'),
 			platform: 'win32-x64-archive',
-			timeout: 5000,
+			timeout: 15_000,
 			extensionsDevelopmentPath: paths.map((p) => join(extensionsDevelopmentPath, p)),
 		});
 

@@ -62,10 +62,10 @@ extends:
             displayName: Start xvfb
             condition: eq(variables['Agent.OS'], 'Linux')
 
-          - task: NodeTool@0
+          - task: UseNode@1
             displayName: Switch to Node 22
             inputs:
-              versionSpec: 22.x
+              version: 22.x
 
           - script: cd sample && npm run test
             displayName: Test package

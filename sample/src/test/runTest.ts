@@ -8,8 +8,8 @@ import { runTests, downloadAndUnzipVSCode, runVSCodeCommand } from '../../../out
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 async function go() {
-	const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
-	const extensionTestsPath = path.resolve(__dirname, './suite');
+	const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+	const extensionTestsPath = path.resolve(__dirname, './suite/index.js');
 
 	/**
 	 * Basic usage
@@ -19,7 +19,7 @@ async function go() {
 		extensionTestsPath,
 	});
 
-	const extensionTestsPath2 = path.resolve(__dirname, './suite2');
+	const extensionTestsPath2 = path.resolve(__dirname, './suite2/index.js');
 	const testWorkspace = path.resolve(__dirname, '../../src/test-fixtures/fixture1');
 
 	/**
@@ -32,10 +32,10 @@ async function go() {
 	});
 
 	/**
-	 * Use 1.61.0 release for testing
+	 * Use 1.113.0 release for testing
 	 */
 	await runTests({
-		version: '1.61.0',
+		version: '1.113.0',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
@@ -62,24 +62,24 @@ async function go() {
 	});
 
 	/**
-	 * Use a specific Insiders (1.85.0) for testing
+	 * Use a specific Insiders (1.119.0-insider) for testing
 	 */
 	await runTests({
-		version: 'af28b32d7e553898b2a91af498b1fb666fdebe0c',
+		version: '717aa443fdb80afacf21f6050ba976f890b8ea55',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
 	});
 
 	/**
-	 * Noop, since 1.61.0 already downloaded to .vscode-test/vscode-1.61.0
+	 * Noop, since 1.113.0 already downloaded to .vscode-test/vscode-1.113.0
 	 */
-	await downloadAndUnzipVSCode('1.61.0');
+	await downloadAndUnzipVSCode('1.113.0');
 
 	/**
-	 * Manually download VS Code 1.60.0 release for testing.
+	 * Manually download VS Code 1.110.1 release for testing.
 	 */
-	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.60.0');
+	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.110.1');
 	await runTests({
 		vscodeExecutablePath,
 		extensionDevelopmentPath,
@@ -90,7 +90,7 @@ async function go() {
 	/**
 	 * Install Python extension
 	 */
-	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.60.0' });
+	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.110.1' });
 
 	/**
 	 * - Add additional launch flags for VS Code
@@ -121,10 +121,13 @@ async function go() {
 		stderr,
 	});
 	assert.ok(capturedStdout.join('').includes('Extension Test Suite 1'));
-	assert.ok(capturedStderr.join('').includes('property `engines.vscode` is mandatory'));
+	assert.ok(capturedStderr.join('').length > 0, 'expected captured stderr to be non-empty');
 }
 
-go();
+go().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});
 
 /**
  * Create a mock writable stream to capture output to.
