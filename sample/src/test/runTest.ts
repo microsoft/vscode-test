@@ -32,10 +32,10 @@ async function go() {
 	});
 
 	/**
-	 * Use 1.111.0 release for testing
+	 * Use 1.113.0 release for testing
 	 */
 	await runTests({
-		version: '1.111.0',
+		version: '1.113.0',
 		extensionDevelopmentPath,
 		extensionTestsPath,
 		launchArgs: [testWorkspace],
@@ -72,14 +72,14 @@ async function go() {
 	});
 
 	/**
-	 * Noop, since 1.111.0 already downloaded to .vscode-test/vscode-1.111.0
+	 * Noop, since 1.113.0 already downloaded to .vscode-test/vscode-1.113.0
 	 */
-	await downloadAndUnzipVSCode('1.111.0');
+	await downloadAndUnzipVSCode('1.113.0');
 
 	/**
-	 * Manually download VS Code 1.110.1 release for testing.
+	 * Manually download VS Code 1.112.1 release for testing.
 	 */
-	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.110.1');
+	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.112.1');
 	await runTests({
 		vscodeExecutablePath,
 		extensionDevelopmentPath,
@@ -90,7 +90,7 @@ async function go() {
 	/**
 	 * Install Python extension
 	 */
-	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.110.1' });
+	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.112.1' });
 
 	/**
 	 * - Add additional launch flags for VS Code
