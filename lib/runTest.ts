@@ -101,6 +101,7 @@ export async function runTests(options: TestOptions): Promise<number> {
 		'--disable-updates',
 		'--skip-welcome',
 		'--skip-release-notes',
+		'--no-cached-data',
 		'--disable-workspace-trust',
 		'--extensionTestsPath=' + options.extensionTestsPath,
 	];
