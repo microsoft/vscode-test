@@ -22,6 +22,7 @@ parameters:
 extends:
   template: azure-pipelines/npm-package/pipeline.yml@templates
   parameters:
+    cgIgnoreDirectories: sample/.vscode-test
     npmPackages:
       - name: test-electron
         ghCreateTag: false
