@@ -139,7 +139,7 @@ export function downloadDirToExecutablePath(dir: string, platform: DownloadPlatf
 		if (isPlatformWindows(platform)) {
 			return path.resolve(dir, 'Code.exe');
 		} else if (isPlatformDarwin(platform)) {
-			return path.resolve(dir, 'Visual Studio Code.app/Contents/MacOS/Electron');
+			return resolveDarwinAppExecutable(path.resolve(dir, 'Visual Studio Code.app'));
 		} else {
 			return path.resolve(dir, 'code');
 		}
@@ -157,11 +157,78 @@ export function insidersDownloadDirToExecutablePath(dir: string, platform: Downl
 		if (isPlatformWindows(platform)) {
 			return path.resolve(dir, 'Code - Insiders.exe');
 		} else if (isPlatformDarwin(platform)) {
-			return path.resolve(dir, 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron');
+			return resolveDarwinAppExecutable(path.resolve(dir, 'Visual Studio Code - Insiders.app'));
 		} else {
 			return path.resolve(dir, 'code-insiders');
 		}
 	}
+}
+
+/**
+ * Resolves the path to the main executable inside a macOS `.app` bundle.
+ *
+ * VS Code 1.110 renamed the macOS main binary from the historical
+ * `Contents/MacOS/Electron` to the product name (`Code` on Stable,
+ * `Code - Insiders` on Insiders) in microsoft/vscode#291948 (2026-02-03). A
+ * compatibility symlink kept the old `Electron` name working until it was
+ * removed in microsoft/vscode#326502 (2026-07-20), at which point downloads
+ * from any 1.110+ archive fail to launch with `spawn .../Contents/MacOS/Electron ENOENT`.
+ *
+ * The resolution runs three tiers, each strictly narrower than the previous:
+ *
+ * 1. **`Info.plist` → `CFBundleExecutable`.** This is the authoritative source
+ *    macOS itself uses to locate a bundle's main executable. VS Code ships
+ *    the plist as XML, so a targeted regex avoids pulling in a plist parser
+ *    or shelling out to `PlistBuddy`. The extracted value is treated as
+ *    untrusted input: it must resolve directly under `Contents/MacOS/` (no
+ *    `..` traversal, no absolute paths) and the resolved file must exist.
+ *
+ * 2. **Sole regular file in `Contents/MacOS/`.** VS Code bundles ship exactly
+ *    one main binary in that directory across every historical variant
+ *    (`Electron` pre-1.110, `Code`/`Code - Insiders` after), plus optionally
+ *    a compatibility symlink to it. Filtering to regular files (excluding
+ *    symlinks) collapses to a single entry that is safe to use even if the
+ *    plist is missing, unreadable, in the binary plist format, or otherwise
+ *    doesn't match the XML shape above.
+ *
+ * 3. **Legacy `Electron` name.** Preserves the historical behaviour for any
+ *    pre-1.110 build where the first two tiers didn't fire (e.g. an unusual
+ *    packaging layout). Kept as a last-resort so this function is always
+ *    safe to call and never throws.
+ *
+ * See microsoft/vscode-test#348 and microsoft/vscode-test#349.
+ */
+function resolveDarwinAppExecutable(appPath: string): string {
+	const macosDir = path.resolve(appPath, 'Contents', 'MacOS');
+	const infoPlistPath = path.resolve(appPath, 'Contents', 'Info.plist');
+
+	// Tier 1: read CFBundleExecutable from Info.plist, treating it as
+	// untrusted input (guard against path traversal via a malformed plist).
+	try {
+		const plist = readFileSync(infoPlistPath, 'utf-8');
+		const match = plist.match(/<key>CFBundleExecutable<\/key>\s*<string>([^<]+)<\/string>/);
+		if (match) {
+			const candidate = path.resolve(macosDir, match[1]);
+			if (candidate.startsWith(macosDir + path.sep) && existsSync(candidate)) {
+				return candidate;
+			}
+		}
+	} catch {
+		// fall through to tier 2
+	}
+
+	// Tier 2: the sole regular (non-symlink) file in Contents/MacOS/.
+	try {
+		const files = readdirSync(macosDir, { withFileTypes: true }).filter((e) => e.isFile());
+		if (files.length === 1) {
+			return path.resolve(macosDir, files[0].name);
+		}
+	} catch {
+		// fall through to tier 3
+	}
+
+	// Tier 3: legacy Electron name for pre-1.110 builds.
+	return path.resolve(macosDir, 'Electron');
 }
 
 export function insidersDownloadDirMetadata(
