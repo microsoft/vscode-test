@@ -6,7 +6,7 @@ This module helps you test VS Code extensions. Note that new extensions may want
 
 Supported:
 
-- Node >= 16.x
+- Node >= 22
 - Windows >= Windows Server 2012+ / Win10+ (anything with Powershell >= 5.0)
 - macOS
 - Linux
@@ -16,109 +16,150 @@ Supported:
 See [./sample](./sample) for a runnable sample, with [Azure DevOps Pipelines](https://github.com/microsoft/vscode-test/blob/main/sample/azure-pipelines.yml) and [Github Actions](https://github.com/microsoft/vscode-test/blob/main/sample/.github/workflows/ci.yml) configuration.
 
 ```ts
-import { runTests, runVSCodeCommand, downloadAndUnzipVSCode } from '@vscode/test-electron';
+import * as path from 'path';
+import * as assert from 'assert';
+import { Writable } from 'stream';
+import { fileURLToPath } from 'url';
+
+import { runTests, downloadAndUnzipVSCode, runVSCodeCommand } from '@vscode/test-electron';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 async function go() {
-	try {
-		const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
-		const extensionTestsPath = path.resolve(__dirname, './suite');
+	const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+	const extensionTestsPath = path.resolve(__dirname, './suite/index.js');
 
-		/**
-		 * Basic usage
-		 */
-		await runTests({
-			extensionDevelopmentPath,
-			extensionTestsPath,
-		});
+	/**
+	 * Basic usage
+	 */
+	await runTests({
+		extensionDevelopmentPath,
+		extensionTestsPath,
+	});
 
-		const extensionTestsPath2 = path.resolve(__dirname, './suite2');
-		const testWorkspace = path.resolve(__dirname, '../../../test-fixtures/fixture1');
+	const extensionTestsPath2 = path.resolve(__dirname, './suite2/index.js');
+	const testWorkspace = path.resolve(__dirname, '../../src/test-fixtures/fixture1');
 
-		/**
-		 * Running another test suite on a specific workspace
-		 */
-		await runTests({
-			extensionDevelopmentPath,
-			extensionTestsPath: extensionTestsPath2,
-			launchArgs: [testWorkspace],
-		});
+	/**
+	 * Running another test suite on a specific workspace
+	 */
+	await runTests({
+		extensionDevelopmentPath,
+		extensionTestsPath: extensionTestsPath2,
+		launchArgs: [testWorkspace],
+	});
 
-		/**
-		 * Use 1.36.1 release for testing
-		 */
-		await runTests({
-			version: '1.36.1',
-			extensionDevelopmentPath,
-			extensionTestsPath,
-			launchArgs: [testWorkspace],
-		});
+	/**
+	 * Use 1.113.0 release for testing
+	 */
+	await runTests({
+		version: '1.113.0',
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		launchArgs: [testWorkspace],
+	});
 
-		/**
-		 * Use Insiders release for testing
-		 */
-		await runTests({
-			version: 'insiders',
-			extensionDevelopmentPath,
-			extensionTestsPath,
-			launchArgs: [testWorkspace],
-		});
+	/**
+	 * Use Insiders release for testing
+	 */
+	await runTests({
+		version: 'insiders',
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		launchArgs: [testWorkspace],
+	});
 
-		/**
-		 * Noop, since 1.36.1 already downloaded to .vscode-test/vscode-1.36.1
-		 */
-		await downloadAndUnzipVSCode('1.36.1');
+	/**
+	 * Use unreleased Insiders (here be dragons!)
+	 */
+	await runTests({
+		version: 'insiders-unreleased',
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		launchArgs: [testWorkspace],
+	});
 
-		/**
-		 * Manually download VS Code 1.35.0 release for testing.
-		 */
-		const vscodeExecutablePath = await downloadAndUnzipVSCode('1.35.0');
-		await runTests({
-			vscodeExecutablePath,
-			extensionDevelopmentPath,
-			extensionTestsPath,
-			launchArgs: [testWorkspace],
-		});
+	/**
+	 * Use a specific Insiders (1.119.0-insider) for testing
+	 */
+	await runTests({
+		version: '717aa443fdb80afacf21f6050ba976f890b8ea55',
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		launchArgs: [testWorkspace],
+	});
 
-		/**
-		 * Install Python extension
-		 */
-		await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.35.0' });
+	/**
+	 * Noop, since 1.113.0 already downloaded to .vscode-test/vscode-1.113.0
+	 */
+	await downloadAndUnzipVSCode('1.113.0');
 
-		/**
-		 * - Add additional launch flags for VS Code
-		 * - Pass custom environment variables to test runner
-		 */
-		await runTests({
-			vscodeExecutablePath,
-			extensionDevelopmentPath,
-			extensionTestsPath,
-			launchArgs: [
-				testWorkspace,
-				// This disables all extensions except the one being tested
-				'--disable-extensions',
-			],
-			// Custom environment variables for extension test script
-			extensionTestsEnv: { foo: 'bar' },
-		});
+	/**
+	 * Manually download VS Code 1.110.1 release for testing.
+	 */
+	const vscodeExecutablePath = await downloadAndUnzipVSCode('1.110.1');
+	await runTests({
+		vscodeExecutablePath,
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		launchArgs: [testWorkspace],
+	});
 
-		/**
-		 * Use win64 instead of win32 for testing Windows
-		 */
-		if (process.platform === 'win32') {
-			await runTests({
-				extensionDevelopmentPath,
-				extensionTestsPath,
-				version: '1.40.0',
-				platform: 'win32-x64-archive',
-			});
-		}
-	} catch (err) {
-		console.error('Failed to run tests');
-		process.exit(1);
-	}
+	/**
+	 * Install Python extension
+	 */
+	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.110.1' });
+
+	/**
+	 * - Add additional launch flags for VS Code
+	 * - Pass custom environment variables to test runner
+	 */
+	await runTests({
+		vscodeExecutablePath,
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		launchArgs: [
+			testWorkspace,
+			// This disables all extensions except the one being tested
+			'--disable-extensions',
+		],
+		// Custom environment variables for extension test script
+		extensionTestsEnv: { foo: 'bar' },
+	});
+
+	/**
+	 * Verify we can capture the output streams.
+	 */
+	const { stream: stdout, output: capturedStdout } = createMockStream();
+	const { stream: stderr, output: capturedStderr } = createMockStream();
+	await runTests({
+		extensionDevelopmentPath,
+		extensionTestsPath,
+		stdout,
+		stderr,
+	});
+	assert.ok(capturedStdout.join('').includes('Extension Test Suite 1'));
+	assert.ok(capturedStderr.join('').length > 0, 'expected captured stderr to be non-empty');
 }
 
-go();
+go().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});
+
+/**
+ * Create a mock writable stream to capture output to.
+ */
+const createMockStream = () => {
+	const output: string[] = [];
+	const stream = new Writable({
+		write(chunk, _, callback) {
+			output.push(chunk.toString());
+			callback();
+		},
+	});
+	return { stream, output };
+};
 ```
 
 ## Development
