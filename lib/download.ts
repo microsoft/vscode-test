@@ -432,11 +432,19 @@ async function unzipVSCode(
 	}
 }
 
-function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, input?: NodeJS.ReadableStream) {
+export function spawnDecompressorChild(command: string, args: ReadonlyArray<string>, input?: NodeJS.ReadableStream) {
 	return new Promise<void>((resolve, reject) => {
 		const child = cp.spawn(command, args, { stdio: 'pipe' });
 		if (input) {
-			input.on('error', reject);
+			input.on('error', (err) => {
+				// A failed attempt must not leave the decompressor child behind:
+				// if the download stream errors mid-body, `tar` keeps blocking
+				// on stdin and its pipes hold the Node.js event loop alive, so
+				// the process never exits -- even if a later retry succeeds.
+				// Kill the child and let the original error propagate.
+				child.kill();
+				reject(err);
+			});
 			input.pipe(child.stdin);
 		}
 

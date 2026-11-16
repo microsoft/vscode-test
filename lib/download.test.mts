@@ -8,11 +8,13 @@ import { existsSync, promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { Readable } from 'stream';
 import {
 	downloadAndUnzipVSCode,
 	fetchInsiderVersions,
 	fetchStableVersions,
 	fetchTargetInferredVersion,
+	spawnDecompressorChild,
 } from './download.js';
 import { SilentReporter } from './progress.js';
 import { isRunnableOnHost, resolveCliPathFromVSCodeExecutablePath } from './util.js';
@@ -154,5 +156,89 @@ describe('fetchTargetInferredVersion', () => {
 		await writeJSON('package.json', { engines: { vscode: '1.60.0-insider' } });
 		const version = await doFetch();
 		expect(version.id).to.equal('1.60.0-insider');
+	});
+});
+
+describe('spawnDecompressorChild', () => {
+	const spawnedPids: number[] = [];
+	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+	const isRunning = (pid: number) => {
+		try {
+			process.kill(pid, 0);
+			return true;
+		} catch {
+			return false;
+		}
+	};
+
+	afterAll(async () => {
+		// Best-effort cleanup: a failing run (e.g. against unfixed code) must
+		// not leak the decompressor children it spawned.
+		for (const pid of spawnedPids) {
+			try {
+				process.kill(pid);
+			} catch {
+				// already gone
+			}
+		}
+	});
+
+	test('kills the child when the input stream errors', async () => {
+		// A child that publishes its pid, then blocks reading stdin forever,
+		// exactly like `tar -xzf -` waiting for the rest of the archive body.
+		const pidFile = join(tmpdir(), `vscode-test-child-${Date.now()}.pid`);
+		const script =
+			`require('fs').writeFileSync(${JSON.stringify(pidFile)}, String(process.pid)); ` + `process.stdin.resume();`;
+		const input = new Readable({
+			read() {
+				// hold the stream open, as a download in progress would
+			},
+		});
+
+		const promise = spawnDecompressorChild(process.execPath, ['-e', script], input);
+
+		// Wait for the child to be up and blocked on stdin before failing the
+		// stream, so the test targets a genuinely-running child.
+		let pid = 0;
+		for (let i = 0; i < 100 && !existsSync(pidFile); i++) {
+			await wait(100);
+		}
+		pid = Number((await fs.readFile(pidFile)).toString());
+		spawnedPids.push(pid);
+
+		input.emit('error', new Error('aborted mid-download'));
+
+		await expect(promise).rejects.toThrow(/aborted mid-download/);
+
+		// The failed attempt must not leave the decompressor child behind: on
+		// unfixed code the child stays blocked on stdin and its pipes keep the
+		// Node.js event loop alive, so the process never exits -- even if a
+		// later retry succeeds.
+		const deadline = Date.now() + 15_000;
+		while (Date.now() < deadline) {
+			if (!isRunning(pid)) {
+				return;
+			}
+			await wait(100);
+		}
+		throw new Error(`decompressor child ${pid} still alive after the input stream failed`);
+	});
+
+	test('resolves when the input ends and the child exits cleanly', async () => {
+		const input = new Readable({
+			read() {
+				this.push('hello');
+				this.push(null);
+			},
+		});
+
+		await spawnDecompressorChild(process.execPath, ['-e', 'process.stdin.resume()'], input);
+	});
+
+	test('rejects when the child exits with a non-zero code', async () => {
+		await expect(spawnDecompressorChild(process.execPath, ['-e', 'process.exit(3)'])).rejects.toThrow(
+			/Failed to unzip archive, exited with 3/,
+		);
 	});
 });
