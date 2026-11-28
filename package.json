@@ -39,7 +39,7 @@
     "lint-staged": "^15.2.7",
     "prettier": "^3.3.2",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^7.15.0",
+    "typescript-eslint": "^8.74.0",
     "vitest": "^4.1.12"
   },
   "license": "MIT",
