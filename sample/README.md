@@ -15,3 +15,6 @@ npm install
 npm run compile
 npm test
 ```
+
+The CLI installation test uses a local VSIX so it does not depend on the Extension Marketplace.
+To regenerate it, run `vsce package --no-dependencies --allow-missing-repository --skip-license --out ../cli-extension.vsix` from `src/test-fixtures/cli-extension`.
