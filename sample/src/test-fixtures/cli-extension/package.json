@@ -1,0 +1,8 @@
+{
+  "name": "cli-extension",
+  "publisher": "vscode-test-sample",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.110.0"
+  }
+}
