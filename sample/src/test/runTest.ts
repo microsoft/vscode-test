@@ -88,9 +88,12 @@ async function go() {
 	});
 
 	/**
-	 * Install Python extension
+	 * Install a local extension without contacting the Marketplace
 	 */
-	await runVSCodeCommand(['--install-extension', 'ms-python.python'], { version: '1.110.1' });
+	await runVSCodeCommand(['--install-extension', 'src/test-fixtures/cli-extension.vsix'], {
+		version: '1.110.1',
+		spawn: { cwd: extensionDevelopmentPath },
+	});
 
 	/**
 	 * - Add additional launch flags for VS Code
