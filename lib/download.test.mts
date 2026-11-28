@@ -36,19 +36,22 @@ const platforms = [
 ];
 
 describe('sane downloads', () => {
-	const testTempDir = join(tmpdir(), 'vscode-test-download');
+	let testTempDir: string;
 
 	beforeAll(async () => {
-		await fs.mkdir(testTempDir, { recursive: true });
+		testTempDir = await fs.mkdtemp(join(tmpdir(), 'vscode-test-download-'));
 	});
 
 	for (const quality of ['insiders', 'stable']) {
 		for (const platform of platforms) {
-			test.concurrent(`${quality}/${platform}`, async () => {
+			// Keep at most one extracted build on disk at a time.
+			test.sequential(`${quality}/${platform}`, async ({ onTestFinished }) => {
+				const cachePath = join(testTempDir, `${quality}-${platform}`);
+				onTestFinished(() => fs.rm(cachePath, { recursive: true, force: true }));
 				const location = await downloadAndUnzipVSCode({
 					platform,
 					version: quality,
-					cachePath: testTempDir,
+					cachePath,
 					reporter: new SilentReporter(),
 					timeout: 60_000,
 				});
@@ -72,13 +75,7 @@ describe('sane downloads', () => {
 		}
 	}
 
-	afterAll(async () => {
-		try {
-			await fs.rm(testTempDir, { recursive: true, force: true });
-		} catch {
-			// ignored
-		}
-	});
+	afterAll(() => fs.rm(testTempDir, { recursive: true, force: true }));
 });
 
 describe('fetchTargetInferredVersion', () => {
